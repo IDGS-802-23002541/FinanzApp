@@ -4,7 +4,7 @@
 - **Materias:** Aplicaciones Web Progresivas · Desarrollo Móvil Integral.
 - **Producto:** FinanzApp, plataforma web y móvil de finanzas personales y colaborativas por «carteras» (hogar, viajes, eventos): registro de gastos compartidos, invitaciones por QR/clave, estadísticas y cierre con liquidación sugerida.
 - **Equipo:** Diego Yair Borja Romero · Aideé Vanessa Casillas Tapia · Vanessa Yassmin Rea Muñoz · Antonio Damián Rodríguez Alarcón.
-- **Repositorio:** https://github.com/IDGS-802-23002541/FinanzApp.git — ramas: `main`, `diego`, `vanessa`, `aidee`, `damian`.
+- **Repositorio:** https://github.com/IDGS-802-23002541/FinanzApp.git — ramas: `main`, `diego`, `vane`, `aidee`, `damian`.
 - **Tablero Kanban:** Taiga (conectado por MCP; guía en `docs/mcp-taiga.md`).
 - **Stack oficial (desarrollo nuevo):**
   - Web: React + Vite, **única librería de UI: MUI**.
