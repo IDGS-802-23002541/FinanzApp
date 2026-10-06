@@ -1,4 +1,4 @@
-# Reglas de `react-front` (web)
+# Reglas de `web_FinanzaApp` (web)
 
 - Stack: **React + Vite**; UI **solo MUI**. No agregar Tailwind, Bootstrap ni otras librerías de UI.
 - Frameworks ligeros permitidos: `react-router-dom`, `zustand`, `react-hook-form`. Consulta antes de añadir cualquier otra dependencia.

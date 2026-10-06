@@ -38,10 +38,9 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 
 | Carpeta | Contenido | Stack |
 | --- | --- | --- |
-| `react-front/` | Web (landing + panel) | React + Vite · UI **únicamente MUI** · frameworks ligeros |
-| `backpython/` | API REST | Python 3.13 + Flask (**Blueprints**) · SQL Server · Cloudinary |
-| `androidmovil/` | App Android | Kotlin + Jetpack Compose (MVVM) |
-| `finanzapp-web/` | Prototipo Angular de referencia | **No se desarrolla aquí**, solo se consulta |
+| `web_FinanzaApp/` | Web (landing + panel) | React + Vite · UI **únicamente MUI** · frameworks ligeros |
+| `Backend_FinanzaApp/` | API REST | Python 3.13 + Flask (**Blueprints**) · SQL Server · Cloudinary |
+| `movil_FinanzaApp/` | App Android | Kotlin + Jetpack Compose (MVVM) |
 | raíz | Documentación del proyecto | Markdown |
 
 - Prohibido en la web: Tailwind, Bootstrap u otra librería de UI distinta de MUI.
@@ -57,6 +56,6 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 ## 5. Taiga (tablero Kanban) vía MCP
 
 - El MCP `taiga` está disponible: úsalo para **consultar y actualizar** las historias del proyecto en vez de duplicarlas.
-- Reparto por carriles en `backlog_tecnico_y_reparto.md`; cada quien trabaja las historias de su carril.
+- Reparto por carriles y avance en el tablero **Taiga** (consúltalo con el MCP); cada quien trabaja las historias de su carril.
 - No borres historias, sprints ni proyectos sin confirmación del equipo.
 - Guía para conectar el MCP en otra máquina: `docs/mcp-taiga.md`.

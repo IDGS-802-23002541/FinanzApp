@@ -11,7 +11,5 @@
   - Backend: Python 3.13 + Flask con **Blueprints**; base de datos **SQL Server**; archivos en **Cloudinary**.
   - Móvil: Android Studio con **Kotlin + Jetpack Compose**.
 - **Documentos clave:**
-  - `historias_de_usuario.md` — 14 historias con INVEST + anexo de backlog técnico e independiente para 4 desarrolladores.
-  - `backlog_tecnico_y_reparto.md` — fichas técnicas, 4 carriles (Diego/Aideé/Vanessa/Damián) y plan de iteraciones.
-  - `historias_taiga.csv`, `historias_taiga_sujetos.txt`, `importar_taiga.py` — carga del backlog a Taiga.
-- **Prototipo existente:** `finanzapp-web/` (Angular + Tailwind) es el prototipo funcional de referencia; **no se desarrolla ahí**.
+  - `docs/mcp-taiga.md` — guía de conexión del MCP de Taiga; el backlog y las historias viven en el tablero.
+- **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI); el prototipo Angular anterior fue retirado.
