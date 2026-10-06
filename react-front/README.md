@@ -1,37 +1,53 @@
 # react-front — Aplicación web (React + Vite + MUI)
 
-Frontend oficial del proyecto (**reemplaza al prototipo Angular `finanzapp-web/`**).
+Frontend oficial del proyecto (**refactor del prototipo Angular `finanzapp-web/`**).
 
-## Stack obligatorio
+## Stack
 
-- **React + Vite** (TypeScript recomendado).
-- **MUI como única librería de UI**: `@mui/material`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled`.
-- Frameworks ligeros permitidos: `react-router-dom` (rutas), `zustand` (estado global si hace falta), `react-hook-form` (formularios, opcional).
-- Prohibido: Tailwind, Bootstrap, Ant Design u otra librería de componentes.
+- **React 19 + Vite** (TypeScript, modo `strict`).
+- **MUI como única librería de UI** (`@mui/material`, `@mui/icons-material`, `@emotion/*`).
+- Estado global con **zustand**; rutas con **react-router-dom**; gráficas SVG propias.
+- QR de invitación con **qrcode** (render local, sin servicios externos).
 
-## Estructura sugerida
-
-```
-src/
-├── pages/          # una carpeta por módulo: auth, carteras, movimientos, contribuyentes, ajustes…
-├── components/     # componentes reutilizables (StatCard, ProgressBar, Modal…)
-├── services/       # llamadas a la API Flask (una función por endpoint)
-├── hooks/
-├── theme/          # tema global de MUI (colores, tipografía)
-├── utils/          # formato de moneda/fechas y cálculos
-└── App.tsx / main.tsx
-```
-
-## Primeros pasos
+## Comandos
 
 ```bash
 cd react-front
-npm create vite@latest . -- --template react-ts   # cuando se genere el esqueleto
-npm install
-npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
-npm run dev
+npm install          # solo la primera vez
+npm run dev          # desarrollo en http://localhost:4200
+npm run build        # verificación de tipos + build de producción (dist/)
+npm run preview      # sirve el build para probarlo
 ```
 
-## Reglas
+## Estructura
 
-Ver `AGENTS.md` de esta carpeta y el `AGENTS.md` raíz (ramas y commits).
+```
+src/
+├── components/      # Icon, ui (Avatar, StatCard, Modal, ConfirmModal…), charts, ToastHost, RequireAuth
+├── data/            # mock-data.ts: dataset determinista (carteras, usuarios, 391 movimientos)
+├── layout/          # Shell: sidebar escritorio, drawer + barra inferior móvil y FAB
+├── pages/           # Landing, Login, Registro, NoEncontrado, carteras/ (lista, detalle, formularios),
+│                    # contribuyentes/, Transacciones, Inactivas, Ajustes
+├── stores/          # zustand: auth, usuarios, carteras, transacciones, toast
+├── types/           # modelos del dominio (mismos campos que la API prevista)
+├── utils/           # format.ts (moneda/fechas es-MX), finanzas.ts (saldos, liquidación, series)
+├── theme.ts         # tema MUI con la paleta de marca
+└── main.tsx / App.tsx
+```
+
+## Funcionalidad portada
+
+- Landing informativa, login/registro con validaciones y sesión persistida (`localStorage.finanzapp.sesion`).
+- Carteras: crear/editar/archivar/eliminar, filtros por categoría y búsqueda, vista de colaboraciones.
+- Detalle de cartera con 5 pestañas: **Resumen** (KPIs + gráficas + ranking), **Movimientos** (filtros + CRUD),
+  **Contribuyentes** (alta/baja), **Invitación QR** (copiar/compartir/regenerar) y **Cierre y balance**
+  (saldos, liquidación sugerida, imprimir y finalizar).
+- Transacciones globales con filtros combinables; carteras inactivas (histórico) con reactivación.
+- Ajustes: perfil, contraseña, preferencias y cierre de sesión.
+
+Las cuentas demo (`diego@finanzapp.mx` / `demo123`) funcionan igual que en el prototipo Angular.
+
+## Convenciones
+
+Ver `AGENTS.md` de esta carpeta y el `AGENTS.md` raíz (ramas y commits). No se usa Tailwind ni otras
+librerías de UI; los datos viven en `src/data/mock-data.ts` hasta que exista la API en `backpython/`.
