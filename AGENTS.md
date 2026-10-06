@@ -8,7 +8,7 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 | --- | --- | --- |
 | `main` | Integración — **nadie trabaja ni commitea aquí** | — |
 | `diego` | Diego Yair Borja Romero | `DB` |
-| `vanessa` | Vanessa Yassmin Rea Muñoz | `VR` |
+| `vane` | Vanessa Yassmin Rea Muñoz | `VR` |
 | `aidee` | Aideé Vanessa Casillas Tapia | `AC` |
 | `damian` | Antonio Damián Rodríguez Alarcón | `DR` |
 
