@@ -6,6 +6,8 @@ export interface TransaccionFormProps {
   transaccion: Transaccion | null;
   /** Si viene, la cartera queda fija (no se muestra selector) */
   idCarteraFija?: number | null;
+  /** Si viene, el responsable queda fijo */
+  idUsuarioFija?: number | null;
   onCerrar: () => void;
   onGuardado: (transaccion: Transaccion) => void;
 }
