@@ -52,6 +52,6 @@ Notas:
 
 ## 5. Uso en el flujo de trabajo
 
-- Consulta y actualiza historias con el MCP en lugar de duplicarlas; el backlog de referencia está en `backlog_tecnico_y_reparto.md`.
+- Consulta y actualiza historias con el MCP en lugar de duplicarlas; el tablero Taiga es la fuente de verdad del backlog.
 - No borres historias, sprints ni proyectos sin confirmación del equipo.
-- La carga inicial del backlog también puede hacerse con `historias_taiga.csv` y `importar_taiga.py`.
+- Las historias iniciales ya están cargadas en el tablero; administra cambios solo con el MCP.
