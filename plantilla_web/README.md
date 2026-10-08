@@ -1,4 +1,4 @@
-# web_FinanzaApp — Aplicación web (React + Vite + MUI)
+# plantilla_web — Aplicación web (React + Vite + MUI)
 
 Frontend oficial del proyecto.
 
@@ -12,7 +12,7 @@ Frontend oficial del proyecto.
 ## Comandos
 
 ```bash
-cd web_FinanzaApp
+cd plantilla_web
 npm install          # solo la primera vez
 npm run dev          # desarrollo en http://localhost:4200
 npm run build        # verificación de tipos + build de producción (dist/)
@@ -49,5 +49,5 @@ Las cuentas demo (`diego@finanzapp.mx` / `demo123`) están listas para probar la
 
 ## Convenciones
 
-Ver `AGENTS.md` de esta carpeta y el `AGENTS.md` raíz (ramas y commits). No se usa Tailwind ni otras
+Ver el `AGENTS.md` de `web_FinanzaApp/` y el `AGENTS.md` raíz (ramas y commits). No se usa Tailwind ni otras
 librerías de UI; los datos viven en `src/data/mock-data.ts` hasta que exista la API en `Backend_FinanzaApp/`.
