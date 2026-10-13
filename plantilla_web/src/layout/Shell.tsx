@@ -30,6 +30,7 @@ const GRUPOS: { nombre: string; enlaces: Enlace[] }[] = [
     enlaces: [
       { etiqueta: 'Carteras', ruta: '/app/carteras', icono: 'wallet' },
       { etiqueta: 'Transacciones', ruta: '/app/transacciones', icono: 'receipt' },
+      { etiqueta: 'Reportes', ruta: '/app/reportes', icono: 'chart' },
     ],
   },
   {
@@ -48,6 +49,7 @@ const GRUPOS: { nombre: string; enlaces: Enlace[] }[] = [
 const ENLACES_MOVILES: Enlace[] = [
   { etiqueta: 'Carteras', ruta: '/app/carteras', icono: 'wallet' },
   { etiqueta: 'Movimientos', ruta: '/app/transacciones', icono: 'receipt' },
+  { etiqueta: 'Reportes', ruta: '/app/reportes', icono: 'chart' },
   { etiqueta: 'Personas', ruta: '/app/contribuyentes', icono: 'users' },
   { etiqueta: 'Inactivas', ruta: '/app/inactivas', icono: 'archive' },
   { etiqueta: 'Ajustes', ruta: '/app/ajustes', icono: 'settings' },
@@ -298,7 +300,7 @@ export function Shell() {
           pb: 'env(safe-area-inset-bottom)',
         }}
       >
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
           {ENLACES_MOVILES.map((enlace) => (
             <Box
               key={enlace.ruta}

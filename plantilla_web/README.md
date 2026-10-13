@@ -23,14 +23,15 @@ npm run preview      # sirve el build para probarlo
 
 ```
 src/
-├── components/      # Icon, ui (Avatar, StatCard, Modal, ConfirmModal…), charts, ToastHost, RequireAuth
+├── components/      # Icon, ui (Avatar, StatCard, Modal, ConfirmModal…), charts (barras, dona, línea), ToastHost, RequireAuth
 ├── data/            # mock-data.ts: dataset determinista (carteras, usuarios, 391 movimientos)
-├── layout/          # Shell: sidebar escritorio, drawer + barra inferior móvil y FAB
+├── layout/          # Shell: sidebar escritorio, drawer + barra inferior móvil (6 accesos) y FAB
 ├── pages/           # Landing, Login, Registro, NoEncontrado, carteras/ (lista, detalle, formularios),
-│                    # contribuyentes/, Transacciones, Inactivas, Ajustes
+│                    # contribuyentes/, Transacciones, reportes/ (ventanas Hogar y Temporales), Inactivas, Ajustes
 ├── stores/          # zustand: auth, usuarios, carteras, transacciones, toast
 ├── types/           # modelos del dominio (mismos campos que la API prevista)
-├── utils/           # format.ts (moneda/fechas es-MX), finanzas.ts (saldos, liquidación, series)
+├── utils/           # format.ts (moneda/fechas es-MX), finanzas.ts (saldos, liquidación, series),
+│                    # reportes.ts (períodos, KPIs, recurrencia, proyectos), exportar.ts (CSV/impresión)
 ├── theme.ts         # tema MUI con la paleta de marca
 └── main.tsx / App.tsx
 ```
@@ -43,6 +44,11 @@ src/
   **Contribuyentes** (alta/baja), **Invitación QR** (copiar/compartir/regenerar) y **Cierre y balance**
   (saldos, liquidación sugerida, imprimir y finalizar).
 - Transacciones globales con filtros combinables; carteras inactivas (histórico) con reactivación.
+- Reportes: reparto Hogar vs Temporales y dos ventanas de análisis. **Hogar** (carteras recurrentes)
+  con gasto del período, promedio mensual, evolución, recurrencia por categoría y aportación por integrante;
+  **Temporales** (Viaje/Evento/Otro) con presupuesto vs gastado por proyecto (siempre con desglose), fase,
+  días, gasto por día, curva de avance y detalle comparativo. Incluye saldos con liquidación sugerida
+  y exportación CSV (compatible con Excel es-MX) e impresión/PDF en ambas ventanas.
 - Ajustes: perfil, contraseña, preferencias y cierre de sesión.
 
 Las cuentas demo (`diego@finanzapp.mx` / `demo123`) están listas para probar la app.

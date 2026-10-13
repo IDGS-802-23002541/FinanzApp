@@ -76,4 +76,8 @@ body {
   body {
     background: #ffffff;
   }
+
+  .evitar-corte {
+    break-inside: avoid;
+  }
 }

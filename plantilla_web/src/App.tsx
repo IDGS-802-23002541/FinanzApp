@@ -13,6 +13,7 @@ import Contribuyentes from './pages/Contribuyentes';
 import Transacciones from './pages/Transacciones';
 import Inactivas from './pages/Inactivas';
 import Ajustes from './pages/Ajustes';
+import Reportes from './pages/reportes/Reportes';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="carteras/:id" element={<Detalle />} />
           <Route path="contribuyentes" element={<Contribuyentes />} />
           <Route path="transacciones" element={<Transacciones />} />
+          <Route path="reportes" element={<Reportes />} />
           <Route path="inactivas" element={<Inactivas />} />
           <Route path="ajustes" element={<Ajustes />} />
         </Route>

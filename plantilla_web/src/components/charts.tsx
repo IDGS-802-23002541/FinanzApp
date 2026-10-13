@@ -18,6 +18,9 @@ export interface BarChartProps {
   mostrarSecundario?: boolean;
   leyendaPrincipal?: string;
   leyendaSecundario?: string;
+  /** Línea horizontal de referencia (por ejemplo, el promedio del período). */
+  referencia?: number;
+  etiquetaReferencia?: string;
 }
 
 const MARCAS = [100, 75, 50, 25, 0];
@@ -29,9 +32,11 @@ export function BarChart({
   mostrarSecundario = false,
   leyendaPrincipal = '',
   leyendaSecundario = 'Ingresos',
+  referencia,
+  etiquetaReferencia = 'Promedio',
 }: BarChartProps) {
   const valores = datos.flatMap((p) => [p.valor, mostrarSecundario ? (p.secundario ?? 0) : 0]);
-  const bruto = Math.max(1, ...valores);
+  const bruto = Math.max(1, ...valores, referencia ?? 0);
   const magnitud = Math.pow(10, Math.floor(Math.log10(bruto)));
   const maximo = Math.ceil(bruto / magnitud) * magnitud;
 
@@ -143,6 +148,24 @@ export function BarChart({
             </Tooltip>
           ))}
         </Box>
+
+        {typeof referencia === 'number' && referencia > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: { xs: 0, sm: 56 },
+              right: 0,
+              bottom: `${Math.min(100, (referencia / maximo) * 100)}%`,
+              borderTop: '1.5px dashed #94a3b8',
+              pointerEvents: 'none',
+              zIndex: 3,
+            }}
+          >
+            <Typography sx={{ position: 'absolute', right: 0, top: -18, fontSize: 10, fontWeight: 700, color: '#64748b' }}>
+              {etiquetaReferencia} {monedaCompacta(referencia)}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       <Box sx={{ mt: 0.75, display: 'flex', gap: { xs: 0.75, sm: 1.5 }, pl: { xs: 0, sm: '56px' } }}>
@@ -252,6 +275,181 @@ export function DonutChart({ segmentos, etiquetaCentro = 'Total' }: DonutChartPr
             </Typography>
           </Box>
         ))}
+      </Box>
+    </Box>
+  );
+}
+
+/* ------------------------------- LineChart ------------------------------ */
+
+export interface PuntoLinea {
+  etiqueta: string;
+  valor: number;
+}
+
+export interface LineChartProps {
+  datos: PuntoLinea[];
+  alto?: number;
+  color?: string;
+  /** Línea horizontal de referencia (presupuesto o base del proyecto). */
+  referencia?: number;
+  etiquetaReferencia?: string;
+  leyenda?: string;
+}
+
+export function LineChart({
+  datos,
+  alto = 200,
+  color = '#108354',
+  referencia,
+  etiquetaReferencia = 'Presupuesto',
+  leyenda = '',
+}: LineChartProps) {
+  if (datos.length === 0) {
+    return (
+      <Typography sx={{ py: 6, textAlign: 'center', fontSize: 13.5, color: '#64748b' }}>
+        Sin movimientos registrados.
+      </Typography>
+    );
+  }
+
+  const valores = datos.map((p) => p.valor);
+  const bruto = Math.max(1, ...valores, referencia ?? 0);
+  const magnitud = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const maximo = Math.ceil(bruto / magnitud) * magnitud;
+
+  const puntos = datos.map((p, i) => ({
+    ...p,
+    x: datos.length > 1 ? (i / (datos.length - 1)) * 100 : 0,
+    y: Math.min(100, (p.valor / maximo) * 100),
+  }));
+
+  const trazo = puntos.map((p) => `${p.x},${100 - p.y}`).join(' ');
+  const area = `0,100 ${trazo} 100,100`;
+
+  const ultimo = datos.length - 1;
+  const indicesVisibles = new Set<number>([
+    0,
+    Math.floor(ultimo / 3),
+    Math.floor((ultimo * 2) / 3),
+    ultimo,
+  ]);
+
+  return (
+    <Box sx={{ width: '100%' }}>
+      {leyenda && (
+        <Box sx={{ mb: 1.5, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, fontSize: 12, fontWeight: 500, color: '#64748b' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color }} />
+            {leyenda}
+          </Box>
+          {typeof referencia === 'number' && referencia > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box sx={{ width: 10, height: 2, bgcolor: '#94a3b8' }} />
+              {etiquetaReferencia}
+            </Box>
+          )}
+        </Box>
+      )}
+
+      <Box sx={{ position: 'relative', height: alto }}>
+        {MARCAS.map((marca) => (
+          <Box
+            key={marca}
+            sx={{
+              position: 'absolute',
+              insetInline: 0,
+              bottom: `${marca}%`,
+              display: { xs: 'none', sm: 'flex' },
+              alignItems: 'center',
+            }}
+          >
+            <Typography sx={{ width: 48, flexShrink: 0, textAlign: 'right', fontSize: 10, fontWeight: 500, color: '#94a3b8' }}>
+              {monedaCompacta((maximo * marca) / 100)}
+            </Typography>
+            <Box sx={{ ml: 1, height: '1px', flex: 1, bgcolor: '#f1f5f9' }} />
+          </Box>
+        ))}
+
+        {/* Área de la gráfica */}
+        <Box sx={{ position: 'absolute', top: 0, bottom: 0, left: { xs: 0, sm: 56 }, right: 0 }}>
+          <Box
+            component="svg"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          >
+            <polygon points={area} fill={color} opacity={0.08} />
+            <polyline
+              points={trazo}
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </Box>
+
+          {puntos.map((punto) => (
+            <Tooltip key={punto.etiqueta} arrow title={`${punto.etiqueta} · ${moneda(punto.valor)}`}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: `${punto.x}%`,
+                  top: `${100 - punto.y}%`,
+                  width: 9,
+                  height: 9,
+                  transform: 'translate(-50%, -50%)',
+                  borderRadius: '50%',
+                  bgcolor: color,
+                  border: '2px solid #ffffff',
+                  boxShadow: `0 0 0 1px ${color}`,
+                  cursor: 'default',
+                }}
+              />
+            </Tooltip>
+          ))}
+
+          {typeof referencia === 'number' && referencia > 0 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                insetInline: 0,
+                bottom: `${Math.min(100, (referencia / maximo) * 100)}%`,
+                borderTop: '1.5px dashed #94a3b8',
+                pointerEvents: 'none',
+              }}
+            >
+              <Typography sx={{ position: 'absolute', right: 0, top: -18, fontSize: 10, fontWeight: 700, color: '#64748b' }}>
+                {etiquetaReferencia} {monedaCompacta(referencia)}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      <Box sx={{ position: 'relative', mt: 0.75, height: 16 }}>
+        <Box sx={{ position: 'absolute', top: 0, bottom: 0, left: { xs: 0, sm: 56 }, right: 0 }}>
+          {puntos.map((punto, i) =>
+            indicesVisibles.has(i) ? (
+              <Typography
+                key={punto.etiqueta}
+                sx={{
+                  position: 'absolute',
+                  left: `${punto.x}%`,
+                  transform: i === 0 ? 'translateX(0)' : i === ultimo ? 'translateX(-100%)' : 'translateX(-50%)',
+                  fontSize: { xs: 10, sm: 11 },
+                  fontWeight: 500,
+                  color: '#64748b',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {punto.etiqueta}
+              </Typography>
+            ) : null,
+          )}
+        </Box>
       </Box>
     </Box>
   );
