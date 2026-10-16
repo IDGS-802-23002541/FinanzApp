@@ -6,31 +6,35 @@ Pantallas y flujo de la app Android de FinanzApp, alineadas con la
 ## Stack y reglas
 
 - **Android Studio** con **Kotlin + Jetpack Compose**.
-- Arquitectura **MVVM**: `ui/` (Compose) → `viewmodel/` → `data/` (repositorios + API).
+- Arquitectura **MVVM** por features: `ui/` (Compose + ViewModel) → `data/` (API + repositorio).
 - Consumo de la misma API REST del [backend](./backend.md); sesión por **JWT**.
 - Navegación con Navigation Compose.
-- Ubicación: `movil_FinanzaApp/` (hoy solo el esqueleto base generado por Android Studio).
+- Ubicación: `movil_FinanzaApp/`, paquete base `com.finanzap` (esqueleto por features ya creado).
 
 ## Estructura propuesta
 
 ```
-movil_FinanzaApp/app/src/main/java/.../
-├── data/
-│   ├── api/            # Retrofit/Ktor + JWT
-│   ├── model/          # DTOs y entidades (espejo de modelo-datos)
-│   └── repository/
-├── ui/
-│   ├── auth/           # Login, Registro, Restablecer contraseña
-│   ├── carteras/       # Lista, Detalle, Formulario
-│   ├── transacciones/  # Lista, Formulario
-│   ├── contribuyentes/ # Miembros, Invitación QR
-│   ├── periodos/       # Periodos Hogar
-│   ├── reportes/       # Gráficas y filtros
-│   ├── pagos/          # Pagos recurrentes
-│   ├── ajustes/        # Perfil, tema, notificaciones
-│   ├── soporte/        # Tickets del cliente
-│   └── theme/          # Color.kt, Theme.kt, Type.kt (ya existen)
-└── viewmodel/
+movil_FinanzaApp/app/src/main/java/com/finanzap/
+├── FinanzapApp.kt          # Application (Hilt)
+├── MainActivity.kt         # única actividad; aloja la navegación
+├── core/
+│   ├── network/            # cliente HTTP, AuthInterceptor (JWT), manejo de errores
+│   ├── storage/            # TokenStorage (token cifrado)
+│   ├── di/                 # módulos de Hilt
+│   ├── navigation/         # rutas y grafo de navegación
+│   ├── ui/
+│   │   ├── components/     # componentes compartidos
+│   │   └── theme/          # Color.kt, Theme.kt, Type.kt
+│   └── util/               # validadores, formateo de montos y fechas, constantes
+└── features/               # MVVM por feature: data/ (api, repository, dto), model/, ui/
+    ├── auth/               # login, logout, recuperar y cambiar contraseña
+    ├── cuenta/             # ver y eliminar cuenta
+    ├── carteras/           # dashboard y detalle de cartera
+    ├── transacciones/
+    ├── reportes/
+    ├── pagosrecurrentes/   # sin guiones: los paquetes de Kotlin no los admiten
+    ├── ajustes/
+    └── soporte/
 ```
 
 ## Pantallas por módulo

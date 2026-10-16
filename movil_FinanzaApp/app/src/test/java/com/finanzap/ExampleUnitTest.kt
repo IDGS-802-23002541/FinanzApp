@@ -1,4 +1,4 @@
-package com.example.movil_finanzaapp
+package com.finanzap
 
 import org.junit.Test
 
