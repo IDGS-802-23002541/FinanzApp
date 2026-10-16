@@ -1,0 +1,14 @@
+/* Variables del tema claro y oscuro. */
+:root {
+  --color-texto: #1f1f2e;
+  --color-fondo: #ffffff;
+  --color-primario: #6d28d9;
+  --color-borde: #e5e4e7;
+}
+
+:root[data-tema='oscuro'] {
+  --color-texto: #f3f4f6;
+  --color-fondo: #16171d;
+  --color-primario: #c084fc;
+  --color-borde: #2e303a;
+}

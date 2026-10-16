@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# FinanzApp — Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Front web de FinanzApp: **React + Vite** (JavaScript). Enrutado con
+**react-router-dom** y **MUI** como única librería de UI (pendiente de agregar).
 
-Currently, two official plugins are available:
+## Estructura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+src/
+├── main.jsx
+├── app/            # App.jsx y router.jsx (todas las rutas en un solo lugar)
+├── routes/         # ProtectedRoute y RoleRoute
+├── layouts/        # PublicLayout, ClienteLayout, AdminLayout
+├── features/       # un módulo por carpeta (pages, components, hooks, api.js)
+├── components/ui/  # componentes compartidos
+├── hooks/          # hooks compartidos
+├── context/        # AuthContext y ThemeContext
+├── services/       # apiClient.js (cliente HTTP con JWT)
+├── utils/          # formato, validadores y constantes
+└── styles/         # variables CSS del tema claro y oscuro
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Comandos
+
+- `npm install`
+- `npm run dev`
+- `npm run build`
+- `npm run lint`
