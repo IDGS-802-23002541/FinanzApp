@@ -12,4 +12,11 @@
   - Móvil: Android Studio con **Kotlin + Jetpack Compose**.
 - **Documentos clave:**
   - `docs/mcp-taiga.md` — guía de conexión del MCP de Taiga; el backlog y las historias viven en el tablero.
+  - `docs/logica-de-negocio.md` — reglas de negocio de los 12 módulos (documento maestro).
+  - `docs/modelo-datos.md` — entidades, campos y relaciones.
+  - `docs/rbac-permisos.md` — matriz de permisos por rol.
+  - `docs/plan-alineacion.md` — delta del prototipo hacia la especificación.
+  - `docs/backend.md` — API REST Flask (por dominio).
+  - `docs/web.md` — front React + MUI.
+  - `docs/movil.md` — app Android Compose (MVVM).
 - **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI); el prototipo Angular anterior fue retirado.
