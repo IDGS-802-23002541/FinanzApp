@@ -53,7 +53,28 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 - Nada de archivos pesados ni binarios en el repo (los archivos van a Cloudinary).
 - Una tarea se da por terminada cuando compila, no hay errores de consola y cumple sus criterios de aceptación.
 
-## 5. Taiga (tablero Kanban) vía MCP
+## 5. Reglas de codificación (evitar la sobreingeniería)
+
+Principio: escribe código para el **caso real**, estructurado y fácil de entender. Menos es más.
+
+- **Sin casos "por si acaso"**: no agregues parámetros, banderas, ramas ni funciones que nadie usa. Nada de compatibilidad hacia atrás ficticia ni de "modos alternativos" que no se pidieron.
+- **`try/catch` solo cuando algo puede fallar de verdad** (red, disco, JSON externo, servicios de terceros). Prohibido el `try/catch` alrededor de código que no lanza, los `catch` vacíos y los `catch` que se tragan el error en silencio.
+- **Validaciones proporcionales y realistas**: valida en el borde (formulario o API) una sola vez. No re-valides lo mismo en cada capa ni valides casos imposibles (p. ej. revisar `null` en algo que ya garantizaste).
+- **No abstracciones prematuras**: nada de interfaces, fábricas, capas o servicios genéricos para un único caso de uso. Generaliza solo cuando el patrón se repita (regla de tres).
+- **No dupliques lógica**: reutiliza las funciones y utilidades ya existentes antes de crear nuevas.
+- **Simplicidad**: prefiere el lenguaje y las librerías estándar y lo que ya está en el repo. No añadas dependencias para resolver algo trivial.
+- **Estructura clara**: funciones cortas con una sola responsabilidad y nombres en español que digan qué hacen. Usa retornos tempranos para no anidar y separa la lógica de negocio de la UI y la persistencia.
+- **Comentarios mínimos**: comenta el *porqué* cuando no sea obvio, nunca el *qué*. Sin bloques de código comentado.
+- **Nada de "genéricos mágicos"**: evita funciones que reciben muchas opciones solo para cubrir escenarios que hoy no existen.
+- **Prueba de claridad**: otra persona del equipo debe entender el archivo sin explicación. Si hace falta demasiada indirección para algo simple, simplifícalo.
+
+Ejemplos:
+
+- ❌ `try { const total = 2 + 2; } catch (e) { /* nada */ }` → ✅ `const total = 2 + 2;`
+- ❌ `function calcular(datos, opciones = {}, modo = 'default', ...extra)` para un único uso → ✅ `function calcular(datos)`
+- ❌ validar el mismo correo en el store, el servicio y el componente → ✅ validarlo una sola vez en el borde.
+
+## 6. Taiga (tablero Kanban) vía MCP
 
 - El MCP `taiga` está disponible: úsalo para **consultar y actualizar** las historias del proyecto en vez de duplicarlas.
 - Reparto por carriles y avance en el tablero **Taiga** (consúltalo con el MCP); cada quien trabaja las historias de su carril.
