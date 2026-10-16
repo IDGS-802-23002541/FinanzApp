@@ -48,11 +48,12 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 
 | Carpeta | Contenido | Stack |
 | --- | --- | --- |
-| `web_FinanzaApp/` | Web (landing + panel) | React + Vite · UI **únicamente MUI** · frameworks ligeros |
+| `web_FinanzaApp/` | Web (landing + panel) | React + Vite · **JavaScript (no TypeScript)** · UI **únicamente MUI** · frameworks ligeros |
 | `Backend_FinanzaApp/` | API REST | Python 3.13 + Flask (**Blueprints**) · SQL Server · Cloudinary |
 | `movil_FinanzaApp/` | App Android | Kotlin + Jetpack Compose (MVVM) |
 | raíz | Documentación del proyecto | Markdown |
 
+- La web se escribe en **JavaScript** (`.jsx`/`.js`), **no TypeScript**.
 - Prohibido en la web: Tailwind, Bootstrap u otra librería de UI distinta de MUI.
 - No agregar dependencias nuevas sin acordarlo con el equipo.
 

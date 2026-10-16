@@ -74,6 +74,7 @@ Proceso para abrir, trabajar y cerrar tickets en **Taiga**, más las reglas por 
 
 ### Web (React)
 
+- **JavaScript** (`.jsx`/`.js`), no TypeScript.
 - Reutilizar componentes, usar hooks (`useState`, `useEffect`) y pasar datos por props.
 - Si algo se repite dos veces, se vuelve componente.
 - Las llamadas a la API se concentran fuera de los componentes: hoy en `web_FinanzaApp/src/stores/` (zustand); se puede crear `src/services/` cuando haga falta. Nunca dentro de los componentes.
