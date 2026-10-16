@@ -20,4 +20,4 @@
   - `docs/backend.md` — API REST Flask (por dominio).
   - `docs/web.md` — front React + MUI.
   - `docs/movil.md` — app Android Compose (MVVM).
-- **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI); el prototipo Angular anterior fue retirado.
+- **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI, **JavaScript**), construido **desde cero**; los prototipos anteriores (Angular y `plantilla_web/`) fueron retirados.

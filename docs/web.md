@@ -1,11 +1,11 @@
 # Frontend Web — React + Vite + MUI
 
 Mapeo de módulos, pantallas y estado para el front web. Ubicación definitiva:
-**`web_FinanzaApp/`** (React + Vite, **UI únicamente MUI**). Basado en el
-prototipo `plantilla_web/`, que debe migrarse.
+**`web_FinanzaApp/`** (React + Vite, **JavaScript**, **UI únicamente MUI**), que se
+construye **desde cero**.
 
-> El prototipo `plantilla_web/` está escrito en TypeScript; al migrarlo a
-> `web_FinanzaApp/` se convierte a **JavaScript** (`.jsx`/`.js`), que es el estándar del proyecto.
+> El antiguo prototipo `plantilla_web/` se retiró: sirvió como referencia de diseño,
+> pero no se migra ni es la base del front.
 
 ## Stack y reglas
 

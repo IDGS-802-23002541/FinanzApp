@@ -1,8 +1,7 @@
 # Modelo de datos — FinanzApp
 
-Entidades, campos y relaciones que sustentan la [lógica de negocio](./logica-de-negocio.md).
-Refleja los **cambios** respecto al prototipo actual (`plantilla_web/src/types/models.ts`)
-y las **entidades nuevas** de los módulos que aún no existen.
+Entidades, campos y relaciones que sustentan la [lógica de negocio](./logica-de-negocio.md),
+incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Convenciones: `PK` = clave primaria, `FK` = clave foránea, `?` = campo opcional.
 > Los borrados son **lógicos** (`estado` + `fechaBaja`), salvo que se indique lo contrario.
