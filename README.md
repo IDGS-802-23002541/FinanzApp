@@ -46,6 +46,21 @@ FinanzApp/
 - Flask
 - API REST
 
+## 🧩 Extensiones recomendadas (VS Code)
+
+Al abrir el repositorio, VS Code sugiere instalar las extensiones listadas en
+`.vscode/extensions.json`. Para instalarlas todas: paleta de comandos
+(`Ctrl+Shift+P`) → **Extensions: Install Workspace Recommended Extensions**, o el
+botón **Install All** de la notificación.
+
+- **OpenCode** (`sst-dev.opencode`) — asistente de IA integrado en el editor.
+- **Thunder Client** (`rangav.vscode-thunder-client`) — cliente para probar la API REST.
+- **Markdown Preview Enhanced** (`shd101wyy.markdown-preview-enhanced`) y
+  **Markdown All in One** (`yzhang.markdown-all-in-one`) — visualización y edición de la documentación `.md`.
+- **Python** (`ms-python.python` y familia): Pylance, Debugger, Python Environments,
+  Black, isort, Flake8, Pylint, MyPy y Ruff — entorno de desarrollo del backend Flask.
+- **Jupyter** (`ms-toolsai.jupyter` y complementos) — ejecución de celdas para pruebas y análisis.
+
 ## Objetivo
 
 FinanzApp tiene como objetivo proporcionar una herramienta para administrar y consultar información relacionada con las finanzas personales desde diferentes plataformas.
