@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "sst-dev.opencode",
+    "rangav.vscode-thunder-client",
+    "shd101wyy.markdown-preview-enhanced",
+    "yzhang.markdown-all-in-one",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.vscode-python-envs",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.flake8",
+    "ms-python.pylint",
+    "ms-python.mypy-type-checker",
+    "charliermarsh.ruff",
+    "ms-toolsai.jupyter",
+    "ms-toolsai.jupyter-keymap",
+    "ms-toolsai.jupyter-renderers"
+  ]
+}
