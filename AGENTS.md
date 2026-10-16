@@ -77,6 +77,7 @@ Ejemplos:
 ## 6. Taiga (tablero Kanban) vía MCP
 
 - El MCP `taiga` está disponible: úsalo para **consultar y actualizar** las historias del proyecto en vez de duplicarlas.
+- **Fuente de actividades:** el backlog que el agente trabaja son las *historias de usuario* del proyecto **FinanzApp** (id `1808877`, slug `idgs-802-23002441-finanzapp`) en Taiga. Antes de empezar una tarea, revísalo ahí con el MCP.
 - Reparto por carriles y avance en el tablero **Taiga** (consúltalo con el MCP); cada quien trabaja las historias de su carril.
 - No borres historias, sprints ni proyectos sin confirmación del equipo.
 - Guía para conectar el MCP en otra máquina: `docs/mcp-taiga.md`.
