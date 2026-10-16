@@ -6,14 +6,14 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
 
 | Rama | Persona | Iniciales |
 | --- | --- | --- |
-| `main` | Integración — **nadie trabaja ni commitea aquí** | — |
+| `main` | Integración — recibe merges por PR; **commits directos solo con autorización del equipo** | — |
 | `diego` | Diego Yair Borja Romero | `DB` |
 | `vane` | Vanessa Yassmin Rea Muñoz | `VR` |
 | `aidee` | Aideé Vanessa Casillas Tapia | `AC` |
 | `damian` | Antonio Damián Rodríguez Alarcón | `DR` |
 
 - Identifica al desarrollador actual con `git config user.name`. Si no coincide con la tabla, **pregunta** antes de continuar.
-- Trabaja **solo en tu rama**. `main` únicamente recibe merges (PR) desde las ramas personales.
+- Trabaja en tu rama. Integra a `main` preferentemente vía **PR** desde tu rama personal; se permiten **commits directos a `main`** para cambios pequeños y de bajo riesgo (por ejemplo, documentación), avisando al equipo.
 
 ## 1. Antes de empezar cualquier tarea (obligatorio)
 
@@ -32,7 +32,7 @@ Estas reglas aplican a **todo el repositorio** y las debe cumplir cualquier agen
   - Ejemplos: `DB fix: validación de monto negativo al registrar gasto`, `VR feat: lista de carteras con filtro`.
 - Antes de commitear revisa `git status` y `git diff`: nunca incluir contraseñas, tokens ni archivos `.env`/`taiga.env`.
 - Sube tu rama con `git push -u origin <tu-rama>` cuando las credenciales estén configuradas.
-- Al cerrar una funcionalidad completa, abre PR de tu rama hacia `main` y pide revisión a otro integrante.
+- Al cerrar una funcionalidad completa, **recomendado** abrir PR de tu rama hacia `main` y pedir revisión a otro integrante.
 
 ## 3. Estructura y stacks
 
