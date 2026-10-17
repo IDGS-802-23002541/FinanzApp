@@ -37,6 +37,10 @@ htmlcov/
 .env.*
 !.env.example
 
+# Credenciales locales de la base de datos (nunca al repo)
+Backend_FinanzaApp/SQL/*.local.env
+*.local.env
+
 # =========================
 # Android / Kotlin / Gradle
 # =========================
