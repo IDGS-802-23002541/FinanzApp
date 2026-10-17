@@ -3,13 +3,13 @@
 Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `1808877`, slug `idgs-802-23002441-finanzapp`).
 
 - **Fecha de carga:** 17/10/2026.
-- **Contenido:** 12 épicas (una por módulo), 43 historias de usuario y 122 tareas.
+- **Contenido:** 43 historias de usuario y 122 tareas.
 - **Estado inicial:** todas las historias y tareas en estado **New**.
 - **Motivo del respaldo:** el MCP de Taiga dejó de responder tras la carga; este archivo permite revisar el backlog sin depender de la conexión y sirve de respaldo.
 
 ## Notas importantes
 
-- **Vínculo Historia → Épica:** el MCP de Taiga no permitió vincular automáticamente las historias a su épica (el tool `related_userstories_add` envía mal el campo `epic` y `update` lo ignora). Las historias se agrupan además con la etiqueta **`modulo-N`** y su módulo aparece en la descripción. El vínculo visual se puede hacer arrastrando cada historia dentro de su épica en la interfaz de Taiga.
+- **Sin épicas:** no se usan épicas. Las historias se agrupan por módulo con la etiqueta **`modulo-N`** y su módulo aparece también al inicio de la descripción.
 - **Prioridad:** Taiga no la guarda en un campo nativo; se registró en la descripción y con las etiquetas `prioridad-alta`, `prioridad-media`, `prioridad-baja`.
 - **Eliminación:** toda eliminación en el producto es **lógica** (cambio de estatus).
 
