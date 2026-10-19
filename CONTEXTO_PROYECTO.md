@@ -19,5 +19,6 @@
   - `docs/plan-alineacion.md` — delta del prototipo hacia la especificación.
   - `docs/backend.md` — API REST Flask (por dominio).
   - `docs/web.md` — front React + MUI.
+  - `docs/paleta-colores.md` — paleta principal, tokens semánticos y reglas de uso de color.
   - `docs/movil.md` — app Android Compose (MVVM).
 - **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI, **JavaScript**), construido **desde cero**; los prototipos anteriores (Angular y `plantilla_web/`) fueron retirados.

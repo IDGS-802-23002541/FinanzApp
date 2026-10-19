@@ -66,7 +66,11 @@ web_FinanzaApp/src/
 - En `Ajustes.jsx`, el campo correo se muestra **deshabilitado**.
 - Las carteras **Finalizadas** se muestran en modo **solo lectura**.
 
-## Tema
+## Tema y paleta
 
-- Switch **Claro/Oscuro**; tokens de color desde `theme.js` (MUI `createTheme`).
+- Switch **Claro/Oscuro**; los tokens viven en `web_FinanzaApp/src/styles/tema.css`.
+- **Paleta principal:** Petróleo `#173B45`, Terracota `#C65D45`, Coral `#E7A28E`,
+  Fondo `#F8F3EF` y Blanco `#FFFFFF`.
+- **Reglas de uso, contraste y equivalencia con Figma:** [paleta-colores.md](./paleta-colores.md).
+- No escribir códigos hex en componentes: usar `var(--color-*)`.
 - Mantener el idioma español y montos en MXN (`es-MX`).

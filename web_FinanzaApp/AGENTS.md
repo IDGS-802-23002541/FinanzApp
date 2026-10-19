@@ -1,6 +1,7 @@
 # Reglas de `web_FinanzaApp` (web)
 
 - Stack: **React + Vite** en **JavaScript** (no TypeScript); UI **solo MUI**. No agregar Tailwind, Bootstrap ni otras librerías de UI.
+- **Colores:** usa los tokens `var(--color-*)` de `src/styles/tema.css`; la paleta principal y sus reglas están en `../docs/paleta-colores.md`. No escribas códigos hex sueltos en componentes.
 - Frameworks ligeros permitidos: `react-router-dom`, `zustand`, `react-hook-form`. Consulta antes de añadir cualquier otra dependencia.
 - Organiza por módulos en `src/pages/` y componentes reutilizables en `src/components/`; **todo consumo de API pasa por `src/services/`** (nada de `fetch` suelto en componentes).
 - Estados de UI obligatorios en cada vista que consume datos: cargando, error y vacío.
