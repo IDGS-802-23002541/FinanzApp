@@ -1,81 +1,79 @@
-# Plan de alineación — del prototipo a la especificación
+# Plan de implementación — de la especificación al código
 
-Delta entre el **código actual** (prototipo con datos mock en `plantilla_web/`)
-y la **lógica de negocio documentada**, con el estado de cada module y el
-impacto en archivos. Sirve de checklist de implementación.
+Checklist para construir el front **desde cero** en **`web_FinanzaApp/`** (JavaScript),
+alineado con la **lógica de negocio documentada**. El antiguo prototipo `plantilla_web/`
+se retiró y no es la base: solo sirvió de referencia de diseño.
 
-> El front definitivo vive en **`web_FinanzaApp/`**. El módulo de reportes que
-> hoy solo existe en `plantilla_web/` debe reubicarse ahí.
+## 0. Punto de partida
 
-## 0. Riesgo previo: estructura de ramas
-
-| Situación | Impacto |
+| Situación | Acción |
 | --- | --- |
-| `main` tiene el front en `web_FinanzaApp/`; `diego` lo tiene en `plantilla_web/` | Divergencia estructural; alinear a `web_FinanzaApp/`. |
-| `plantilla_web/` tiene el módulo `reportes/` y `utils/reportes.ts`, `utils/exportar.ts` que `main` no tiene | Migrar esos archivos a `web_FinanzaApp/` antes de ramificar más. |
-| `Backend_FinanzaApp/` vacío (solo README + requirements) | No hay API real; toda la lógica es mock en el front y debe migrarse al backend. |
+| Front: `web_FinanzaApp/` (solo el esqueleto base) | Construir cada módulo desde cero en JavaScript. |
+| `Backend_FinanzaApp/` vacío (solo README + requirements) | No hay API real: implementar los blueprints y consumirlos desde el front. |
 
-## 1. Tabla de estado por módulo
+## 1. Alcance por módulo
 
-Estado: **Existe** (cumple) · **Parcial** (existe con desviaciones) · **Falta**.
+El front se construye **completo desde cero**: todos los módulos parten de «Por hacer».
 
-| Módulo | Estado | Qué falta / cambiar |
-| --- | --- | --- |
-| 1. Landing Page | Parcial | Formulario de comentarios funcional y persistente (hoy no existe la lógica). |
-| 2. Autenticación y cuenta | Parcial | JWT real; restablecer contraseña en 3 pasos; eliminar cuenta (lógico); bloquear edición de correo; tema Claro/Oscuro. |
-| 3. Dashboard / Carteras | Parcial | Estado **Finalizada** separado de Inactiva; finalizar solo Viaje/Evento; **periodos Hogar**; filtro por Finalizadas. |
-| 4. Detalle de cartera | Parcial | Delegación de rol; salir de cartera; baja/reactivación de miembros. |
-| 5. Transacciones | Parcial | Comprobante (Cloudinary); editar/eliminar solo Admin o dueño; paginación; filtro por periodo. |
-| 5b. Categorías | Parcial | Catálogo por tipo de cartera; personalizadas por cartera; tipo Gasto/Ingreso/Ambos; habilitar/ordenar. |
-| 6. Reportes | Parcial | Filtros por tipo y montos; **exportación PDF formal** (hoy CSV e impresión). |
-| 7. Pagos recurrentes | Falta | Módulo completo. |
-| 8. Ajustes y notificaciones | Parcial | Tema Claro/Oscuro; motor de notificaciones real. |
-| 9. Soporte (cliente) | Falta | Tickets, estados, respuestas, cancelar. |
-| 10. Inicio Admin | Falta | Métricas de clientes, buzón de comentarios, conteos. |
-| 11. Gestión de trabajadores | Falta | CRUD de trabajadores y sus tickets. |
-| 12. Soporte Admin / Dev | Falta | Tablero, tomar/asignar, catalogar, delegar, responder, cerrar. |
+| Módulo | Qué construir |
+| --- | --- |
+| 1. Landing Page | Formulario de comentarios funcional y persistente. |
+| 2. Autenticación y cuenta | JWT real; restablecer contraseña en 3 pasos; eliminar cuenta (lógico); correo no editable; tema Claro/Oscuro. |
+| 3. Dashboard / Carteras | Estado **Finalizada** separado de Inactiva; finalizar solo Viaje/Evento; **periodos Hogar**; filtro por Finalizadas. |
+| 4. Detalle de cartera | Delegación de rol; salir de cartera; baja/reactivación de miembros. |
+| 5. Transacciones | Comprobante (Cloudinary); editar/eliminar solo Admin o dueño; paginación; filtro por periodo. |
+| 5b. Categorías | Catálogo por tipo de cartera; personalizadas por cartera; tipo Gasto/Ingreso/Ambos; habilitar/ordenar. |
+| 6. Reportes | Filtros por tipo y montos; **exportación PDF formal** (además de CSV e impresión). |
+| 7. Pagos recurrentes | Módulo completo. |
+| 8. Ajustes y notificaciones | Tema Claro/Oscuro; motor de notificaciones real. |
+| 9. Soporte (cliente) | Tickets, estados, respuestas, cancelar. |
+| 10. Inicio Admin | Métricas de clientes, buzón de comentarios, conteos. |
+| 11. Gestión de trabajadores | CRUD de trabajadores y sus tickets. |
+| 12. Soporte Admin / Dev | Tablero, tomar/asignar, catalogar, delegar, responder, cerrar. |
 
-## 2. Cambios de lógica por archivo (prototipo actual)
+## 2. Reglas por archivo del front nuevo
 
-### `src/types/models.ts`
-- Dividir `RolUsuario` en `rolSistema` (global) y `rolCartera` (membresía).
-- `EstadoCartera`: agregar `finalizada`.
-- `MiembroCartera`: añadir `estado`/`fechaBaja`; renombrar `rol`.
-- `Transaccion`: añadir `idPeriodo` y `comprobanteUrl`; quitar `nombreGasto` duplicado.
-- `CategoriaGasto`: añadir `idCartera?`, `idCategoriaCartera?`, `tipo`, `habilitada`, `orden`.
-- `Usuario`: añadir `estado`, `fechaBaja`; quitar `rol`.
-- Nuevos tipos: `Periodo`, `PagoRecurrente`, `TicketSoporte`, `RespuestaTicket`, `Trabajador`, `ComentarioLanding`, `Notificacion`.
+> Los archivos viven en `web_FinanzaApp/src/` en **JavaScript** (`.jsx`/`.js`).
 
-### `src/stores/carteras.ts`
-- `eliminar` y `eliminarMiembro`: pasar de borrado físico a **baja lógica**.
-- `archivar`: no marcar como finalizada a todas; separar **inactivar** de **finalizar** (solo Viaje/Evento).
-- `crearMiembro`: validar administrador único; añadir **delegar rol** y **salir de cartera**.
-- `generarCodigo`: clave de **8 caracteres** (hoy `FZ-` + 6).
+### `src/types/models.js`
+- `RolUsuario` se divide en `rolSistema` (global) y `rolCartera` (membresía).
+- `EstadoCartera` incluye `finalizada`.
+- `MiembroCartera` lleva `estado`/`fechaBaja` y el campo `rol`.
+- `Transaccion` lleva `idPeriodo` y `comprobanteUrl` (sin `nombreGasto` duplicado).
+- `CategoriaGasto` lleva `idCartera?`, `idCategoriaCartera?`, `tipo`, `habilitada`, `orden`.
+- `Usuario` lleva `estado`, `fechaBaja`.
+- Tipos nuevos: `Periodo`, `PagoRecurrente`, `TicketSoporte`, `RespuestaTicket`, `Trabajador`, `ComentarioLanding`, `Notificacion`.
 
-### `src/stores/auth.ts`
-- Quitar `rol: 'admin'` automático en `registrar`.
-- Sustituir la sesión en `localStorage` por **JWT**.
-- Añadir restablecer contraseña y eliminar cuenta (lógico).
+### `src/stores/carteras.js`
+- `eliminar` y `eliminarMiembro`: **baja lógica** (nunca borrado físico).
+- Separar **inactivar** de **finalizar** (finalizar solo Viaje/Evento).
+- `crearMiembro`: validar administrador único; permitir **delegar rol** y **salir de cartera**.
+- `generarCodigo`: clave de **8 caracteres**.
 
-### `src/stores/usuarios.ts`
-- Quitar contraseña fija `demo123`; usar hash provisto por el backend.
-- Añadir `estado` de cuenta.
+### `src/stores/auth.js`
+- `registrar`: sin `rol: 'admin'` automático.
+- Sesión por **JWT** (no `localStorage`).
+- Restablecer contraseña y eliminar cuenta (lógico).
 
-### `src/stores/transacciones.ts`
-- Añadir reglas de autorización (Admin o dueño) y bloqueo por estado de cartera.
+### `src/stores/usuarios.js`
+- Sin contraseña fija; hash provisto por el backend.
+- Campo `estado` de cuenta.
+
+### `src/stores/transacciones.js`
+- Reglas de autorización (Admin o dueño) y bloqueo por estado de cartera.
 - Soporte de `idPeriodo` y `comprobanteUrl`.
 
-### `src/utils/finanzas.ts` y `src/utils/reportes.ts`
+### `src/utils/finanzas.js` y `src/utils/reportes.js`
 - Balance y liquidación por **periodo** en carteras Hogar.
 - Filtros por tipo de cartera y montos.
 
-### `src/utils/exportar.ts`
-- Añadir **exportación PDF** formal (además del CSV e impresión actuales).
+### `src/utils/exportar.js`
+- **Exportación PDF** formal (además de CSV e impresión).
 
 ### `src/pages/*`
-- `Ajustes.tsx`: bloquear edición de correo; añadir switch de tema.
-- `Detalle.tsx`: `puedeEditar` = activa **y** (admin o dueño), quitar permiso del autor contribuyente.
-- `pages/reportes/*`, `Landing.tsx`, `Registro.tsx`, `Login.tsx`: ajustes según módulos 1, 2 y 6.
+- `Ajustes.jsx`: correo no editable; switch de tema.
+- `Detalle.jsx`: `puedeEditar` = activa **y** (admin o dueño).
+- `pages/reportes/*`, `Landing.jsx`, `Registro.jsx`, `Login.jsx`: según módulos 1, 2 y 6.
 
 ## 3. Módulos nuevos a crear (front)
 
@@ -90,8 +88,8 @@ Estado: **Existe** (cumple) · **Parcial** (existe con desviaciones) · **Falta*
 
 ## 4. Orden de implementación sugerido
 
-1. **Alineación estructural**: consolidar el front en `web_FinanzaApp/` y migrar `reportes/`.
-2. **Modelo y roles**: `models.ts`, `rolSistema`/`rolCartera`, RBAC base.
+1. **Base del front**: estructura en `web_FinanzaApp/` y utilidades compartidas.
+2. **Modelo y roles**: `models.js`, `rolSistema`/`rolCartera`, RBAC base.
 3. **Carteras**: estados, baja lógica, periodos Hogar, invitaciones de 8 caracteres.
 4. **Transacciones y categorías**: autorización, comprobantes, paginación, periodos.
 5. **Cuenta y auth**: JWT, restablecer contraseña, eliminación lógica, tema.

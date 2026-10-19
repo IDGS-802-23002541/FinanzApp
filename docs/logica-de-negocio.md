@@ -10,8 +10,8 @@ correcciones acordadas respecto al prototipo actual.
 - **Delta contra el código actual:** [`plan-alineacion.md`](./plan-alineacion.md)
 - **Backend:** [`backend.md`](./backend.md) · **Web:** [`web.md`](./web.md) · **Móvil:** [`movil.md`](./movil.md)
 
-> Ubicación del front definitivo: `web_FinanzaApp/` (React + Vite + MUI).
-> El prototipo con datos mock vive hoy en `plantilla_web/` y debe migrarse.
+> Ubicación del front definitivo: `web_FinanzaApp/` (React + Vite + MUI, **JavaScript**),
+> construido **desde cero**. El antiguo prototipo `plantilla_web/` quedó retirado.
 
 ---
 

@@ -4,7 +4,7 @@
 - **Materias:** Aplicaciones Web Progresivas · Desarrollo Móvil Integral.
 - **Producto:** FinanzApp, plataforma web y móvil de finanzas personales y colaborativas por «carteras» (hogar, viajes, eventos): registro de gastos compartidos, invitaciones por QR/clave, estadísticas y cierre con liquidación sugerida.
 - **Equipo:** Diego Yair Borja Romero · Aideé Vanessa Casillas Tapia · Vanessa Yassmin Rea Muñoz · Antonio Damián Rodríguez Alarcón.
-- **Repositorio:** https://github.com/IDGS-802-23002541/FinanzApp.git — ramas: `main`, `diego`, `vane`, `aidee`, `damian`.
+- **Repositorio:** https://github.com/IDGS-802-23002541/FinanzApp.git — ramas: `main` (estable, versiones etiquetadas), `develop` (integración diaria) y ramas de trabajo personales (`diego`, `vane`, `aidee`, `damian`) o de función (`feat/…`, `fix/…`).
 - **Tablero Kanban:** Taiga (conectado por MCP; guía en `docs/mcp-taiga.md`).
 - **Stack oficial (desarrollo nuevo):**
   - Web: React + Vite, **única librería de UI: MUI**.
@@ -12,6 +12,7 @@
   - Móvil: Android Studio con **Kotlin + Jetpack Compose**.
 - **Documentos clave:**
   - `docs/mcp-taiga.md` — guía de conexión del MCP de Taiga; el backlog y las historias viven en el tablero.
+  - `docs/proceso-trabajo.md` — guía de trabajo: cómo abrir, trabajar y cerrar un ticket, reglas por área y versionamiento.
   - `docs/logica-de-negocio.md` — reglas de negocio de los 12 módulos (documento maestro).
   - `docs/modelo-datos.md` — entidades, campos y relaciones.
   - `docs/rbac-permisos.md` — matriz de permisos por rol.
@@ -19,4 +20,4 @@
   - `docs/backend.md` — API REST Flask (por dominio).
   - `docs/web.md` — front React + MUI.
   - `docs/movil.md` — app Android Compose (MVVM).
-- **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI); el prototipo Angular anterior fue retirado.
+- **Frontend vigente:** `web_FinanzaApp/` (React + Vite + MUI, **JavaScript**), construido **desde cero**; los prototipos anteriores (Angular y `plantilla_web/`) fueron retirados.
