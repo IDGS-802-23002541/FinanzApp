@@ -27,8 +27,12 @@
 -- ----------------------------------------------------------
 -- 2) Catálogos base
 -- ----------------------------------------------------------
--- Tipos de cartera (personal, compartida, evento/viaje), categorías
--- por defecto, estatus y roles. Se agregan cuando se definan.
+-- Tipos de cartera (CK_CARTERA_tipo): HOGAR, VIAJE, EVENTO, OTRA.
+-- Estados de cartera (CK_CARTERA_estado): ACTIVA, ARCHIVADA, FINALIZADA.
+-- Roles de cartera (CK_MIEMBROS_CARTERA_rol): ADMIN, CONTRIBUYENTE.
+-- Estados de miembro (CK_MIEMBROS_CARTERA_estado): ACTIVO, BAJA.
+-- Roles del sistema (CK_USUARIO_rolGlobal): CLIENTE, TRABAJADOR, ADMIN.
+-- Categorías globales: se cargan con `python seed.py` (idempotente).
 
 
 -- ----------------------------------------------------------
