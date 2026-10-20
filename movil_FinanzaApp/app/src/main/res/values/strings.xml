@@ -1,3 +1,15 @@
 <resources>
-    <string name="app_name">Movil_FinanzaApp</string>
+    <string name="app_name">FinanzApp</string>
+
+    <string name="login_titulo">FinanzApp</string>
+    <string name="login_subtitulo">Inicia sesión para continuar</string>
+    <string name="login_correo">Correo electrónico</string>
+    <string name="login_contrasena">Contraseña</string>
+    <string name="login_mostrar">Mostrar</string>
+    <string name="login_ocultar">Ocultar</string>
+    <string name="login_entrar">Entrar</string>
+
+    <string name="home_titulo">Inicio</string>
+    <string name="home_sesion">Sesión iniciada</string>
+    <string name="home_cerrar_sesion">Cerrar sesión</string>
 </resources>

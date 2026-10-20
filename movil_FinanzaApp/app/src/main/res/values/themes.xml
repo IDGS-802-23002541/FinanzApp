@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Movil_FinanzaApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Movil_FinanzaApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fondo</item>
+        <item name="android:colorAccent">@color/petroleo</item>
+    </style>
 </resources>
