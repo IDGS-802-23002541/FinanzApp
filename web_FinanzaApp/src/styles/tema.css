@@ -1,14 +1,47 @@
-/* Variables del tema claro y oscuro. */
+/* Paleta principal FinanzApp. Reglas: docs/paleta-colores.md */
 :root {
-  --color-texto: #1f1f2e;
-  --color-fondo: #ffffff;
-  --color-primario: #6d28d9;
-  --color-borde: #e5e4e7;
+  /* Valores fuente de la paleta */
+  --paleta-petroleo: #173b45;
+  --paleta-terracota: #c65d45;
+  --paleta-coral: #e7a28e;
+  --paleta-fondo: #f8f3ef;
+  --paleta-blanco: #ffffff;
+
+  /* Tokens semánticos — modo claro */
+  --color-texto: var(--paleta-petroleo);
+  --color-texto-secundario: #5b7278;
+  --color-texto-terciario: #88979a;
+  --color-fondo: var(--paleta-fondo);
+  --color-superficie: var(--paleta-blanco);
+  --color-superficie-suave: #f1eae5;
+  --color-primario: var(--paleta-petroleo);
+  --color-sobre-primario: var(--paleta-blanco);
+  --color-secundario: var(--paleta-terracota);
+  --color-acento: var(--paleta-coral);
+  --color-borde: #e3d8d1;
+  --color-borde-fuerte: #d3c4bb;
+  --color-exito: var(--paleta-petroleo);
+  --color-alerta: var(--paleta-terracota);
+  --color-error: #a94832;
+  --color-info: var(--paleta-coral);
 }
 
+/* Adaptación de la misma paleta para fondo oscuro. */
 :root[data-tema='oscuro'] {
-  --color-texto: #f3f4f6;
-  --color-fondo: #16171d;
-  --color-primario: #c084fc;
-  --color-borde: #2e303a;
+  --color-texto: var(--paleta-fondo);
+  --color-texto-secundario: #c9d6d8;
+  --color-texto-terciario: #93a7ab;
+  --color-fondo: #0f2a32;
+  --color-superficie: var(--paleta-petroleo);
+  --color-superficie-suave: #1f4a55;
+  --color-primario: var(--paleta-coral);
+  --color-sobre-primario: var(--paleta-petroleo);
+  --color-secundario: var(--paleta-terracota);
+  --color-acento: var(--paleta-coral);
+  --color-borde: #2a5560;
+  --color-borde-fuerte: #3b6b76;
+  --color-exito: #8fd1b8;
+  --color-alerta: var(--paleta-coral);
+  --color-error: #e08a73;
+  --color-info: var(--paleta-coral);
 }
