@@ -1,7 +1,7 @@
 # FinanzApp — Web
 
 Front web de FinanzApp: **React + Vite** (JavaScript). Enrutado con
-**react-router-dom** y **MUI** como única librería de UI (pendiente de agregar).
+**react-router-dom** y **MUI** como única librería de UI.
 
 ## Estructura
 
