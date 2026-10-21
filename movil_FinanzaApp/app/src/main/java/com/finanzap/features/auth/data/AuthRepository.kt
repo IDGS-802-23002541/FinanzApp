@@ -16,7 +16,7 @@ class AuthRepository @Inject constructor(
     suspend fun iniciarSesion(correo: String, contrasena: String): Result<Unit> =
         try {
             val respuesta = authApi.iniciarSesion(
-                LoginRequest(correo = correo.trim(), contrasena = contrasena)
+                LoginRequest(correo = correo.trim(), contrasenia = contrasena)
             )
             val sesion = respuesta.data
             check(sesion.accessToken.isNotBlank()) { "El servidor devolvió un token vacío." }
