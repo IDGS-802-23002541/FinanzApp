@@ -1,15 +1,41 @@
 <resources>
     <string name="app_name">FinanzApp</string>
 
-    <string name="login_titulo">FinanzApp</string>
-    <string name="login_subtitulo">Inicia sesión para continuar</string>
+    <!-- Login -->
+    <string name="login_lema">Las cuentas claras también se ven bien</string>
+    <string name="login_encabezado">Inicia sesión</string>
+    <string name="login_descripcion">Accede a tus carteras, estadísticas y balances.</string>
     <string name="login_correo">Correo electrónico</string>
     <string name="login_contrasena">Contraseña</string>
     <string name="login_mostrar">Mostrar</string>
     <string name="login_ocultar">Ocultar</string>
-    <string name="login_entrar">Entrar</string>
+    <string name="login_entrar">Iniciar sesión</string>
 
-    <string name="home_titulo">Inicio</string>
-    <string name="home_sesion">Sesión iniciada</string>
-    <string name="home_cerrar_sesion">Cerrar sesión</string>
+    <!-- Carteras -->
+    <string name="carteras_titulo">Carteras</string>
+    <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
+    <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
+    <string name="carteras_cerrar_sesion">Cerrar sesión</string>
+    <string name="carteras_mis">Mis carteras</string>
+    <string name="carteras_compartidas">Compartidas</string>
+    <string name="carteras_todas">Todas</string>
+    <string name="carteras_buscar">Buscar cartera…</string>
+    <string name="carteras_nueva">Nueva cartera</string>
+    <string name="carteras_abrir">Abrir cartera</string>
+    <string name="carteras_registrar_gasto">Registrar gasto</string>
+    <string name="carteras_ver">Ver cartera</string>
+    <string name="carteras_mi_pagado">Mi pagado</string>
+    <string name="carteras_mi_cuota">Mi cuota</string>
+    <string name="carteras_mi_saldo">Mi saldo</string>
+    <string name="carteras_avance">Avance del presupuesto</string>
+    <string name="carteras_administrada">Administrada por %1$s</string>
+    <string name="carteras_vacio_titulo">Añade tu primera cartera</string>
+    <string name="carteras_vacio_mensaje">Crea una cartera para tu hogar, viaje o evento y registra tu primer movimiento.</string>
+    <string name="carteras_vacio_compartidas_titulo">Aún no participas en otras carteras</string>
+    <string name="carteras_vacio_compartidas_mensaje">Cuando te inviten con un código o QR, aparecerán aquí.</string>
+    <string name="carteras_sin_resultados_titulo">Sin resultados</string>
+    <string name="carteras_sin_resultados_mensaje">Ninguna cartera coincide con el filtro o la búsqueda.</string>
+    <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
+    <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
+    <string name="carteras_pendiente_nueva">Nueva cartera llega con la HU #45.</string>
 </resources>

@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.finanzap.features.auth.ui.login.LoginScreen
-import com.finanzap.features.carteras.ui.home.HomeScreen
+import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
 import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
@@ -29,12 +29,12 @@ fun FinanzAppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = if (haySesionInicial) Rutas.Home else Rutas.Login
+        startDestination = if (haySesionInicial) Rutas.Carteras else Rutas.Login
     ) {
         composable(Rutas.Login) {
             LoginScreen(
                 onLoginExitoso = {
-                    navController.navigate(Rutas.Home) {
+                    navController.navigate(Rutas.Carteras) {
                         popUpTo(Rutas.Login) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -42,8 +42,8 @@ fun FinanzAppNavHost(
             )
         }
 
-        composable(Rutas.Home) {
-            HomeScreen(onCerrarSesion = onCerrarSesion)
+        composable(Rutas.Carteras) {
+            CarterasScreen(onCerrarSesion = onCerrarSesion)
         }
     }
 }
