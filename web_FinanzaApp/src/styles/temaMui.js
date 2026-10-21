@@ -36,21 +36,45 @@ export function crearTemaMui() {
     },
     shape: { borderRadius: 12 },
     typography: {
-      fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif",
-      button: { textTransform: 'none', fontWeight: 600 },
+      fontFamily: "'Inter', system-ui, 'Segoe UI', Roboto, sans-serif",
+      h1: {
+        fontSize: '1.75rem',
+        fontWeight: 800,
+        lineHeight: 1.5,
+        letterSpacing: '-0.02em',
+      },
+      h2: {
+        fontSize: '1.5rem',
+        fontWeight: 800,
+        lineHeight: 1.4,
+        letterSpacing: '-0.01em',
+      },
+      body1: { fontSize: '1rem', lineHeight: 1.5 },
+      body2: { fontSize: '0.875rem', lineHeight: 1.5 },
+      caption: { fontSize: '0.75rem', lineHeight: 1.5 },
+      button: {
+        textTransform: 'none',
+        fontWeight: 600,
+        fontSize: '0.9375rem',
+      },
     },
     components: {
       MuiButton: {
         defaultProps: { disableElevation: true },
         styleOverrides: {
-          root: { borderRadius: 10, paddingBlock: 10, paddingInline: 20 },
+          root: {
+            borderRadius: 12,
+            minHeight: 50,
+            paddingInline: 20,
+          },
         },
       },
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
             backgroundColor: color('superficie'),
-            borderRadius: 10,
+            borderRadius: 12,
+            minHeight: 48,
           },
           notchedOutline: { borderColor: color('borde') },
         },
@@ -60,6 +84,12 @@ export function crearTemaMui() {
       },
       MuiLink: {
         defaultProps: { underline: 'hover' },
+        styleOverrides: {
+          root: { fontWeight: 600, color: color('primario') },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: { root: { borderRadius: 12 } },
       },
       MuiPaper: {
         styleOverrides: { root: { backgroundImage: 'none' } },
