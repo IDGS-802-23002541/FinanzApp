@@ -6,6 +6,8 @@ import ProtectedRoute from '../routes/ProtectedRoute.jsx'
 import RoleRoute from '../routes/RoleRoute.jsx'
 import Landing from '../features/landing/pages/Landing.jsx'
 import Login from '../features/auth/pages/Login.jsx'
+import Registro from '../features/auth/pages/Registro.jsx'
+import RecuperarContrasena from '../features/auth/pages/RecuperarContrasena.jsx'
 import ListaCarteras from '../features/carteras/pages/Lista.jsx'
 import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
@@ -24,6 +26,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <Landing /> },
       { path: '/login', element: <Login /> },
+      { path: '/registro', element: <Registro /> },
+      { path: '/recuperar', element: <RecuperarContrasena /> },
     ],
   },
   {
