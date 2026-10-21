@@ -1,14 +1,22 @@
 {
   "info": {
-    "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0001",
+    "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
     "name": "FinanzApp - Auth",
-    "description": "Colección de pruebas del módulo de autenticación. Cubre el registro (#96) y la conexión a la base de datos.",
+    "description": "Pruebas del módulo de autenticación: registro (#96) y sesión JWT (#99).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
     }
   ],
   "item": [
@@ -138,6 +146,125 @@
         },
         "url": "{{baseUrl}}/auth/registro",
         "description": "Esperado: 201. amaterno es opcional y se guarda como null."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "08 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda accessToken y refreshToken en las variables de la colección."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Refresh",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh_token\":\"{{refreshToken}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/refresh",
+        "description": "Esperado: 200. Renueva el accessToken."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Esperado: 200. Revoca la sesión asociada al accessToken."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "11 - Logout repetido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Esperado: 401. La sesión ya fue revocada."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "12 - Refresh tras logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh_token\":\"{{refreshToken}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/refresh",
+        "description": "Esperado: 401. La sesión está revocada."
       },
       "response": [],
       "event": []

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: FinanzApp API
   description: Contrato de la API REST de FinanzApp (Flask + SQL Server).
-  version: 0.1.0
+  version: 0.2.0
 servers:
   - url: http://127.0.0.1:5000
     description: Desarrollo local
@@ -54,7 +54,117 @@ paths:
               example:
                 ok: false
                 mensaje: El correo ya está registrado.
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Iniciar sesión
+      description: Valida credenciales y cuenta activa. Devuelve un access token JWT con el rol y un refresh token de sesión.
+      operationId: iniciarSesion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              correo: prueba1@dominio.com
+              contrasenia: Password1
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionExitosa'
+        '400':
+          description: Faltan correo o contraseña
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: Correo y contraseña son obligatorios.
+        '401':
+          description: Credenciales incorrectas o cuenta inactiva (mensaje neutro)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: Credenciales incorrectas.
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Renovar el access token
+      description: Recibe el refresh token de una sesión activa y devuelve un nuevo access token.
+      operationId: renovarToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refresh_token: egL8PpKyiAybe1d_9nLq90OIgyrFOqfIaeCrqj-GwBAhZY8CgqWDVqm7p8SHMAtD
+      responses:
+        '200':
+          description: Token renovado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRenovado'
+        '400':
+          description: Falta el refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sesión inválida, revocada o expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: Sesión inválida o expirada.
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Cerrar sesión
+      description: Revoca la sesión asociada al access token. El token deja de ser válido.
+      operationId: cerrarSesion
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesión cerrada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Sesión cerrada correctamente.
+        '401':
+          description: Token ausente, inválido, expirado o sesión ya revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: Sesión cerrada o inválida.
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     RegistroRequest:
       type: object
@@ -87,6 +197,26 @@ components:
           minLength: 8
           description: Mínimo 8 caracteres, al menos una mayúscula y un número.
           example: Password1
+    LoginRequest:
+      type: object
+      required:
+        - correo
+        - contrasenia
+      properties:
+        correo:
+          type: string
+          format: email
+          example: prueba1@dominio.com
+        contrasenia:
+          type: string
+          example: Password1
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
     Usuario:
       type: object
       properties:
@@ -135,6 +265,50 @@ components:
         mensaje:
           type: string
           example: Cuenta creada correctamente.
+    SesionExitosa:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+            token_type:
+              type: string
+              example: Bearer
+            expires_in:
+              type: integer
+              example: 900
+            usuario:
+              $ref: '#/components/schemas/Usuario'
+        mensaje:
+          type: string
+          example: Sesión iniciada correctamente.
+    TokenRenovado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+            token_type:
+              type: string
+              example: Bearer
+            expires_in:
+              type: integer
+              example: 900
+        mensaje:
+          type: string
+          example: Token renovado correctamente.
     Error:
       type: object
       properties:
