@@ -6,6 +6,8 @@ importaciones circulares (circular imports) entre los modelos y la aplicación,
 permitiendo implementar limpiamente el patrón de diseño por factoría (create_app).
 """
 
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+jwt = JWTManager()

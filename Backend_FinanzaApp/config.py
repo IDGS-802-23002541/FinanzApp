@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
 
@@ -10,6 +11,12 @@ load_dotenv(BASE_DIR / ".env")
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev")
+
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(
+        minutes=int(os.getenv("JWT_ACCESS_MINUTOS", "15"))
+    )
+    REFRESH_TOKEN_DIAS = int(os.getenv("REFRESH_TOKEN_DIAS", "7"))
 
     DB_SERVER = os.getenv("DB_SERVER")
     DB_PORT = os.getenv("DB_PORT", "1433")
