@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
+import BarraSesion from '../components/ui/BarraSesion.jsx'
 
 const enlaces = [
   { ruta: '/carteras', texto: 'Carteras' },
@@ -13,6 +14,7 @@ const enlaces = [
 function ClienteLayout() {
   return (
     <>
+      <BarraSesion />
       <nav>
         {enlaces.map(({ ruta, texto }) => (
           <Link key={ruta} to={ruta}>
