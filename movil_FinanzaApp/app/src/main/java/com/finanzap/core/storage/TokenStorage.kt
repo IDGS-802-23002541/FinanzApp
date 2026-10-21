@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Guarda el JWT cifrado en el dispositivo.
+ * Guarda el JWT y el refresh token cifrados en el dispositivo.
  * No se almacenan contraseñas ni datos personales.
  *
  * Se usa security-crypto porque es la dependencia acordada en el proyecto;
@@ -34,18 +34,34 @@ class TokenStorage @Inject constructor(
         )
     }
 
-    fun guardar(token: String) {
-        preferencias.edit().putString(CLAVE_TOKEN, token).apply()
+    fun guardarSesion(accessToken: String, refreshToken: String) {
+        preferencias.edit()
+            .putString(CLAVE_ACCESS, accessToken)
+            .putString(CLAVE_REFRESH, refreshToken)
+            .apply()
     }
 
-    fun obtener(): String? = preferencias.getString(CLAVE_TOKEN, null)
+    /** El access token dura 15 minutos: se reemplaza cuando el backend lo renueva. */
+    fun guardarAccessToken(accessToken: String) {
+        preferencias.edit().putString(CLAVE_ACCESS, accessToken).apply()
+    }
+
+    fun accessToken(): String? = preferencias.getString(CLAVE_ACCESS, null)
+
+    fun refreshToken(): String? = preferencias.getString(CLAVE_REFRESH, null)
+
+    fun haySesion(): Boolean = !accessToken().isNullOrBlank() && !refreshToken().isNullOrBlank()
 
     fun limpiar() {
-        preferencias.edit().remove(CLAVE_TOKEN).apply()
+        preferencias.edit()
+            .remove(CLAVE_ACCESS)
+            .remove(CLAVE_REFRESH)
+            .apply()
     }
 
     private companion object {
         const val ARCHIVO_PREFERENCIAS = "sesion_finanzapp"
-        const val CLAVE_TOKEN = "jwt"
+        const val CLAVE_ACCESS = "jwt"
+        const val CLAVE_REFRESH = "refresh"
     }
 }

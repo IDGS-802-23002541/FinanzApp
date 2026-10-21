@@ -1,7 +1,9 @@
 package com.finanzap.features.auth.data
 
 import com.finanzap.features.auth.data.dto.LoginRequest
-import com.finanzap.features.auth.data.dto.LoginResponse
+import com.finanzap.features.auth.data.dto.RefreshRequest
+import com.finanzap.features.auth.data.dto.RespuestaSesion
+import com.finanzap.features.auth.data.dto.RespuestaToken
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -9,5 +11,11 @@ import retrofit2.http.POST
 interface AuthApi {
 
     @POST("auth/login")
-    suspend fun iniciarSesion(@Body peticion: LoginRequest): LoginResponse
+    suspend fun iniciarSesion(@Body peticion: LoginRequest): RespuestaSesion
+
+    @POST("auth/refresh")
+    suspend fun renovarToken(@Body peticion: RefreshRequest): RespuestaToken
+
+    @POST("auth/logout")
+    suspend fun cerrarSesion()
 }

@@ -18,8 +18,12 @@ class AuthRepository @Inject constructor(
             val respuesta = authApi.iniciarSesion(
                 LoginRequest(correo = correo.trim(), contrasena = contrasena)
             )
-            check(respuesta.token.isNotBlank()) { "El servidor devolvió un token vacío." }
-            tokenStorage.guardar(respuesta.token)
+            val sesion = respuesta.data
+            check(sesion.accessToken.isNotBlank()) { "El servidor devolvió un token vacío." }
+            tokenStorage.guardarSesion(
+                accessToken = sesion.accessToken,
+                refreshToken = sesion.refreshToken
+            )
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -27,9 +31,20 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
 
-    fun cerrarSesion() {
+    /**
+     * Revoca la sesión en el backend y siempre borra el guardado local.
+     * Si no hay red se limpia igual: el refresh token caduca solo en el servidor.
+     */
+    suspend fun cerrarSesion() {
+        try {
+            authApi.cerrarSesion()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // La sesión local debe cerrarse aunque el backend no responda.
+        }
         tokenStorage.limpiar()
     }
 
-    fun haySesion(): Boolean = !tokenStorage.obtener().isNullOrBlank()
+    fun haySesion(): Boolean = tokenStorage.haySesion()
 }

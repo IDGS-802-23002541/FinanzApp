@@ -13,7 +13,7 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = tokenStorage.obtener()
+        val token = tokenStorage.accessToken()
         val peticion = if (token.isNullOrBlank()) {
             chain.request()
         } else {

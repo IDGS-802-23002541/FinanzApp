@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
                     null -> PantallaCargando()
                     else -> FinanzAppNavHost(
                         haySesionInicial = sesion,
+                        irALogin = viewModel.irALogin,
                         onCerrarSesion = viewModel::cerrarSesion
                     )
                 }

@@ -2,6 +2,7 @@ package com.finanzap.core.di
 
 import com.finanzap.BuildConfig
 import com.finanzap.core.network.AuthInterceptor
+import com.finanzap.core.network.TokenAuthenticator
 import com.finanzap.features.auth.data.AuthApi
 import dagger.Module
 import dagger.Provides
@@ -27,9 +28,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator
+    ): OkHttpClient {
         val constructor = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .authenticator(tokenAuthenticator)
 
         if (BuildConfig.DEBUG) {
             val registro = HttpLoggingInterceptor().apply {
