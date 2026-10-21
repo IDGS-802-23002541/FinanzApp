@@ -1,12 +1,8 @@
 import { Outlet } from 'react-router-dom'
 
-// Landing, login y registro.
+// Landing y vistas de autenticación (cada una define su propio layout visual).
 function PublicLayout() {
-  return (
-    <main>
-      <Outlet />
-    </main>
-  )
+  return <Outlet />
 }
 
 export default PublicLayout

@@ -24,6 +24,9 @@
   --color-alerta: var(--paleta-terracota);
   --color-error: #a94832;
   --color-info: var(--paleta-coral);
+
+  /* Degradado del panel de marca en las vistas públicas. */
+  --gradiente-marca: linear-gradient(150deg, #173b45 0%, #1d4a55 35%, #0e2a32 100%);
 }
 
 /* Adaptación de la misma paleta para fondo oscuro. */

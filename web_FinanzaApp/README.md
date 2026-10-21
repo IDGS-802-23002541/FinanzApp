@@ -1,7 +1,7 @@
 # FinanzApp — Web
 
 Front web de FinanzApp: **React + Vite** (JavaScript). Enrutado con
-**react-router-dom** y **MUI** como única librería de UI (pendiente de agregar).
+**react-router-dom** y **MUI** como única librería de UI.
 
 ## Estructura
 
@@ -26,3 +26,10 @@ src/
 - `npm run dev`
 - `npm run build`
 - `npm run lint`
+
+## Entorno
+
+- **Desarrollo:** deja `VITE_API_URL` vacío en `.env.development`; Vite reenvía
+  `/auth` a `http://127.0.0.1:5000` (ver `vite.config.js`) y el navegador no
+  bloquea la petición por CORS.
+- **Producción:** `VITE_API_URL` con la URL pública de la API.
