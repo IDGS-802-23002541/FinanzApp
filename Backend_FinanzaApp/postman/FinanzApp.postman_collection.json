@@ -1,0 +1,273 @@
+{
+  "info": {
+    "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
+    "name": "FinanzApp - Auth",
+    "description": "Pruebas del módulo de autenticación: registro (#96) y sesión JWT (#99).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Probar conexión BD",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/prueba"
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "02 - Registro válido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"amaterno\":\"Alarcon\",\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Crea la cuenta con rol CLIENTE y estado ACTIVO."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "03 - Correo duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"amaterno\":\"Alarcon\",\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 409. Usa el mismo correo del request 02."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "04 - Contraseña débil",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"prueba2@dominio.com\",\"contrasenia\":\"abc\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. La contraseña no cumple la política."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "05 - Correo inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"esto-no-es-correo\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. El correo no tiene formato válido."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "06 - Campos faltantes",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. Lista los campos obligatorios que faltan."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "07 - Alta válida sin amaterno",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"prueba3@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. amaterno es opcional y se guarda como null."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "08 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda accessToken y refreshToken en las variables de la colección."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Refresh",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh_token\":\"{{refreshToken}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/refresh",
+        "description": "Esperado: 200. Renueva el accessToken."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Esperado: 200. Revoca la sesión asociada al accessToken."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "11 - Logout repetido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Esperado: 401. La sesión ya fue revocada."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "12 - Refresh tras logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh_token\":\"{{refreshToken}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/refresh",
+        "description": "Esperado: 401. La sesión está revocada."
+      },
+      "response": [],
+      "event": []
+    }
+  ]
+}
