@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: FinanzApp API
+  description: Contrato de la API REST de FinanzApp (Flask + SQL Server).
+  version: 0.1.0
+servers:
+  - url: http://127.0.0.1:5000
+    description: Desarrollo local
+tags:
+  - name: Auth
+    description: Registro, sesión y recuperación de cuenta
+paths:
+  /auth/registro:
+    post:
+      tags:
+        - Auth
+      summary: Registrar una cuenta
+      description: Crea una cuenta con rol CLIENTE y estado ACTIVO. El correo es único y la contraseña se guarda con hash.
+      operationId: registrarCuenta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+            example:
+              nombreUsuario: Damian
+              apaterno: Rodriguez
+              amaterno: Alarcon
+              correo: prueba1@dominio.com
+              contrasenia: Password1
+      responses:
+        '201':
+          description: Cuenta creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroExitoso'
+        '400':
+          description: Datos inválidos (campos faltantes, correo mal formado o contraseña débil)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: 'Faltan campos: nombreUsuario,apaterno,correo,contrasenia.'
+        '409':
+          description: El correo ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: El correo ya está registrado.
+components:
+  schemas:
+    RegistroRequest:
+      type: object
+      required:
+        - nombreUsuario
+        - apaterno
+        - correo
+        - contrasenia
+      properties:
+        nombreUsuario:
+          type: string
+          maxLength: 80
+          example: Damian
+        apaterno:
+          type: string
+          maxLength: 80
+          example: Rodriguez
+        amaterno:
+          type: string
+          maxLength: 80
+          nullable: true
+          example: Alarcon
+        correo:
+          type: string
+          maxLength: 254
+          format: email
+          example: prueba1@dominio.com
+        contrasenia:
+          type: string
+          minLength: 8
+          description: Mínimo 8 caracteres, al menos una mayúscula y un número.
+          example: Password1
+    Usuario:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+          example: 1
+        nombreUsuario:
+          type: string
+          example: Damian
+        apaterno:
+          type: string
+          example: Rodriguez
+        amaterno:
+          type: string
+          nullable: true
+          example: Alarcon
+        correo:
+          type: string
+          example: prueba1@dominio.com
+        rolGlobal:
+          type: string
+          enum:
+            - CLIENTE
+            - TRABAJADOR
+            - ADMIN
+          example: CLIENTE
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - INACTIVO
+            - ELIMINADO
+          example: ACTIVO
+        fechaRegistro:
+          type: string
+          description: Fecha en formato HTTP-date (RFC 1123).
+          example: 'Wed, 21 Oct 2026 18:38:51 GMT'
+    RegistroExitoso:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Usuario'
+        mensaje:
+          type: string
+          example: Cuenta creada correctamente.
+    Error:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        mensaje:
+          type: string
+          example: El correo ya está registrado.

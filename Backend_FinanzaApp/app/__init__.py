@@ -19,6 +19,9 @@ def create_app():
 
     db.init_app(app)
 
+    from app.routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
+
     from app import models  
 
     # La puse de prueba para ver si todo salia bien con la coneccion a BD

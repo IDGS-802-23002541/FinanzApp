@@ -1,0 +1,146 @@
+{
+  "info": {
+    "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0001",
+    "name": "FinanzApp - Auth",
+    "description": "Colección de pruebas del módulo de autenticación. Cubre el registro (#96) y la conexión a la base de datos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Probar conexión BD",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/prueba"
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "02 - Registro válido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"amaterno\":\"Alarcon\",\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Crea la cuenta con rol CLIENTE y estado ACTIVO."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "03 - Correo duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"amaterno\":\"Alarcon\",\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 409. Usa el mismo correo del request 02."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "04 - Contraseña débil",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"prueba2@dominio.com\",\"contrasenia\":\"abc\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. La contraseña no cumple la política."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "05 - Correo inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"esto-no-es-correo\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. El correo no tiene formato válido."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "06 - Campos faltantes",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 400. Lista los campos obligatorios que faltan."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "07 - Alta válida sin amaterno",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Damian\",\"apaterno\":\"Rodriguez\",\"correo\":\"prueba3@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. amaterno es opcional y se guarda como null."
+      },
+      "response": [],
+      "event": []
+    }
+  ]
+}
