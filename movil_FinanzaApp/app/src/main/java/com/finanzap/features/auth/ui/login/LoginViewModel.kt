@@ -38,7 +38,8 @@ class LoginViewModel @Inject constructor(
         val actual = _state.value
         if (actual.cargando) return
 
-        val errorValidacion = validar(actual.correo, actual.contrasena)
+        val correo = actual.correo.trim()
+        val errorValidacion = validar(correo, actual.contrasena)
         if (errorValidacion != null) {
             _state.update { it.copy(error = errorValidacion) }
             return
@@ -46,7 +47,7 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             _state.update { it.copy(cargando = true, error = null) }
-            authRepository.iniciarSesion(actual.correo, actual.contrasena)
+            authRepository.iniciarSesion(correo, actual.contrasena)
                 .onSuccess {
                     _state.update { it.copy(cargando = false, loginExitoso = true) }
                 }

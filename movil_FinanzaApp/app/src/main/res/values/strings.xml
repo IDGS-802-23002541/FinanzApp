@@ -11,6 +11,10 @@
     <string name="login_ocultar">Ocultar</string>
     <string name="login_entrar">Iniciar sesión</string>
 
+    <!-- Tema -->
+    <string name="tema_claro">Modo claro</string>
+    <string name="tema_oscuro">Modo oscuro</string>
+
     <!-- Carteras -->
     <string name="carteras_titulo">Carteras</string>
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
@@ -20,6 +24,7 @@
     <string name="carteras_compartidas">Compartidas</string>
     <string name="carteras_todas">Todas</string>
     <string name="carteras_buscar">Buscar cartera…</string>
+    <string name="carteras_limpiar_busqueda">Limpiar búsqueda</string>
     <string name="carteras_nueva">Nueva cartera</string>
     <string name="carteras_abrir">Abrir cartera</string>
     <string name="carteras_registrar_gasto">Registrar gasto</string>

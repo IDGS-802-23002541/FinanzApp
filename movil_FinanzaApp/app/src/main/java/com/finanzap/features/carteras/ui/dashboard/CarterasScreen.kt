@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
@@ -44,6 +45,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -70,6 +72,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit,
     onCerrarSesion: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
@@ -100,6 +104,8 @@ fun CarterasScreen(
                 Encabezado(
                     compartidas = state.segmento == Segmento.COMPARTIDAS,
                     totalCompartidas = state.totalCompartidas,
+                    temaOscuro = temaOscuro,
+                    onAlternarTema = onAlternarTema,
                     onNuevaCartera = { avisar(mensajeNueva) },
                     onCerrarSesion = onCerrarSesion
                 )
@@ -173,10 +179,12 @@ fun CarterasScreen(
 private fun Encabezado(
     compartidas: Boolean,
     totalCompartidas: Int,
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit,
     onNuevaCartera: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
-    Row(verticalAlignment = Alignment.Top) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.carteras_titulo),
@@ -195,6 +203,17 @@ private fun Encabezado(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
+        TextButton(onClick = onAlternarTema) {
+            Text(
+                text = stringResource(
+                    if (temaOscuro) R.string.tema_claro else R.string.tema_oscuro
+                ),
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+
+        Spacer(modifier = Modifier.width(4.dp))
 
         FilledIconButton(onClick = onNuevaCartera) {
             Icon(
@@ -352,6 +371,18 @@ private fun Buscador(busqueda: String, onBusquedaChange: (String) -> Unit) {
         placeholder = { Text(stringResource(R.string.carteras_buscar)) },
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null)
+        },
+        trailingIcon = if (busqueda.isNotEmpty()) {
+            {
+                IconButton(onClick = { onBusquedaChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.carteras_limpiar_busqueda)
+                    )
+                }
+            }
+        } else {
+            null
         }
     )
 }

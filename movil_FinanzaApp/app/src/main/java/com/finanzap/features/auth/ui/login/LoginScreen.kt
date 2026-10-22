@@ -33,8 +33,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -48,10 +52,14 @@ import com.finanzap.R
 
 @Composable
 fun LoginScreen(
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit,
     onLoginExitoso: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val foco = LocalFocusManager.current
+    val focoContrasena = remember { FocusRequester() }
 
     LaunchedEffect(state.loginExitoso) {
         if (state.loginExitoso) {
@@ -70,7 +78,10 @@ fun LoginScreen(
                 .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
-            EncabezadoMarca()
+            EncabezadoMarca(
+                temaOscuro = temaOscuro,
+                onAlternarTema = onAlternarTema
+            )
 
             Column(
                 modifier = Modifier
@@ -102,6 +113,9 @@ fun LoginScreen(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
                     ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focoContrasena.requestFocus() }
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(14.dp))
@@ -123,7 +137,10 @@ fun LoginScreen(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { viewModel.iniciarSesion() }
+                        onDone = {
+                            foco.clearFocus()
+                            viewModel.iniciarSesion()
+                        }
                     ),
                     trailingIcon = {
                         TextButton(
@@ -141,7 +158,9 @@ fun LoginScreen(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focoContrasena)
                 )
 
                 if (state.error != null) {
@@ -187,7 +206,10 @@ fun LoginScreen(
 
 // Banda de marca del diseño: bloque petróleo con logo y lema.
 @Composable
-private fun EncabezadoMarca() {
+private fun EncabezadoMarca(
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,6 +234,16 @@ private fun EncabezadoMarca() {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
+            Spacer(modifier = Modifier.weight(1f))
+            TextButton(onClick = onAlternarTema) {
+                Text(
+                    text = stringResource(
+                        if (temaOscuro) R.string.tema_claro else R.string.tema_oscuro
+                    ),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

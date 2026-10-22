@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.SharedFlow
 fun FinanzAppNavHost(
     haySesionInicial: Boolean,
     irALogin: SharedFlow<Unit>,
-    onCerrarSesion: () -> Unit
+    onCerrarSesion: () -> Unit,
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -33,6 +35,8 @@ fun FinanzAppNavHost(
     ) {
         composable(Rutas.Login) {
             LoginScreen(
+                temaOscuro = temaOscuro,
+                onAlternarTema = onAlternarTema,
                 onLoginExitoso = {
                     navController.navigate(Rutas.Carteras) {
                         popUpTo(Rutas.Login) { inclusive = true }
@@ -43,7 +47,11 @@ fun FinanzAppNavHost(
         }
 
         composable(Rutas.Carteras) {
-            CarterasScreen(onCerrarSesion = onCerrarSesion)
+            CarterasScreen(
+                temaOscuro = temaOscuro,
+                onAlternarTema = onAlternarTema,
+                onCerrarSesion = onCerrarSesion
+            )
         }
     }
 }
