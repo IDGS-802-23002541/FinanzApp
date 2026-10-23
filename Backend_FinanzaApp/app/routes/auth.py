@@ -1,7 +1,9 @@
 import hashlib
+import hmac
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
+
 
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt, jwt_required
@@ -9,12 +11,12 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
-from app.models import SesionUsuario, Usuario
+from app.models import SesionUsuario, TokenRecuperacion, Usuario
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 MENSAJE_CREDENCIALES = "Credenciales incorrectas."
-
+MENSAJE_RECUPERACION = "Si el correo esta registrado, recibiras un codigo de recuperacion"
 
 def _ahora_utc():
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -22,6 +24,21 @@ def _ahora_utc():
 
 def _hash_token(token):
     return hashlib.sha256(token.encode("utf-8")).digest()
+
+
+def _generar_codigo():
+    # entero entre 0 y 999999
+    numero = secrets.randbelow(1_000_000)
+    # agrega ceros a la izquierda (hasta 6 digitos)
+    return f"{numero:06d}"
+
+
+def _hash_codigo(codigo):
+    clave = current_app.config["SECRET_KEY"].encode("utf-8")
+    mensaje = codigo.encode("utf-8")
+    # hmac.new crea una mac 
+    # digest devuelve los 32 bytes 
+    return hmac.new(clave, mensaje, hashlib.sha256).digest()
 
 
 def _serializar_usuario(usuario):
@@ -183,6 +200,56 @@ def login():
 
     sesion, token_refresh = _crear_sesion(usuario.idUsuario)
     return _respuesta_sesion(usuario, sesion, token_refresh), 200
+
+
+@auth_bp.post("/recuperar")
+def recuperar():
+    datos = request.get_json(silent=True)
+
+    if not isinstance(datos, dict):
+        return jsonify({"ok":False, "mensaje": "El cuerpo debe ser un objeto JSON."}), 400
+
+    # normalizar correo 
+    correo = (datos.get("correo") or "").strip().lower()
+    if not correo or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", correo):
+        return jsonify({"ok": False, "mensaje":"l correo no tiene un formato valido"}), 400
+    
+    # buscar usuario por correo 
+    usuario = db.session.execute(
+        db.select(Usuario).where(Usuario.correo == correo)
+    ).scalar_one_or_none()
+
+    # si no existe o no esta activo no crea token
+    codigo = None
+
+    if usuario is not None and usuario.estado == "ACTIVO": 
+        # si si, se actualiza el ahora
+        ahora = _ahora_utc()
+
+        db.session.execute(
+            db.update(TokenRecuperacion)
+            .where(
+                TokenRecuperacion.usuarioId == usuario.idUsuario,
+                TokenRecuperacion.fechaUso.is_(None),
+            )
+            .values(fechaUso=ahora)
+        )
+
+        codigo = _generar_codigo()
+        db.session.add(
+            TokenRecuperacion(
+                usuarioId=usuario.idUsuario,
+                hashToken=_hash_codigo(codigo),
+                fechaExpiracion=ahora + timedelta(minutes=current_app.config["RECUPERACION_MINUTOS"]),
+            )
+        )
+        db.session.commit()
+    datos_respuesta = {"codigo":codigo} if codigo and current_app.debug else None 
+
+    return jsonify(
+        {"ok": True, "data": datos_respuesta,"mensaje": MENSAJE_RECUPERACION}
+    )
+
 
 
 @auth_bp.post("/refresh")
