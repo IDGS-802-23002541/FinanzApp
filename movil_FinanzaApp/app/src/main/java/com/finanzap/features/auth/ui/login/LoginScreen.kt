@@ -1,7 +1,7 @@
 package com.finanzap.features.auth.ui.login
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,16 +20,19 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,7 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -46,9 +53,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
+import com.finanzap.core.ui.theme.Blanco
+import com.finanzap.core.ui.theme.Coral
+import com.finanzap.core.ui.theme.Petroleo
+import com.finanzap.core.ui.theme.PetroleoMedio
+import com.finanzap.core.ui.theme.PetroleoProfundo
 
 @Composable
 fun LoginScreen(
@@ -86,15 +99,16 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 28.dp)
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
             ) {
                 Text(
                     text = stringResource(R.string.login_encabezado),
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.login_descripcion),
                     style = MaterialTheme.typography.bodyMedium,
@@ -102,10 +116,20 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(28.dp))
 
+                val errorCorreo = state.errorCorreo
                 OutlinedTextField(
                     value = state.correo,
                     onValueChange = viewModel::onCorreoChange,
-                    placeholder = { Text(stringResource(R.string.login_correo)) },
+                    label = { Text(stringResource(R.string.login_correo)) },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Email, contentDescription = null)
+                    },
+                    isError = errorCorreo != null,
+                    supportingText = if (errorCorreo != null) {
+                        { Text(errorCorreo) }
+                    } else {
+                        null
+                    },
                     singleLine = true,
                     enabled = !state.cargando,
                     shape = RoundedCornerShape(10.dp),
@@ -118,12 +142,45 @@ fun LoginScreen(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                val errorContrasena = state.errorContrasena
                 OutlinedTextField(
                     value = state.contrasena,
                     onValueChange = viewModel::onContrasenaChange,
-                    placeholder = { Text(stringResource(R.string.login_contrasena)) },
+                    label = { Text(stringResource(R.string.login_contrasena)) },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = null)
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = viewModel::onToggleContrasena,
+                            enabled = !state.cargando
+                        ) {
+                            Icon(
+                                painter = painterResource(
+                                    if (state.contrasenaVisible) {
+                                        R.drawable.ic_visibilidad_oculto
+                                    } else {
+                                        R.drawable.ic_visibilidad
+                                    }
+                                ),
+                                contentDescription = stringResource(
+                                    if (state.contrasenaVisible) {
+                                        R.string.login_ocultar_contrasena
+                                    } else {
+                                        R.string.login_mostrar_contrasena
+                                    }
+                                )
+                            )
+                        }
+                    },
+                    isError = errorContrasena != null,
+                    supportingText = if (errorContrasena != null) {
+                        { Text(errorContrasena) }
+                    } else {
+                        null
+                    },
                     singleLine = true,
                     enabled = !state.cargando,
                     shape = RoundedCornerShape(10.dp),
@@ -142,35 +199,14 @@ fun LoginScreen(
                             viewModel.iniciarSesion()
                         }
                     ),
-                    trailingIcon = {
-                        TextButton(
-                            onClick = viewModel::onToggleContrasena,
-                            enabled = !state.cargando
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    if (state.contrasenaVisible) {
-                                        R.string.login_ocultar
-                                    } else {
-                                        R.string.login_mostrar
-                                    }
-                                )
-                            )
-                        }
-                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focoContrasena)
                 )
 
-                if (state.error != null) {
+                state.error?.let { mensaje ->
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = state.error.orEmpty(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    BannerError(mensaje)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -185,10 +221,12 @@ fun LoginScreen(
                 ) {
                     if (state.cargando) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(stringResource(R.string.login_entrando))
                     } else {
                         Text(stringResource(R.string.login_entrar))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -204,55 +242,123 @@ fun LoginScreen(
     }
 }
 
-// Banda de marca del diseño: bloque petróleo con logo y lema.
+// Banda de marca: mismo gradiente, círculos y jerarquía del panel de AuthLayout en la web.
 @Composable
 private fun EncabezadoMarca(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 24.dp, vertical = 28.dp)
+            .height(224.dp)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Petroleo, PetroleoMedio, PetroleoProfundo)
+                )
+            )
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.onPrimary) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(34.dp)) {
-                    Text(
-                        text = "F",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val centro = Offset(size.width * 1.02f, -size.height * 0.12f)
+            val trazo = Stroke(width = 1.5.dp.toPx())
+            drawCircle(
+                color = Coral.copy(alpha = 0.35f),
+                radius = size.minDimension * 0.58f,
+                center = centro,
+                style = trazo
+            )
+            drawCircle(
+                color = Coral.copy(alpha = 0.35f),
+                radius = size.minDimension * 0.76f,
+                center = centro,
+                style = trazo
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(shape = CircleShape, color = Blanco) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(36.dp)) {
+                        Text(
+                            text = "F",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Petroleo
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Blanco
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = onAlternarTema) {
+                    Icon(
+                        painter = painterResource(
+                            if (temaOscuro) R.drawable.ic_tema_claro else R.drawable.ic_tema_oscuro
+                        ),
+                        contentDescription = stringResource(
+                            if (temaOscuro) {
+                                R.string.tema_cambiar_claro
+                            } else {
+                                R.string.tema_cambiar_oscuro
+                            }
+                        ),
+                        tint = Blanco
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+
             Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = onAlternarTema) {
-                Text(
-                    text = stringResource(
-                        if (temaOscuro) R.string.tema_claro else R.string.tema_oscuro
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+
+            Text(
+                text = stringResource(R.string.login_lema),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 32.sp,
+                letterSpacing = (-0.5).sp,
+                color = Blanco
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = stringResource(R.string.login_lema_pie),
+                style = MaterialTheme.typography.bodySmall,
+                color = Blanco.copy(alpha = 0.7f)
+            )
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = stringResource(R.string.login_lema),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
+@Composable
+private fun BannerError(mensaje: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = mensaje,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
     }
 }

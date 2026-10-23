@@ -6,6 +6,8 @@ data class LoginUiState(
     val contrasena: String = "",
     val contrasenaVisible: Boolean = false,
     val cargando: Boolean = false,
+    val errorCorreo: String? = null,
+    val errorContrasena: String? = null,
     val error: String? = null,
     val loginExitoso: Boolean = false
 )

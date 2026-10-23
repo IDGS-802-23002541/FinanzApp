@@ -24,7 +24,9 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = TextoSecundario,
     outline = Borde,
     error = Error,
-    onError = Blanco
+    onError = Blanco,
+    errorContainer = ErrorSuave,
+    onErrorContainer = Error
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -42,7 +44,9 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = TextoSecundarioOscuro,
     outline = BordeOscuro,
     error = ErrorOscuro,
-    onError = Petroleo
+    onError = Petroleo,
+    errorContainer = ErrorSuaveOscuro,
+    onErrorContainer = ErrorOscuro
 )
 
 @Composable

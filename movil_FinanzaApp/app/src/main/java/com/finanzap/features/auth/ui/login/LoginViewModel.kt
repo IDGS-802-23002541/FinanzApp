@@ -23,11 +23,11 @@ class LoginViewModel @Inject constructor(
     val state: StateFlow<LoginUiState> = _state.asStateFlow()
 
     fun onCorreoChange(correo: String) {
-        _state.update { it.copy(correo = correo, error = null) }
+        _state.update { it.copy(correo = correo, errorCorreo = null, error = null) }
     }
 
     fun onContrasenaChange(contrasena: String) {
-        _state.update { it.copy(contrasena = contrasena, error = null) }
+        _state.update { it.copy(contrasena = contrasena, errorContrasena = null, error = null) }
     }
 
     fun onToggleContrasena() {
@@ -39,9 +39,12 @@ class LoginViewModel @Inject constructor(
         if (actual.cargando) return
 
         val correo = actual.correo.trim()
-        val errorValidacion = validar(correo, actual.contrasena)
-        if (errorValidacion != null) {
-            _state.update { it.copy(error = errorValidacion) }
+        val errorCorreo = validarCorreo(correo)
+        val errorContrasena = validarContrasena(actual.contrasena)
+        if (errorCorreo != null || errorContrasena != null) {
+            _state.update {
+                it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena, error = null)
+            }
             return
         }
 
@@ -63,12 +66,14 @@ class LoginViewModel @Inject constructor(
         _state.update { it.copy(loginExitoso = false) }
     }
 
-    private fun validar(correo: String, contrasena: String): String? = when {
+    private fun validarCorreo(correo: String): String? = when {
         correo.isBlank() -> "Ingresa tu correo."
         !correoValido(correo) -> "Ingresa un correo válido."
-        contrasena.isBlank() -> "Ingresa tu contraseña."
         else -> null
     }
+
+    private fun validarContrasena(contrasena: String): String? =
+        if (contrasena.isBlank()) "Ingresa tu contraseña." else null
 
     private fun mensajeError(error: Throwable): String = when (error) {
         is HttpException -> if (error.code() == 401 || error.code() == 403) {

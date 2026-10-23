@@ -7,13 +7,17 @@
     <string name="login_descripcion">Accede a tus carteras, estadísticas y balances.</string>
     <string name="login_correo">Correo electrónico</string>
     <string name="login_contrasena">Contraseña</string>
-    <string name="login_mostrar">Mostrar</string>
-    <string name="login_ocultar">Ocultar</string>
+    <string name="login_mostrar_contrasena">Mostrar contraseña</string>
+    <string name="login_ocultar_contrasena">Ocultar contraseña</string>
     <string name="login_entrar">Iniciar sesión</string>
+    <string name="login_entrando">Iniciando sesión…</string>
+    <string name="login_lema_pie">Universidad Tecnológica de León · IDGS1002</string>
 
     <!-- Tema -->
     <string name="tema_claro">Modo claro</string>
     <string name="tema_oscuro">Modo oscuro</string>
+    <string name="tema_cambiar_claro">Cambiar a modo claro</string>
+    <string name="tema_cambiar_oscuro">Cambiar a modo oscuro</string>
 
     <!-- Carteras -->
     <string name="carteras_titulo">Carteras</string>
