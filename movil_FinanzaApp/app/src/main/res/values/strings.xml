@@ -11,7 +11,24 @@
     <string name="login_ocultar_contrasena">Ocultar contraseña</string>
     <string name="login_entrar">Iniciar sesión</string>
     <string name="login_entrando">Iniciando sesión…</string>
+    <string name="login_olvide_contrasena">¿Olvidaste tu contraseña?</string>
     <string name="login_lema_pie">Universidad Tecnológica de León · IDGS1002</string>
+
+    <!-- Recuperar contraseña -->
+    <string name="recuperar_titulo">Recuperar contraseña</string>
+    <string name="recuperar_volver">Volver</string>
+    <string name="recuperar_descripcion_solicitud">Escribe el correo de tu cuenta y te enviaremos un código de 6 dígitos.</string>
+    <string name="recuperar_descripcion_codigo">Ingresa el código enviado a %1$s y define tu nueva contraseña.</string>
+    <string name="recuperar_correo">Correo electrónico</string>
+    <string name="recuperar_codigo">Código de 6 dígitos</string>
+    <string name="recuperar_contrasena_nueva">Nueva contraseña</string>
+    <string name="recuperar_confirmar_contrasena">Confirmar contraseña</string>
+    <string name="recuperar_enviar_codigo">Enviar código</string>
+    <string name="recuperar_enviando">Enviando…</string>
+    <string name="recuperar_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="recuperar_guardando">Guardando…</string>
+    <string name="recuperar_reenviar_codigo">Reenviar código</string>
+    <string name="recuperar_codigo_desarrollo">Código de desarrollo: %1$s</string>
 
     <!-- Tema -->
     <string name="tema_claro">Modo claro</string>

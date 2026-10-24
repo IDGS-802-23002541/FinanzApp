@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +69,7 @@ fun LoginScreen(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
     onLoginExitoso: () -> Unit,
+    onRecuperarContrasena: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -204,6 +206,14 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .focusRequester(focoContrasena)
                 )
+
+                TextButton(
+                    onClick = onRecuperarContrasena,
+                    enabled = !state.cargando,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.login_olvide_contrasena))
+                }
 
                 val errorGeneral = state.errorGeneral
                 if (errorGeneral != null) {

@@ -1,0 +1,11 @@
+package com.finanzap.features.auth.data.dto
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class RestablecerRequest(
+    val correo: String,
+    val codigo: String,
+    // La API usa "contrasenia" (ver openapi.yaml); en el resto de la app se escribe "contrasena".
+    val contrasenia: String
+)

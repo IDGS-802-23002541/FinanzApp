@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.finanzap.features.auth.ui.login.LoginScreen
+import com.finanzap.features.auth.ui.recuperar.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
 import kotlinx.coroutines.flow.Flow
 
@@ -44,7 +45,17 @@ fun FinanzAppNavHost(
                         popUpTo(Rutas.Login) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                onRecuperarContrasena = {
+                    navController.navigate(Rutas.RecuperarContrasena)
                 }
+            )
+        }
+
+        composable(Rutas.RecuperarContrasena) {
+            RecuperarContrasenaScreen(
+                onVolver = { navController.popBackStack() },
+                onCompletada = { navController.popBackStack() }
             )
         }
 

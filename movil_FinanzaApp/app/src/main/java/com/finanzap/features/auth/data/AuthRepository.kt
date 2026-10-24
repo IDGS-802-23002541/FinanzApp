@@ -2,6 +2,8 @@ package com.finanzap.features.auth.data
 
 import com.finanzap.core.storage.TokenStorage
 import com.finanzap.features.auth.data.dto.LoginRequest
+import com.finanzap.features.auth.data.dto.RecuperarRequest
+import com.finanzap.features.auth.data.dto.RestablecerRequest
 import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,6 +25,36 @@ class AuthRepository @Inject constructor(
             tokenStorage.guardarSesion(
                 accessToken = sesion.accessToken,
                 refreshToken = sesion.refreshToken
+            )
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    /**
+     * Devuelve el código solo cuando el backend corre en debug: el envío por correo
+     * todavía no existe (tarea #219).
+     */
+    suspend fun solicitarRecuperacion(correo: String): Result<String?> =
+        try {
+            val respuesta = authApi.solicitarRecuperacion(RecuperarRequest(correo.trim()))
+            Result.success(respuesta.data?.codigo)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    suspend fun restablecerContrasenia(
+        correo: String,
+        codigo: String,
+        contrasena: String
+    ): Result<Unit> =
+        try {
+            authApi.restablecerContrasenia(
+                RestablecerRequest(correo.trim(), codigo.trim(), contrasena)
             )
             Result.success(Unit)
         } catch (e: CancellationException) {
