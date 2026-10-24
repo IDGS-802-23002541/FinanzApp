@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: FinanzApp API
   description: Contrato de la API REST de FinanzApp (Flask + SQL Server).
-  version: 0.2.0
+  version: 0.3.0
 servers:
   - url: http://127.0.0.1:5000
     description: Desarrollo local
@@ -159,6 +159,74 @@ paths:
               example:
                 ok: false
                 mensaje: Sesión cerrada o inválida.
+  /auth/recuperar:
+    post:
+      tags:
+        - Auth
+      summary: Solicitar código de recuperación
+      description: Genera un código de 6 dígitos con vigencia de 30 minutos. Siempre responde con un mensaje neutro para no revelar si el correo existe.
+      operationId: solicitarRecuperacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecuperarRequest'
+            example:
+              correo: prueba1@dominio.com
+      responses:
+        '200':
+          description: Solicitud procesada (mensaje neutro)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecuperacionSolicitada'
+              example:
+                ok: true
+                data:
+                  codigo: '123456'
+                mensaje: Si el correo esta registrado, recibiras un codigo de recuperacion
+        '400':
+          description: Cuerpo inválido o correo con formato incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/restablecer:
+    post:
+      tags:
+        - Auth
+      summary: Restablecer contraseña con código
+      description: Valida el código vigente y de un solo uso, actualiza la contraseña y revoca las sesiones activas.
+      operationId: restablecerContrasenia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestablecerRequest'
+            example:
+              correo: prueba1@dominio.com
+              codigo: '123456'
+              contrasenia: NuevaPassword1
+      responses:
+        '200':
+          description: Contraseña actualizada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Contraseña actualizada correctamente.
+        '400':
+          description: Código inválido, expirado o ya usado; o contraseña que no cumple la política
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                ok: false
+                mensaje: El código no es válido o ya expiró.
 components:
   securitySchemes:
     bearerAuth:
@@ -309,6 +377,52 @@ components:
         mensaje:
           type: string
           example: Token renovado correctamente.
+    RecuperarRequest:
+      type: object
+      required:
+        - correo
+      properties:
+        correo:
+          type: string
+          format: email
+          example: prueba1@dominio.com
+    RestablecerRequest:
+      type: object
+      required:
+        - correo
+        - codigo
+        - contrasenia
+      properties:
+        correo:
+          type: string
+          format: email
+          example: prueba1@dominio.com
+        codigo:
+          type: string
+          minLength: 6
+          maxLength: 6
+          example: '123456'
+        contrasenia:
+          type: string
+          description: Mínimo 8 caracteres, al menos una mayúscula y un número.
+          example: NuevaPassword1
+    RecuperacionSolicitada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+          description: En producción es null. En desarrollo incluye el código para pruebas.
+          properties:
+            codigo:
+              type: string
+              example: '123456'
+        mensaje:
+          type: string
+          example: Si el correo esta registrado, recibiras un codigo de recuperacion
     Error:
       type: object
       properties:

@@ -17,6 +17,7 @@ class Config:
         minutes=int(os.getenv("JWT_ACCESS_MINUTOS", "15"))
     )
     REFRESH_TOKEN_DIAS = int(os.getenv("REFRESH_TOKEN_DIAS", "7"))
+    RECUPERACION_MINUTOS = int(os.getenv("RECUPERACION_MINUTOS", "30"))
 
     DB_SERVER = os.getenv("DB_SERVER")
     DB_PORT = os.getenv("DB_PORT", "1433")

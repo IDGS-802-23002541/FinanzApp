@@ -17,6 +17,10 @@
     {
       "key": "refreshToken",
       "value": ""
+    },
+    {
+      "key": "codigoRecuperacion",
+      "value": ""
     }
   ],
   "item": [
@@ -265,6 +269,99 @@
         },
         "url": "{{baseUrl}}/auth/refresh",
         "description": "Esperado: 401. La sesión está revocada."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "13 - Recuperar contraseña",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\"}"
+        },
+        "url": "{{baseUrl}}/auth/recuperar",
+        "description": "Esperado: 200. Guarda data.codigo en codigoRecuperacion (solo en debug)."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok && body.data && body.data.codigo) {",
+              "  pm.collectionVariables.set('codigoRecuperacion', body.data.codigo);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Restablecer contraseña",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"codigo\":\"{{codigoRecuperacion}}\",\"contrasenia\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/restablecer",
+        "description": "Esperado: 200. Usa el código guardado por el request 13."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "15 - Restablecer con código usado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"codigo\":\"{{codigoRecuperacion}}\",\"contrasenia\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/restablecer",
+        "description": "Esperado: 400. El código ya fue usado."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "16 - Login con contraseña nueva",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"contrasenia\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Confirma que la contraseña cambió."
       },
       "response": [],
       "event": []
