@@ -29,11 +29,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val viewModel: MainViewModel = hiltViewModel()
-            val haySesion by viewModel.haySesion.collectAsStateWithLifecycle()
-            val temaGuardado by viewModel.temaOscuro.collectAsStateWithLifecycle()
+            val state by viewModel.state.collectAsStateWithLifecycle()
 
             // Sin preferencia guardada se respeta el theme del sistema.
-            val oscuro = temaGuardado ?: isSystemInDarkTheme()
+            val oscuro = state.temaOscuro ?: isSystemInDarkTheme()
 
             // Los iconos de las barras del sistema deben contrastar con el tema elegido.
             SideEffect {
@@ -44,11 +43,12 @@ class MainActivity : ComponentActivity() {
             }
 
             FinanzAppTheme(darkTheme = oscuro) {
-                when (val sesion = haySesion) {
-                    null -> PantallaCargando()
-                    else -> FinanzAppNavHost(
-                        haySesionInicial = sesion,
-                        irALogin = viewModel.irALogin,
+                if (state.cargando) {
+                    PantallaCargando()
+                } else {
+                    FinanzAppNavHost(
+                        haySesionInicial = state.haySesion,
+                        eventos = viewModel.eventos,
                         onCerrarSesion = viewModel::cerrarSesion,
                         temaOscuro = oscuro,
                         onAlternarTema = { viewModel.guardarTemaOscuro(!oscuro) }

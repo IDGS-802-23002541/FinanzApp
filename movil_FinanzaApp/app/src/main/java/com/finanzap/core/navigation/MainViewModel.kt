@@ -7,12 +7,13 @@ import com.finanzap.core.storage.PreferenciasTema
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,39 +25,31 @@ class MainViewModel @Inject constructor(
     eventosSesion: EventosSesion
 ) : ViewModel() {
 
-    // null = todavía se está leyendo el token; true/false = ya hay respuesta.
-    private val _haySesion = MutableStateFlow<Boolean?>(null)
-    val haySesion: StateFlow<Boolean?> = _haySesion.asStateFlow()
+    private val _state = MutableStateFlow(MainUiState(temaOscuro = preferenciasTema.temaOscuro()))
+    val state: StateFlow<MainUiState> = _state.asStateFlow()
 
-    // null = el usuario no ha elegido tema y se sigue el del sistema.
-    private val _temaOscuro = MutableStateFlow(preferenciasTema.temaOscuro())
-    val temaOscuro: StateFlow<Boolean?> = _temaOscuro.asStateFlow()
-
-    // Se emite cuando hay que regresar al login: logout propio o refresh rechazado.
-    private val _irALogin = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val irALogin: SharedFlow<Unit> = _irALogin.asSharedFlow()
+    private val _eventos = Channel<MainEvento>(Channel.BUFFERED)
+    val eventos: Flow<MainEvento> = _eventos.receiveAsFlow()
 
     init {
         viewModelScope.launch {
-            _haySesion.value = withContext(Dispatchers.IO) {
-                authRepository.haySesion()
-            }
+            val haySesion = withContext(Dispatchers.IO) { authRepository.haySesion() }
+            _state.update { it.copy(cargando = false, haySesion = haySesion) }
         }
-
         viewModelScope.launch {
-            eventosSesion.sesionTerminada.collect { _irALogin.emit(Unit) }
+            eventosSesion.sesionTerminada.collect { _eventos.send(MainEvento.IrALogin) }
         }
     }
 
     fun cerrarSesion() {
         viewModelScope.launch {
             authRepository.cerrarSesion()
-            _irALogin.emit(Unit)
+            _eventos.send(MainEvento.IrALogin)
         }
     }
 
     fun guardarTemaOscuro(oscuro: Boolean) {
         preferenciasTema.guardarTemaOscuro(oscuro)
-        _temaOscuro.value = oscuro
+        _state.update { it.copy(temaOscuro = oscuro) }
     }
 }

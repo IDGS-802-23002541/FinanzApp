@@ -7,12 +7,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.finanzap.features.auth.ui.login.LoginScreen
 import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun FinanzAppNavHost(
     haySesionInicial: Boolean,
-    irALogin: SharedFlow<Unit>,
+    eventos: Flow<MainEvento>,
     onCerrarSesion: () -> Unit,
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit
@@ -21,10 +21,12 @@ fun FinanzAppNavHost(
 
     // Logout o refresh rechazado: se limpia toda la pila y se vuelve al login.
     LaunchedEffect(Unit) {
-        irALogin.collect {
-            navController.navigate(Rutas.Login) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
+        eventos.collect { evento ->
+            when (evento) {
+                MainEvento.IrALogin -> navController.navigate(Rutas.Login) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
         }
     }

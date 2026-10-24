@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -57,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
+import com.finanzap.core.ui.components.BannerError
 import com.finanzap.core.ui.theme.Blanco
 import com.finanzap.core.ui.theme.Coral
 import com.finanzap.core.ui.theme.Petroleo
@@ -74,10 +74,11 @@ fun LoginScreen(
     val foco = LocalFocusManager.current
     val focoContrasena = remember { FocusRequester() }
 
-    LaunchedEffect(state.loginExitoso) {
-        if (state.loginExitoso) {
-            onLoginExitoso()
-            viewModel.onLoginNavegado()
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                LoginEvento.IrACarteras -> onLoginExitoso()
+            }
         }
     }
 
@@ -204,9 +205,10 @@ fun LoginScreen(
                         .focusRequester(focoContrasena)
                 )
 
-                state.error?.let { mensaje ->
+                val errorGeneral = state.errorGeneral
+                if (errorGeneral != null) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    BannerError(mensaje)
+                    BannerError(mensaje = errorGeneral)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -331,33 +333,6 @@ private fun EncabezadoMarca(
                 text = stringResource(R.string.login_lema_pie),
                 style = MaterialTheme.typography.bodySmall,
                 color = Blanco.copy(alpha = 0.7f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun BannerError(mensaje: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = mensaje,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer
             )
         }
     }

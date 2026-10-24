@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChipDefaults
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
+import com.finanzap.core.ui.components.EstadoError
 import com.finanzap.core.ui.components.EstadoVacio
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.core.util.formatearMoneda
@@ -111,31 +113,43 @@ fun CarterasScreen(
                 )
             }
 
-            item {
-                SelectorSegmento(
-                    segmento = state.segmento,
-                    totalMis = state.totalMis,
-                    totalCompartidas = state.totalCompartidas,
-                    onSegmentoChange = viewModel::onSegmentoChange
-                )
-            }
-
-            item {
-                FiltrosTipo(
-                    seleccionado = state.tipo,
-                    onTipoChange = viewModel::onTipoChange
-                )
-            }
-
-            item {
-                Buscador(
-                    busqueda = state.busqueda,
-                    onBusquedaChange = viewModel::onBusquedaChange
-                )
-            }
-
-            if (state.carteras.isEmpty()) {
+            val error = state.error
+            if (!state.cargando && error == null) {
                 item {
+                    SelectorSegmento(
+                        segmento = state.segmento,
+                        totalMis = state.totalMis,
+                        totalCompartidas = state.totalCompartidas,
+                        onSegmentoChange = viewModel::onSegmentoChange
+                    )
+                }
+
+                item {
+                    FiltrosTipo(
+                        seleccionado = state.tipo,
+                        onTipoChange = viewModel::onTipoChange
+                    )
+                }
+
+                item {
+                    Buscador(
+                        busqueda = state.busqueda,
+                        onBusquedaChange = viewModel::onBusquedaChange
+                    )
+                }
+            }
+
+            when {
+                state.cargando -> item { CargandoCarteras() }
+
+                error != null -> item {
+                    EstadoError(
+                        mensaje = error,
+                        onReintentar = viewModel::cargar
+                    )
+                }
+
+                state.carteras.isEmpty() -> item {
                     if (state.busqueda.isNotBlank() || state.tipo != null) {
                         EstadoVacio(
                             icono = Icons.Default.Search,
@@ -158,8 +172,8 @@ fun CarterasScreen(
                         )
                     }
                 }
-            } else {
-                items(items = state.carteras, key = { it.id }) { cartera ->
+
+                else -> items(items = state.carteras, key = { it.id }) { cartera ->
                     if (cartera.rol == RolEnCartera.PROPIETARIO) {
                         TarjetaPropia(cartera = cartera, onAbrir = { avisar(mensajeDetalle) })
                     } else {
@@ -690,4 +704,16 @@ private fun iconoDeTipo(tipo: TipoCartera): ImageVector = when (tipo) {
     TipoCartera.VIAJE -> Icons.Default.Place
     TipoCartera.EVENTO -> Icons.Default.Star
     TipoCartera.OTRO -> Icons.Default.List
+}
+
+@Composable
+private fun CargandoCarteras() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
 }

@@ -9,6 +9,8 @@ enum class Segmento {
 }
 
 data class CarterasUiState(
+    val cargando: Boolean = true,
+    val error: String? = null,
     val segmento: Segmento = Segmento.MIS,
     val tipo: TipoCartera? = null,
     val busqueda: String = "",

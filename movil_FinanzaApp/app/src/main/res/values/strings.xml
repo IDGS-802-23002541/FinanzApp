@@ -47,4 +47,7 @@
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
     <string name="carteras_pendiente_nueva">Nueva cartera llega con la HU #45.</string>
+
+    <!-- Errores -->
+    <string name="error_reintentar">Reintentar</string>
 </resources>

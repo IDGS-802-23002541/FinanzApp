@@ -5,9 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.correoValido
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -22,12 +25,15 @@ class LoginViewModel @Inject constructor(
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state.asStateFlow()
 
+    private val _eventos = Channel<LoginEvento>(Channel.BUFFERED)
+    val eventos: Flow<LoginEvento> = _eventos.receiveAsFlow()
+
     fun onCorreoChange(correo: String) {
-        _state.update { it.copy(correo = correo, errorCorreo = null, error = null) }
+        _state.update { it.copy(correo = correo, errorCorreo = null, errorGeneral = null) }
     }
 
     fun onContrasenaChange(contrasena: String) {
-        _state.update { it.copy(contrasena = contrasena, errorContrasena = null, error = null) }
+        _state.update { it.copy(contrasena = contrasena, errorContrasena = null, errorGeneral = null) }
     }
 
     fun onToggleContrasena() {
@@ -43,27 +49,24 @@ class LoginViewModel @Inject constructor(
         val errorContrasena = validarContrasena(actual.contrasena)
         if (errorCorreo != null || errorContrasena != null) {
             _state.update {
-                it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena, error = null)
+                it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena, errorGeneral = null)
             }
             return
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(cargando = true, error = null) }
+            _state.update { it.copy(cargando = true, errorGeneral = null) }
             authRepository.iniciarSesion(correo, actual.contrasena)
                 .onSuccess {
-                    _state.update { it.copy(cargando = false, loginExitoso = true) }
+                    _state.update { it.copy(cargando = false) }
+                    _eventos.trySend(LoginEvento.IrACarteras)
                 }
                 .onFailure { error ->
                     _state.update {
-                        it.copy(cargando = false, error = mensajeError(error))
+                        it.copy(cargando = false, errorGeneral = mensajeError(error))
                     }
                 }
         }
-    }
-
-    fun onLoginNavegado() {
-        _state.update { it.copy(loginExitoso = false) }
     }
 
     private fun validarCorreo(correo: String): String? = when {
