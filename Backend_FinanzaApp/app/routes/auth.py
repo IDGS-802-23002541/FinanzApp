@@ -250,6 +250,100 @@ def recuperar():
         {"ok": True, "data": datos_respuesta,"mensaje": MENSAJE_RECUPERACION}
     )
 
+@auth_bp.post("/restablecer")
+def restablecer():
+    # lee el json que manda postman
+    datos = request.get_json(silent=True)
+
+    # si no es un objeto json manda error 
+    if not isinstance(datos, dict):
+        return jsonify({"ok": False, "mensaje": "El cuerpo debe ser un objeto JSON"}), 400
+    # saca y limpia los campos 
+    correo = (datos.get("correo") or "").strip().lower()
+    codigo = datos.get("codigo") or ""
+    contrasenia = datos.get("contrasenia") or ""
+
+    # revisa que no falte ninguno 
+    faltantes = [
+        campo
+        for campo, valor in (
+            ("correo",correo),
+            ("codigo",codigo),
+            ("contrasenia",contrasenia),
+        )
+        if not valor 
+    ]
+    if faltantes:
+        return jsonify({"ok":False, "mensaje": f"Faltan campos: { ','.join(faltantes)}."}),400
+    # valida el formato del correo 
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",correo):
+        return jsonify({"ok": False, "mensaje": "El correo no tiene un formato válido."}), 400
+
+    # valida la politica de la contrasenia 
+    requisitos = []
+    if len(contrasenia) < 8: 
+        requisitos.append("minimo 8 caracteres")
+    if not re.search(r"[A-Z]", contrasenia):
+        requisitos.append("una mayúscula")
+    if not re.search(r"\d", contrasenia):
+        requisitos.append("un número")
+    if requisitos:
+        return jsonify(
+            {
+                "ok": False,
+                "mensaje": "La contraseña debe incluir: "
+                + ", ".join(requisitos)
+                + ".",
+            }
+        ), 400
+    # busca al usuario por correo 
+    usuario = db.session.execute(
+        db.select(Usuario).where(Usuario.correo == correo)
+    ).scalar_one_or_none()
+
+    # si no exite o esta inactivo, mismo mensaje nuetro 
+    if usuario is None or usuario.estado != "ACTIVO":
+        return jsonify({"ok": False, "mensaje": "El código no es válido o ya expiró."}), 400
+
+    # busca un token vigente y que no se haya usado
+    ahora = _ahora_utc()
+    token = db.session.execute(
+        db.select(TokenRecuperacion).where(
+            TokenRecuperacion.usuarioId == usuario.idUsuario,
+            TokenRecuperacion.hashToken == _hash_codigo(codigo),
+            TokenRecuperacion.fechaUso.is_(None),
+            TokenRecuperacion.fechaExpiracion > ahora,
+        )
+    ).scalar_one_or_none()
+
+    # si no hay token valido, mismo error 
+    if token is None:
+        return jsonify({"ok": False, "mensaje": "El código no es válido o ya expiró."}), 400
+
+    # cambia la contrasenia y quema el token 
+    usuario.contrasenia = generate_password_hash(contrasenia)
+    usuario.fechaActualizacion = ahora
+    token.fechaUso = ahora
+
+    db.session.execute(
+        db.update(SesionUsuario)
+        .where(
+            SesionUsuario.usuarioId == usuario.idUsuario,
+            SesionUsuario.fechaRevocacion.is_(None),
+        )
+        .values(fechaRevocacion=ahora)
+    )
+    # guarda todo 
+    db.session.commit()
+
+    # respuesta final 
+    return jsonify(
+        {"ok": True, "data": None, "mensaje": "Contraseña actualizada correctamente."}
+    ), 200
+
+        
+
+
 
 
 @auth_bp.post("/refresh")
