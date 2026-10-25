@@ -182,6 +182,9 @@ private class RepositorioFalso : AuthRepository {
         return if (falla != null) Result.failure(falla) else Result.success(Unit)
     }
 
+    override suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit> =
+        Result.success(Unit)
+
     override suspend fun cerrarSesion() = Unit
 
     override fun haySesion(): Boolean = false

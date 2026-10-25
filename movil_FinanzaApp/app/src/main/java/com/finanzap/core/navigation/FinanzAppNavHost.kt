@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.finanzap.features.auth.ui.cuenta.CambiarContrasenaScreen
 import com.finanzap.features.auth.ui.login.LoginScreen
 import com.finanzap.features.auth.ui.recuperar.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
@@ -65,7 +66,15 @@ fun FinanzAppNavHost(
                 temaOscuro = temaOscuro,
                 onAlternarTema = onAlternarTema,
                 onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
+                onCuenta = { navController.navigate(Rutas.CambiarContrasena) },
                 onCerrarSesion = onCerrarSesion
+            )
+        }
+
+        composable(Rutas.CambiarContrasena) {
+            CambiarContrasenaScreen(
+                onVolver = { navController.popBackStack() },
+                onCambiada = { navController.popBackStack() }
             )
         }
 

@@ -20,6 +20,12 @@ interface AuthRepository {
         contrasena: String
     ): Result<Unit>
 
+    /**
+     * Pendiente de backend (tarea #106): el endpoint aún no existe.
+     * La firma ya queda fijada para no tocar pantallas cuando llegue.
+     */
+    suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit>
+
     suspend fun cerrarSesion()
 
     fun haySesion(): Boolean

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -79,6 +80,7 @@ fun CarterasScreen(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
     onNuevaCartera: () -> Unit,
+    onCuenta: () -> Unit,
     onCerrarSesion: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
@@ -116,6 +118,7 @@ fun CarterasScreen(
                     temaOscuro = temaOscuro,
                     onAlternarTema = onAlternarTema,
                     onNuevaCartera = onNuevaCartera,
+                    onCuenta = onCuenta,
                     onCerrarSesion = onCerrarSesion
                 )
             }
@@ -203,6 +206,7 @@ private fun Encabezado(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
     onNuevaCartera: () -> Unit,
+    onCuenta: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -240,6 +244,14 @@ private fun Encabezado(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = stringResource(R.string.carteras_nueva)
+            )
+        }
+
+        IconButton(onClick = onCuenta) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = stringResource(R.string.carteras_mi_cuenta),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 

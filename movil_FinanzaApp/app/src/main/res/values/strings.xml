@@ -33,6 +33,15 @@
     <string name="recuperar_exito_mensaje">Ya puedes iniciar sesión con tu nueva contraseña.</string>
     <string name="recuperar_ir_login">Ir a iniciar sesión</string>
 
+    <!-- Cambiar contraseña -->
+    <string name="cambiar_contrasena_titulo">Cambiar contraseña</string>
+    <string name="cambiar_contrasena_volver">Volver</string>
+    <string name="cambiar_contrasena_actual">Contraseña actual</string>
+    <string name="cambiar_contrasena_nueva">Nueva contraseña</string>
+    <string name="cambiar_contrasena_confirmar">Confirmar contraseña</string>
+    <string name="cambiar_contrasena_guardar">Guardar contraseña</string>
+    <string name="cambiar_contrasena_guardando">Guardando…</string>
+
     <!-- Tema -->
     <string name="tema_claro">Modo claro</string>
     <string name="tema_oscuro">Modo oscuro</string>
@@ -44,6 +53,7 @@
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
     <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
     <string name="carteras_cerrar_sesion">Cerrar sesión</string>
+    <string name="carteras_mi_cuenta">Mi cuenta</string>
     <string name="carteras_mis">Mis carteras</string>
     <string name="carteras_compartidas">Compartidas</string>
     <string name="carteras_todas">Todas</string>

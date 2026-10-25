@@ -1,5 +1,6 @@
 package com.finanzap.features.auth.data
 
+import com.finanzap.features.auth.data.dto.CambiarContrasenaRequest
 import com.finanzap.features.auth.data.dto.LoginRequest
 import com.finanzap.features.auth.data.dto.RecuperarRequest
 import com.finanzap.features.auth.data.dto.RefreshRequest
@@ -28,4 +29,8 @@ interface AuthApi {
 
     @POST("auth/restablecer")
     suspend fun restablecerContrasenia(@Body peticion: RestablecerRequest): RespuestaMensaje
+
+    // Pendiente de backend (tarea #106): hoy responde 404 hasta que exista el endpoint.
+    @POST("auth/cambiar")
+    suspend fun cambiarContrasenia(@Body peticion: CambiarContrasenaRequest): RespuestaMensaje
 }
