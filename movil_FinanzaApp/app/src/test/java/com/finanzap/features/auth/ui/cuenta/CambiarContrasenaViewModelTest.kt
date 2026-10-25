@@ -19,7 +19,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class CambiarContrasenaViewModelTest {
 
-    private val repositorio = RepositorioFalso()
+    private val repositorio = RepositorioCuentaFalso()
 
     @Before
     fun preparar() {
@@ -116,32 +116,4 @@ class CambiarContrasenaViewModelTest {
         assertFalse(estado.cambioCompletado)
         assertEquals("No se pudo conectar. Revisa tu conexión.", estado.errorGeneral)
     }
-}
-
-private class RepositorioFalso : AuthRepository {
-
-    var llamadasCambiar = 0
-    var falla: Exception? = null
-
-    override suspend fun iniciarSesion(correo: String, contrasena: String): Result<Unit> =
-        Result.success(Unit)
-
-    override suspend fun solicitarRecuperacion(correo: String): Result<String?> =
-        Result.success(null)
-
-    override suspend fun restablecerContrasenia(
-        correo: String,
-        codigo: String,
-        contrasena: String
-    ): Result<Unit> = Result.success(Unit)
-
-    override suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit> {
-        llamadasCambiar++
-        val error = falla
-        return if (error != null) Result.failure(error) else Result.success(Unit)
-    }
-
-    override suspend fun cerrarSesion() = Unit
-
-    override fun haySesion(): Boolean = false
 }

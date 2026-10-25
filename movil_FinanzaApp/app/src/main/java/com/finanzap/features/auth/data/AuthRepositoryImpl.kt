@@ -2,6 +2,7 @@ package com.finanzap.features.auth.data
 
 import com.finanzap.core.storage.TokenStorage
 import com.finanzap.features.auth.data.dto.CambiarContrasenaRequest
+import com.finanzap.features.auth.data.dto.ConfirmacionCuentaRequest
 import com.finanzap.features.auth.data.dto.LoginRequest
 import com.finanzap.features.auth.data.dto.RecuperarRequest
 import com.finanzap.features.auth.data.dto.RestablecerRequest
@@ -61,6 +62,32 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit> =
         try {
             authApi.cambiarContrasenia(CambiarContrasenaRequest(actual, nueva))
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    /**
+     * Desactivar o eliminar cierra la sesión local cuando el backend confirma:
+     * la cuenta ya no puede iniciar sesión (CA2 de HU-02.5a y HU-02.5b).
+     */
+    override suspend fun desactivarCuenta(contrasena: String): Result<Unit> =
+        try {
+            authApi.desactivarCuenta(ConfirmacionCuentaRequest(contrasena))
+            tokenStorage.limpiar()
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun eliminarCuenta(contrasena: String): Result<Unit> =
+        try {
+            authApi.eliminarCuenta(ConfirmacionCuentaRequest(contrasena))
+            tokenStorage.limpiar()
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e

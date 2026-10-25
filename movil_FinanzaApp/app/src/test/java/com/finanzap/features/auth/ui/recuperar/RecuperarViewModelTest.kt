@@ -185,6 +185,12 @@ private class RepositorioFalso : AuthRepository {
     override suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit> =
         Result.success(Unit)
 
+    override suspend fun desactivarCuenta(contrasena: String): Result<Unit> =
+        Result.success(Unit)
+
+    override suspend fun eliminarCuenta(contrasena: String): Result<Unit> =
+        Result.success(Unit)
+
     override suspend fun cerrarSesion() = Unit
 
     override fun haySesion(): Boolean = false

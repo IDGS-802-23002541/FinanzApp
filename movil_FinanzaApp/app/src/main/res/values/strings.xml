@@ -33,6 +33,21 @@
     <string name="recuperar_exito_mensaje">Ya puedes iniciar sesión con tu nueva contraseña.</string>
     <string name="recuperar_ir_login">Ir a iniciar sesión</string>
 
+    <!-- Mi cuenta -->
+    <string name="mi_cuenta_titulo">Mi cuenta</string>
+    <string name="mi_cuenta_volver">Volver</string>
+    <string name="mi_cuenta_descripcion">Administra tu contraseña y tu cuenta. Estas acciones son permanentes.</string>
+    <string name="mi_cuenta_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="mi_cuenta_desactivar">Desactivar cuenta</string>
+    <string name="mi_cuenta_eliminar">Eliminar cuenta</string>
+    <string name="mi_cuenta_contrasena">Contraseña</string>
+    <string name="mi_cuenta_desactivar_titulo">Desactivar cuenta</string>
+    <string name="mi_cuenta_desactivar_aviso">Tus carteras pasarán a inactivas y sus colaboradores perderán acceso. Podrás reactivarla si el equipo la habilita. Esta acción cierra tu sesión.</string>
+    <string name="mi_cuenta_desactivar_confirmar">Sí, desactivar</string>
+    <string name="mi_cuenta_eliminar_titulo">Eliminar cuenta</string>
+    <string name="mi_cuenta_eliminar_aviso">Tus datos y tus carteras se eliminarán y sus colaboradores perderán acceso. Tus transacciones registradas se conservan. Esta acción no se puede deshacer.</string>
+    <string name="mi_cuenta_eliminar_confirmar">Sí, eliminar</string>
+
     <!-- Cambiar contraseña -->
     <string name="cambiar_contrasena_titulo">Cambiar contraseña</string>
     <string name="cambiar_contrasena_volver">Volver</string>

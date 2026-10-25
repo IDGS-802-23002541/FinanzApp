@@ -26,6 +26,14 @@ interface AuthRepository {
      */
     suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit>
 
+    /**
+     * Pendientes de backend (tareas #110 y #112): los endpoints aún no existen.
+     * Al confirmar, la sesión local se borra igual que al cerrar sesión.
+     */
+    suspend fun desactivarCuenta(contrasena: String): Result<Unit>
+
+    suspend fun eliminarCuenta(contrasena: String): Result<Unit>
+
     suspend fun cerrarSesion()
 
     fun haySesion(): Boolean
