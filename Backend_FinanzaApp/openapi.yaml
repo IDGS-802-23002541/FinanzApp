@@ -2,13 +2,15 @@ openapi: 3.0.3
 info:
   title: FinanzApp API
   description: Contrato de la API REST de FinanzApp (Flask + SQL Server).
-  version: 0.3.0
+  version: 0.4.0
 servers:
   - url: http://127.0.0.1:5000
     description: Desarrollo local
 tags:
   - name: Auth
     description: Registro, sesión y recuperación de cuenta
+  - name: Carteras
+    description: Creación y consulta de carteras
 paths:
   /auth/registro:
     post:
@@ -227,6 +229,53 @@ paths:
               example:
                 ok: false
                 mensaje: El código no es válido o ya expiró.
+  /carteras:
+    post:
+      tags:
+        - Carteras
+      summary: Crear una cartera
+      description: Crea una cartera con el usuario actual como propietario y estado ACTIVA.
+      operationId: crearCartera
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarteraCrearRequest'
+            example:
+              nombre: Casa Borja
+              tipo: HOGAR
+              descripcion: Gastos del hogar
+              presupuestoInicial: 5000
+              fechaInicio: '2026-11-01'
+              fechaFin: '2026-11-30'
+      responses:
+        '201':
+          description: Cartera creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarteraCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo crear la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -432,3 +481,120 @@ components:
         mensaje:
           type: string
           example: El correo ya está registrado.
+    CarteraCrearRequest:
+      type: object
+      required:
+        - nombre
+        - tipo
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+          example: Casa Borja
+        tipo:
+          type: string
+          enum:
+            - HOGAR
+            - VIAJE
+            - EVENTO
+            - OTRO
+            - OTRA
+          example: HOGAR
+        descripcion:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: Gastos del hogar
+        presupuestoInicial:
+          type: number
+          minimum: 0
+          default: 0
+          example: 5000
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-11-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-11-30'
+    Cartera:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Casa Borja
+        tipo:
+          type: string
+          enum:
+            - HOGAR
+            - VIAJE
+            - EVENTO
+            - OTRO
+          example: HOGAR
+        rol:
+          type: string
+          enum:
+            - PROPIETARIO
+            - COLABORADOR
+          example: PROPIETARIO
+        descripcion:
+          type: string
+          nullable: true
+          example: Gastos del hogar
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+            - ARCHIVADA
+            - FINALIZADA
+          example: ACTIVA
+        administrador:
+          type: string
+          nullable: true
+          example: Damian Rodriguez
+        inicialesAdministrador:
+          type: string
+          nullable: true
+          example: DR
+        presupuestoInicial:
+          type: number
+          example: 5000
+        miPagado:
+          type: number
+          example: 0
+        miCuota:
+          type: number
+          example: 0
+        miSaldo:
+          type: number
+          example: 0
+        avancePresupuesto:
+          type: integer
+          example: 0
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-11-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-11-30'
+    CarteraCreada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Cartera'
+        mensaje:
+          type: string
+          example: Cartera creada correctamente.
