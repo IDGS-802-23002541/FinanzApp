@@ -99,14 +99,16 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
 ### HU-02.3 — Recuperar contraseña
 - **Rol:** Visitante · **Quiero:** recuperar mi contraseña si la olvidé · **Para:** volver a entrar a mi cuenta. · **Prioridad:** Media
 - **Criterios de aceptación:**
-  - **CA1:** Correo registrado → enlace con vigencia limitada (ej. 30 min).
+  - **CA1:** Correo registrado → código de 6 dígitos con vigencia limitada (30 min).
   - **CA2:** Correo no registrado → mismo mensaje neutro.
-  - **CA3:** Enlace vigente + nueva contraseña válida → se actualiza y el enlace se invalida.
-  - **CA4:** Enlace expirado/usado → error y opción de solicitar otro.
+  - **CA3:** Código vigente + nueva contraseña válida → se actualiza y el código se invalida.
+  - **CA4:** Código expirado o ya usado → error y opción de solicitar otro.
+  - **CA5:** Envío del código por correo electrónico (pendiente: tarea #219).
 - **Tareas:**
   - **Web** (Aideé) — recuperación: pantallas de solicitud y restablecimiento.
   - **Backend** (Damián) — recuperación: token de vigencia limitada y mensaje neutro.
   - **BD** (Vanessa) — recuperación: tabla de tokens.
+  - **Móvil** (Diego) — recuperación: solicitud por correo y código de 6 dígitos.
 
 ### HU-02.4 — Cambiar contraseña en sesión
 - **Rol:** Usuario (todos) · **Quiero:** cambiar mi contraseña estando en sesión · **Para:** mantener segura mi cuenta. · **Prioridad:** Media

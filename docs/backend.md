@@ -43,7 +43,7 @@ Backend_FinanzaApp/
 
 | Blueprint | Endpoints principales | Reglas |
 | --- | --- | --- |
-| `auth` | `POST /auth/registro`, `/auth/login`, `/auth/recuperar`, `/auth/restablecer` | JWT; validar correo único; restablecer en 3 pasos. |
+| `auth` | `POST /auth/registro`, `/auth/login`, `/auth/recuperar`, `/auth/restablecer` | JWT; validar correo único; recuperación con código de 6 dígitos (30 min, un solo uso). |
 | `usuarios` | `GET/PUT /usuarios/me`, `DELETE /usuarios/me`, `GET /usuarios` (admin) | Correo inmutable; baja lógica; solo admin lista clientes. |
 | `carteras` | `GET/POST /carteras`, `GET/PUT /carteras/:id`, `POST /carteras/:id/inactivar`, `/reactivar`, `/finalizar` | Finalizada solo Viaje/Evento; sin borrado físico; filtros por estado/pertenencia. |
 | `miembros` | `GET/POST /carteras/:id/miembros`, `DELETE`, `/unirse`, `/delegar`, `/salir` | Un solo admin activo; baja/reactivación; invitación 8 caracteres. |

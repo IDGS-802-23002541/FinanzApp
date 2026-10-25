@@ -62,17 +62,21 @@ Reglas:
 
 ### 3.1 Registro
 - Campos obligatorios: **nombre completo y correo electrónico y contraseña**.
-- Validaciones: correo con formato válido y **no duplicado**; contraseña de mínimo 6 caracteres.
+- Validaciones: correo con formato válido y **no duplicado**; contraseña de mínimo 8 caracteres, con al menos una mayúscula y un número.
 - El usuario nuevo queda con `rolSistema = usuario`, `estado = activo`.
 
 ### 3.2 Autenticación
 - Sesiones mediante **JSON Web Token (JWT)**. El token se emite al iniciar sesión y viaja en las peticiones a la API.
 - **Fin de sesión (logout)**: invalida el token en el cliente.
 
-### 3.3 Restablecer contraseña (flujo de 3 pasos)
-1. `InputCorreo`: se valida que exista la cuenta y se envía un **código de validación**.
-2. `InputCódigoVálido`: se verifica el código (vigencia limitada).
-3. `InputNuevaContraseña`: nueva contraseña + confirmación (mínimo 6 caracteres).
+### 3.3 Restablecer contraseña (código de verificación)
+1. `InputCorreo`: el usuario ingresa su correo y se genera un **código de verificación de 6 dígitos**. La respuesta es siempre el mismo mensaje neutro, exista o no la cuenta.
+2. `InputCódigoVálido`: se verifica el código, que tiene **vigencia de 30 minutos** y es de **un solo uso**.
+3. `InputNuevaContraseña`: nueva contraseña + confirmación (mínimo 8 caracteres, una mayúscula y un número). Al restablecer se invalidan los demás códigos y las sesiones activas.
+
+La app móvil resuelve el paso 2 y 3 en una sola pantalla; la web puede separarlos.
+
+**Envío del código por correo:** pendiente (tarea #219). Mientras no exista, solo el backend en modo `debug` devuelve el código, para pruebas.
 
 ### 3.4 Editar perfil
 - Se pueden modificar datos personales (nombre, apellidos, teléfono...).
