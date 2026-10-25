@@ -55,7 +55,7 @@ jobs:
       - run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses > /dev/null
-          "$SDKMANAGER" "platform-tools" "platforms;android-37"
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - working-directory: movil_FinanzaApp
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
