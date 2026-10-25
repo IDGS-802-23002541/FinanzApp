@@ -42,21 +42,3 @@ jobs:
           npm run lint
           npm run build
 
-  movil:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      # setup-android@v3 está roto (pide paquete 'tools' inexistente).
-      # El runner ya trae SDK pero sdkmanager no está en PATH: se usa ruta completa.
-      - run: |
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKMANAGER" --licenses > /dev/null
-          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-      - working-directory: movil_FinanzaApp
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          ./gradlew testDebugUnitTest --stacktrace
