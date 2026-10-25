@@ -29,6 +29,9 @@
     <string name="recuperar_guardando">Guardando…</string>
     <string name="recuperar_reenviar_codigo">Reenviar código</string>
     <string name="recuperar_codigo_desarrollo">Código de desarrollo: %1$s</string>
+    <string name="recuperar_exito_titulo">Contraseña actualizada</string>
+    <string name="recuperar_exito_mensaje">Ya puedes iniciar sesión con tu nueva contraseña.</string>
+    <string name="recuperar_ir_login">Ir a iniciar sesión</string>
 
     <!-- Tema -->
     <string name="tema_claro">Modo claro</string>

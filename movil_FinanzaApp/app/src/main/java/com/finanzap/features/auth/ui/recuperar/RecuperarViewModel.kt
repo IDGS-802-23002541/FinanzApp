@@ -2,18 +2,16 @@ package com.finanzap.features.auth.ui.recuperar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.finanzap.BuildConfig
 import com.finanzap.core.util.codigoValido
 import com.finanzap.core.util.correoValido
 import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.core.util.requisitosContrasena
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,9 +23,6 @@ class RecuperarViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(RecuperarUiState())
     val state: StateFlow<RecuperarUiState> = _state.asStateFlow()
-
-    private val _eventos = Channel<RecuperarEvento>(Channel.BUFFERED)
-    val eventos: Flow<RecuperarEvento> = _eventos.receiveAsFlow()
 
     fun onCorreoChange(correo: String) {
         _state.update { it.copy(correo = correo, errorCorreo = null, errorGeneral = null) }
@@ -87,7 +82,9 @@ class RecuperarViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(cargando = true, errorCorreo = null, errorGeneral = null) }
             authRepository.solicitarRecuperacion(correo)
-                .onSuccess { codigoDesarrollo ->
+                .onSuccess { codigo ->
+                    // El backend solo expone el código en debug; en release nunca se muestra.
+                    val codigoDesarrollo = if (BuildConfig.DEBUG) codigo else null
                     _state.update {
                         it.copy(
                             cargando = false,
@@ -145,8 +142,7 @@ class RecuperarViewModel @Inject constructor(
                 contrasena = actual.contrasena
             )
                 .onSuccess {
-                    _state.update { it.copy(cargando = false) }
-                    _eventos.send(RecuperarEvento.RecuperacionCompletada)
+                    _state.update { it.copy(cargando = false, recuperacionCompletada = true) }
                 }
                 .onFailure { error ->
                     _state.update {
