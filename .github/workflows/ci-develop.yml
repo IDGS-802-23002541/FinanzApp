@@ -9,6 +9,13 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    # Sin BD en CI: valores falsos solo para construir la URI y arrancar la app.
+    # /prueba responde 503 y el test lo acepta.
+    env:
+      DB_SERVER: ci
+      DB_NAME: ci
+      DB_USER: ci
+      DB_PASSWORD: ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -43,6 +50,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
+      # setup-android@v3 está roto (pide paquete 'tools' inexistente).
+      # El runner ya trae SDK: solo se aceptan licencias y se instala la plataforma.
+      - run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platform-tools" "platforms;android-37"
       - working-directory: movil_FinanzaApp
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          ./gradlew testDebugUnitTest --stacktrace
