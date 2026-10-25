@@ -51,10 +51,11 @@ jobs:
           distribution: temurin
           java-version: "17"
       # setup-android@v3 está roto (pide paquete 'tools' inexistente).
-      # El runner ya trae SDK: solo se aceptan licencias y se instala la plataforma.
+      # El runner ya trae SDK pero sdkmanager no está en PATH: se usa ruta completa.
       - run: |
-          yes | sdkmanager --licenses > /dev/null
-          sdkmanager "platform-tools" "platforms;android-37"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "platform-tools" "platforms;android-37"
       - working-directory: movil_FinanzaApp
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
