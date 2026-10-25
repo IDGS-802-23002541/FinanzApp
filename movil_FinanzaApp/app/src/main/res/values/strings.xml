@@ -66,7 +66,21 @@
     <string name="carteras_sin_resultados_mensaje">Ninguna cartera coincide con el filtro o la búsqueda.</string>
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
-    <string name="carteras_pendiente_nueva">Nueva cartera llega con la HU #45.</string>
+
+    <!-- Nueva cartera -->
+    <string name="nueva_cartera_titulo">Nueva cartera</string>
+    <string name="nueva_cartera_volver">Volver</string>
+    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
+    <string name="nueva_cartera_tipo">Tipo de cartera</string>
+    <string name="nueva_cartera_descripcion">Descripción (opcional)</string>
+    <string name="nueva_cartera_presupuesto">Presupuesto inicial (opcional)</string>
+    <string name="nueva_cartera_fecha_inicio">Fecha de inicio (opcional)</string>
+    <string name="nueva_cartera_fecha_fin">Fecha de fin (opcional)</string>
+    <string name="nueva_cartera_sin_fecha">Sin fecha</string>
+    <string name="nueva_cartera_guardar">Crear cartera</string>
+    <string name="nueva_cartera_guardando">Creando…</string>
+    <string name="comun_aceptar">Aceptar</string>
+    <string name="comun_cancelar">Cancelar</string>
 
     <!-- Errores -->
     <string name="error_reintentar">Reintentar</string>

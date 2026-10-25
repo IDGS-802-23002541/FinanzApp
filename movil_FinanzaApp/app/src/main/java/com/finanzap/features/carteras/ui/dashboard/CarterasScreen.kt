@@ -70,12 +70,15 @@ import com.finanzap.core.util.formatearMoneda
 import com.finanzap.features.carteras.model.Cartera
 import com.finanzap.features.carteras.model.RolEnCartera
 import com.finanzap.features.carteras.model.TipoCartera
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
+    onNuevaCartera: () -> Unit,
     onCerrarSesion: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
@@ -83,13 +86,17 @@ fun CarterasScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val alcance = rememberCoroutineScope()
 
+    // Al volver de crear una cartera la pantalla se recompone: se recarga el listado.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.cargar()
+    }
+
     val avisar: (String) -> Unit = { mensaje ->
         alcance.launch { snackbarHostState.showSnackbar(mensaje) }
     }
 
     val mensajeDetalle = stringResource(R.string.carteras_pendiente_detalle)
     val mensajeGasto = stringResource(R.string.carteras_pendiente_gasto)
-    val mensajeNueva = stringResource(R.string.carteras_pendiente_nueva)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -108,7 +115,7 @@ fun CarterasScreen(
                     totalCompartidas = state.totalCompartidas,
                     temaOscuro = temaOscuro,
                     onAlternarTema = onAlternarTema,
-                    onNuevaCartera = { avisar(mensajeNueva) },
+                    onNuevaCartera = onNuevaCartera,
                     onCerrarSesion = onCerrarSesion
                 )
             }
@@ -168,7 +175,7 @@ fun CarterasScreen(
                             titulo = stringResource(R.string.carteras_vacio_titulo),
                             mensaje = stringResource(R.string.carteras_vacio_mensaje),
                             textoBoton = stringResource(R.string.carteras_nueva),
-                            onBoton = { avisar(mensajeNueva) }
+                            onBoton = onNuevaCartera
                         )
                     }
                 }

@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.finanzap.features.auth.ui.login.LoginScreen
 import com.finanzap.features.auth.ui.recuperar.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
+import com.finanzap.features.carteras.ui.formulario.NuevaCarteraScreen
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -63,7 +64,15 @@ fun FinanzAppNavHost(
             CarterasScreen(
                 temaOscuro = temaOscuro,
                 onAlternarTema = onAlternarTema,
+                onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
                 onCerrarSesion = onCerrarSesion
+            )
+        }
+
+        composable(Rutas.NuevaCartera) {
+            NuevaCarteraScreen(
+                onVolver = { navController.popBackStack() },
+                onCreada = { navController.popBackStack() }
             )
         }
     }
