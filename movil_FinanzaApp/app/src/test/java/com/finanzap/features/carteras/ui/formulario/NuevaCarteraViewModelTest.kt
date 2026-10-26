@@ -144,6 +144,13 @@ private class RepositorioFalso : CarterasRepository {
 
     override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
 
+    override suspend fun carterasConFiltros(
+        estado: String?,
+        tipo: String?,
+        rol: String?,
+        busqueda: String?
+    ): Result<List<Cartera>> = Result.success(emptyList())
+
     override suspend fun crear(
         nombre: String,
         tipo: TipoCartera,
