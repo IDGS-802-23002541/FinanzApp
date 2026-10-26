@@ -367,6 +367,98 @@
       "event": []
     },
     {
+      "name": "17 - Cambiar contraseña: nueva igual a la actual",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"NuevaPassword1\",\"nueva\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 400. La nueva debe ser distinta a la actual."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "18 - Cambiar contraseña: actual incorrecta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"WrongPass1\",\"nueva\":\"OtraPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 400. No cambia nada."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "19 - Cambiar contraseña válida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"NuevaPassword1\",\"nueva\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 200. Cámbiala de NuevaPassword1 a Password1. No es idempotente: corre la carpeta una vez y en orden."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "20 - Cambiar contraseña sin token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"Password1\",\"nueva\":\"OtraPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
       "name": "Carteras",
       "item": [
         {
