@@ -438,8 +438,12 @@ def desactivar_cuenta():
     )
     db.session.execute(
         db.update(Cartera)
-        .where(Cartera.idCartera.in_(mis_carteras))
-        .values(estado = "ARCHIVADA")
+        .where(
+            Cartera.idCartera.in_(mis_carteras),
+            # solo activas: las finalizadas conservan su estado
+            Cartera.estado == "ACTIVA",
+        )
+        .values(estado="ARCHIVADA")
         .execution_options(synchronize_session=False)
     )
 
