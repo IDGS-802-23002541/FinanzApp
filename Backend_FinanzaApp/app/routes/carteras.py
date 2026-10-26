@@ -6,7 +6,7 @@ from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.models import Cartera, MiembroCartera
+from app.models import Cartera, MiembroCartera, Usuario
 
 carteras_bp = Blueprint("carteras", __name__, url_prefix="/carteras")
 
@@ -36,6 +36,12 @@ ROLES_VISIBLES = {
     "ADMIN": "PROPIETARIO",
     "CONTRIBUYENTE": "COLABORADOR",
 }
+
+
+ESTADOS_CARTERA = {"ACTIVA","ARCHIVADA", "FINALIZADA"}
+
+
+MAPA_ROL_BD = {"PROPIETARIO":"ADMIN","COLABORADOR":"CONTRIBUYENTE"}
 
 
 # 3. Escribir helpers de mapeo, fechas, iniciales y serialización.
@@ -193,10 +199,94 @@ def crear():
         }
     ), 201
 
-    # 9. crear MiembroCartera
-    # 10. commit()
-    # 11. responder 201
 
+# listar todas las carteras del usuario
+@carteras_bp.get("")
+@jwt_required()
+def listar():
+    # POR DEFECTOS SALEN LAS ACTIVAS 
+    estado = (request.args.get("estado") or "ACTIVA").strip().upper()
+
+    if estado not in ESTADOS_CARTERA:
+        return jsonify({"ok": False, "mensaje": "El filtro estado no es válido."}), 400
+
+    # tipo: opcional, acepta OTRO y OTRA
+    tipo = (request.args.get("tipo") or "").strip().upper()
+    if tipo and tipo not in TIPOS_ENTRADA:
+        return jsonify({"ok": False, "mensaje": "El filtro tipo no es válido."}), 400
+
+    # rol: opcional, llega como PROPIETARIO o COLABORADOR
+    rol = (request.args.get("rol") or "").strip().upper()
+    if rol and rol not in MAPA_ROL_BD:
+        return jsonify({"ok": False, "mensaje": "El filtro rol no es válido."}), 400
+
+    # texto libre, busca sobre nombre y si esta vacio no filtra 
+    busqueda = (request.args.get("busqueda") or"").strip()
+    
+        # trae membresias activas + cartera activa de cada una 
+    try:
+        # membresia activa + cartera con el estado ya filtrado 
+        consulta = (
+            db.select(MiembroCartera, Cartera)
+            .join(Cartera, Cartera.idCartera == MiembroCartera.carteraId)
+            .where(
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+                Cartera.estado == estado,
+            )
+        )
+
+        # los filtros opcionales se van sumando con AND 
+        if tipo:
+            consulta = consulta.where(Cartera.tipo == _tipo_bd(tipo))
+        if rol:
+            consulta = consulta.where(MiembroCartera.rol == MAPA_ROL_BD[rol])
+        if busqueda:
+            consulta = consulta.where(Cartera.nombre.contains(busqueda))
+        filas = db.session.execute(
+            consulta.order_by(Cartera.fechaCreacion.desc(), Cartera.idCartera.desc())
+        ).all()
+
+    except SQLAlchemyError:
+        # si la bd truena respondemos json, no la pagina 500
+        return jsonify({"ok": False, "mensaje": "No se pudieron obtener las carteras."}), 503
+    
+    # se guardan los ids para buscar a los admins en un solo paso 
+    ids = [cartera.idCartera for _, cartera in filas]
+
+    # una sola solicitud para todos los admins 
+    admins = {}
+    if ids: 
+        admin_filas = db.session.execute(
+            db.select(MiembroCartera.carteraId, Usuario)
+            .join(Usuario, Usuario.idUsuario == MiembroCartera.usuarioId)
+            .where(
+                MiembroCartera.carteraId.in_(ids),
+                MiembroCartera.rol == "ADMIN",
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).all()
+
+        # se arma el mapa id de cartera a usuario admin 
+        admins = {cartera_id: usuario for cartera_id, usuario in admin_filas}
+
+    # le pasamos el rol de la membresia de este usuario y su admin 
+    data = [
+        _serializar_cartera(cartera, membresia.rol, admins.get(cartera.idCartera))
+        for membresia, cartera in filas 
+    ]
+
+    # respuesta 
+    return jsonify(
+        {
+            "ok": True,
+            "data": data,
+            "mensaje": "Carteras obtenidas correctamente.",
+        }
+    ), 200
+
+
+    
 
 
 
