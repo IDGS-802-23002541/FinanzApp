@@ -25,6 +25,10 @@
   --color-error: #a94832;
   --color-info: var(--paleta-coral);
 
+  /* Enlace activo del menú lateral (fondo coral suave y texto con contraste AA). */
+  --color-seleccion: #f7e0d8;
+  --color-seleccion-texto: #a94832;
+
   /* Degradado del panel de marca en las vistas públicas. */
   --gradiente-marca: linear-gradient(150deg, #173b45 0%, #1d4a55 35%, #0e2a32 100%);
 }
@@ -47,4 +51,8 @@
   --color-alerta: var(--paleta-coral);
   --color-error: #e08a73;
   --color-info: var(--paleta-coral);
+
+  /* Enlace activo del menú lateral en oscuro. */
+  --color-seleccion: #1f4a55;
+  --color-seleccion-texto: var(--paleta-coral);
 }
