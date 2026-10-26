@@ -11,7 +11,13 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
-from app.models import SesionUsuario, TokenRecuperacion, Usuario
+from app.models import (
+    Cartera,
+    MiembroCartera,
+    SesionUsuario,
+    TokenRecuperacion,
+    Usuario
+)
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -405,6 +411,76 @@ def cambiar_contrasenia():
         {"ok": True, "data": None, "mensaje": "Contraseña actualizada correctamente."}
     ), 200
 
+
+@auth_bp.post("/desactivar")
+@jwt_required()
+def desactivar_cuenta():
+    datos = request.get_json(silent=True)
+
+    if not isinstance(datos, dict):
+        return jsonify({"ok": False, "mensaje": "El cuerpo debe ser un objeto JSON."}), 400
+
+    contrasenia = datos.get("contrasenia")
+    if not isinstance(contrasenia, str) or not contrasenia:
+        return jsonify({"ok": False, "mensaje": "La contraseña es obligatoria."}), 400
+
+    # se confirma con la contrasenia actual 
+    if not check_password_hash(current_user.contrasenia, contrasenia):
+        return jsonify({"ok": False, "mensaje": "La contraseña no es válida."}), 400
+
+    ahora = _ahora_utc()
+
+    # mis carteras como admin pasan a archivadas 
+    mis_carteras = db.select(MiembroCartera.carteraId).where(
+        MiembroCartera.usuarioId == current_user.idUsuario,
+        MiembroCartera.rol == "ADMIN",
+        MiembroCartera.estado == "ACTIVO",
+    )
+    db.session.execute(
+        db.update(Cartera)
+        .where(Cartera.idCartera.in_(mis_carteras))
+        .values(estado = "ARCHIVADA")
+        .execution_options(synchronize_session=False)
+    )
+
+    # mis colaboraciones en carteras se dan de baja  
+    db.session.execute(
+        db.update(MiembroCartera)
+        .where(
+            MiembroCartera.usuarioId == current_user.idUsuario,
+            MiembroCartera.rol == "CONTRIBUYENTE",
+            MiembroCartera.estado == "ACTIVO",
+        )
+        .values(estado="BAJA", fechaBaja=ahora)
+        .execution_options(synchronize_session=False)
+    )
+
+    # la cuenta queda inactiva, no se borra nada 
+    current_user.estado = "INACTIVO"
+    current_user.fechaActualizacion = ahora 
+
+    # se revocan todas las sesiones incluida es 
+    db.session.execute(
+        db.update(SesionUsuario)
+        .where(
+            SesionUsuario.usuarioId == current_user.idUsuario,
+            SesionUsuario.fechaRevocacion.is_(None),
+        )
+        .values(fechaRevocacion=ahora)
+    )
+
+    db.session.commit()
+
+    return jsonify(
+        {"ok": True, "data": None, "mensaje": "Cuenta desactivada correctamente."}
+    ), 200
+
+
+
+
+
+
+    
 
 
 @auth_bp.post("/refresh")

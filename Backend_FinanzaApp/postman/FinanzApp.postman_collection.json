@@ -459,6 +459,74 @@
       "event": []
     },
     {
+      "name": "21 - Desactivar cuenta sin token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "22 - Desactivar cuenta con contraseña incorrecta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"WrongPass1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 400. La cuenta sigue activa."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "23 - Desactivar cuenta válida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 200. Deja la cuenta de prueba INACTIVA y revoca sus sesiones. Correr al final."
+      },
+      "response": [],
+      "event": []
+    },
+    {
       "name": "Carteras",
       "item": [
         {
