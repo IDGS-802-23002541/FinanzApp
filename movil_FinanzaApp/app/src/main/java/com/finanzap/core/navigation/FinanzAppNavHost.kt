@@ -5,9 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.finanzap.features.auth.ui.cuenta.CambiarContrasenaScreen
+import com.finanzap.features.auth.ui.cuenta.MiCuentaScreen
 import com.finanzap.features.auth.ui.login.LoginScreen
 import com.finanzap.features.auth.ui.recuperar.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.dashboard.CarterasScreen
+import com.finanzap.features.carteras.ui.formulario.NuevaCarteraScreen
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -63,7 +66,36 @@ fun FinanzAppNavHost(
             CarterasScreen(
                 temaOscuro = temaOscuro,
                 onAlternarTema = onAlternarTema,
+                onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
+                onCuenta = { navController.navigate(Rutas.MiCuenta) },
                 onCerrarSesion = onCerrarSesion
+            )
+        }
+
+        composable(Rutas.MiCuenta) {
+            MiCuentaScreen(
+                onVolver = { navController.popBackStack() },
+                onCambiarContrasena = { navController.navigate(Rutas.CambiarContrasena) },
+                onCuentaCerrada = {
+                    navController.navigate(Rutas.Login) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Rutas.CambiarContrasena) {
+            CambiarContrasenaScreen(
+                onVolver = { navController.popBackStack() },
+                onCambiada = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.NuevaCartera) {
+            NuevaCarteraScreen(
+                onVolver = { navController.popBackStack() },
+                onCreada = { navController.popBackStack() }
             )
         }
     }

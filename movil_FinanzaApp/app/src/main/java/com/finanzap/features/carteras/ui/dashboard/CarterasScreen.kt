@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -70,12 +71,16 @@ import com.finanzap.core.util.formatearMoneda
 import com.finanzap.features.carteras.model.Cartera
 import com.finanzap.features.carteras.model.RolEnCartera
 import com.finanzap.features.carteras.model.TipoCartera
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
+    onNuevaCartera: () -> Unit,
+    onCuenta: () -> Unit,
     onCerrarSesion: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
@@ -83,13 +88,17 @@ fun CarterasScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val alcance = rememberCoroutineScope()
 
+    // Al volver de crear una cartera la pantalla se recompone: se recarga el listado.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.cargar()
+    }
+
     val avisar: (String) -> Unit = { mensaje ->
         alcance.launch { snackbarHostState.showSnackbar(mensaje) }
     }
 
     val mensajeDetalle = stringResource(R.string.carteras_pendiente_detalle)
     val mensajeGasto = stringResource(R.string.carteras_pendiente_gasto)
-    val mensajeNueva = stringResource(R.string.carteras_pendiente_nueva)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -108,7 +117,8 @@ fun CarterasScreen(
                     totalCompartidas = state.totalCompartidas,
                     temaOscuro = temaOscuro,
                     onAlternarTema = onAlternarTema,
-                    onNuevaCartera = { avisar(mensajeNueva) },
+                    onNuevaCartera = onNuevaCartera,
+                    onCuenta = onCuenta,
                     onCerrarSesion = onCerrarSesion
                 )
             }
@@ -168,7 +178,7 @@ fun CarterasScreen(
                             titulo = stringResource(R.string.carteras_vacio_titulo),
                             mensaje = stringResource(R.string.carteras_vacio_mensaje),
                             textoBoton = stringResource(R.string.carteras_nueva),
-                            onBoton = { avisar(mensajeNueva) }
+                            onBoton = onNuevaCartera
                         )
                     }
                 }
@@ -196,6 +206,7 @@ private fun Encabezado(
     temaOscuro: Boolean,
     onAlternarTema: () -> Unit,
     onNuevaCartera: () -> Unit,
+    onCuenta: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -233,6 +244,14 @@ private fun Encabezado(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = stringResource(R.string.carteras_nueva)
+            )
+        }
+
+        IconButton(onClick = onCuenta) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = stringResource(R.string.carteras_mi_cuenta),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 

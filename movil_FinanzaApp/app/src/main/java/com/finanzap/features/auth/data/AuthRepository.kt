@@ -1,82 +1,40 @@
 package com.finanzap.features.auth.data
 
-import com.finanzap.core.storage.TokenStorage
-import com.finanzap.features.auth.data.dto.LoginRequest
-import com.finanzap.features.auth.data.dto.RecuperarRequest
-import com.finanzap.features.auth.data.dto.RestablecerRequest
-import kotlinx.coroutines.CancellationException
-import javax.inject.Inject
-import javax.inject.Singleton
+/**
+ * Contrato de autenticación consumido por los ViewModel.
+ * La implementación real está en [AuthRepositoryImpl]; en las pruebas se sustituye por un doble.
+ */
+interface AuthRepository {
 
-// Único punto que habla con la API de autenticación.
-@Singleton
-class AuthRepository @Inject constructor(
-    private val authApi: AuthApi,
-    private val tokenStorage: TokenStorage
-) {
-
-    suspend fun iniciarSesion(correo: String, contrasena: String): Result<Unit> =
-        try {
-            val respuesta = authApi.iniciarSesion(
-                LoginRequest(correo = correo.trim(), contrasenia = contrasena)
-            )
-            val sesion = respuesta.data
-            check(sesion.accessToken.isNotBlank()) { "El servidor devolvió un token vacío." }
-            tokenStorage.guardarSesion(
-                accessToken = sesion.accessToken,
-                refreshToken = sesion.refreshToken
-            )
-            Result.success(Unit)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun iniciarSesion(correo: String, contrasena: String): Result<Unit>
 
     /**
      * Devuelve el código solo cuando el backend corre en debug: el envío por correo
      * todavía no existe (tarea #219).
      */
-    suspend fun solicitarRecuperacion(correo: String): Result<String?> =
-        try {
-            val respuesta = authApi.solicitarRecuperacion(RecuperarRequest(correo.trim()))
-            Result.success(respuesta.data?.codigo)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun solicitarRecuperacion(correo: String): Result<String?>
 
     suspend fun restablecerContrasenia(
         correo: String,
         codigo: String,
         contrasena: String
-    ): Result<Unit> =
-        try {
-            authApi.restablecerContrasenia(
-                RestablecerRequest(correo.trim(), codigo.trim(), contrasena)
-            )
-            Result.success(Unit)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    ): Result<Unit>
 
     /**
-     * Revoca la sesión en el backend y siempre borra el guardado local.
-     * Si no hay red se limpia igual: el refresh token caduca solo en el servidor.
+     * Pendiente de backend (tarea #106): el endpoint aún no existe.
+     * La firma ya queda fijada para no tocar pantallas cuando llegue.
      */
-    suspend fun cerrarSesion() {
-        try {
-            authApi.cerrarSesion()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            // La sesión local debe cerrarse aunque el backend no responda.
-        }
-        tokenStorage.limpiar()
-    }
+    suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit>
 
-    fun haySesion(): Boolean = tokenStorage.haySesion()
+    /**
+     * Pendientes de backend (tareas #110 y #112): los endpoints aún no existen.
+     * Al confirmar, la sesión local se borra igual que al cerrar sesión.
+     */
+    suspend fun desactivarCuenta(contrasena: String): Result<Unit>
+
+    suspend fun eliminarCuenta(contrasena: String): Result<Unit>
+
+    suspend fun cerrarSesion()
+
+    fun haySesion(): Boolean
 }

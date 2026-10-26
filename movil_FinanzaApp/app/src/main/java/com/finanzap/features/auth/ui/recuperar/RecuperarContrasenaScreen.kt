@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,7 +29,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,14 +52,6 @@ fun RecuperarContrasenaScreen(
     viewModel: RecuperarViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        viewModel.eventos.collect { evento ->
-            when (evento) {
-                RecuperarEvento.RecuperacionCompletada -> onCompletada()
-            }
-        }
-    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -237,6 +229,19 @@ fun RecuperarContrasenaScreen(
                 }
             }
         }
+    }
+
+    if (state.recuperacionCompletada) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.recuperar_exito_titulo)) },
+            text = { Text(stringResource(R.string.recuperar_exito_mensaje)) },
+            confirmButton = {
+                TextButton(onClick = onCompletada) {
+                    Text(stringResource(R.string.recuperar_ir_login))
+                }
+            }
+        )
     }
 }
 

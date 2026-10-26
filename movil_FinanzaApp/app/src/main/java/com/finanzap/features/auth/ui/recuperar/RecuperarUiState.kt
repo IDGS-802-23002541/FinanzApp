@@ -13,6 +13,7 @@ data class RecuperarUiState(
     val confirmarContrasena: String = "",
     val contrasenaVisible: Boolean = false,
     val cargando: Boolean = false,
+    val recuperacionCompletada: Boolean = false,
     // Solo llega cuando el backend corre en debug (el correo aún no se envía, tarea #219).
     val codigoDesarrollo: String? = null,
     val errorCorreo: String? = null,

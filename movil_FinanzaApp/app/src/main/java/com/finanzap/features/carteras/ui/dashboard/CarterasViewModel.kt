@@ -25,10 +25,6 @@ class CarterasViewModel @Inject constructor(
     private val _state = MutableStateFlow(CarterasUiState())
     val state: StateFlow<CarterasUiState> = _state.asStateFlow()
 
-    init {
-        cargar()
-    }
-
     fun cargar() {
         _state.update { it.copy(cargando = true, error = null) }
         viewModelScope.launch {

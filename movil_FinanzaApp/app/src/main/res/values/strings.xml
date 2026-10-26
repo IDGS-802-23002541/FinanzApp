@@ -29,6 +29,33 @@
     <string name="recuperar_guardando">Guardando…</string>
     <string name="recuperar_reenviar_codigo">Reenviar código</string>
     <string name="recuperar_codigo_desarrollo">Código de desarrollo: %1$s</string>
+    <string name="recuperar_exito_titulo">Contraseña actualizada</string>
+    <string name="recuperar_exito_mensaje">Ya puedes iniciar sesión con tu nueva contraseña.</string>
+    <string name="recuperar_ir_login">Ir a iniciar sesión</string>
+
+    <!-- Mi cuenta -->
+    <string name="mi_cuenta_titulo">Mi cuenta</string>
+    <string name="mi_cuenta_volver">Volver</string>
+    <string name="mi_cuenta_descripcion">Administra tu contraseña y tu cuenta. Estas acciones son permanentes.</string>
+    <string name="mi_cuenta_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="mi_cuenta_desactivar">Desactivar cuenta</string>
+    <string name="mi_cuenta_eliminar">Eliminar cuenta</string>
+    <string name="mi_cuenta_contrasena">Contraseña</string>
+    <string name="mi_cuenta_desactivar_titulo">Desactivar cuenta</string>
+    <string name="mi_cuenta_desactivar_aviso">Tus carteras pasarán a inactivas y sus colaboradores perderán acceso. Podrás reactivarla si el equipo la habilita. Esta acción cierra tu sesión.</string>
+    <string name="mi_cuenta_desactivar_confirmar">Sí, desactivar</string>
+    <string name="mi_cuenta_eliminar_titulo">Eliminar cuenta</string>
+    <string name="mi_cuenta_eliminar_aviso">Tus datos y tus carteras se eliminarán y sus colaboradores perderán acceso. Tus transacciones registradas se conservan. Esta acción no se puede deshacer.</string>
+    <string name="mi_cuenta_eliminar_confirmar">Sí, eliminar</string>
+
+    <!-- Cambiar contraseña -->
+    <string name="cambiar_contrasena_titulo">Cambiar contraseña</string>
+    <string name="cambiar_contrasena_volver">Volver</string>
+    <string name="cambiar_contrasena_actual">Contraseña actual</string>
+    <string name="cambiar_contrasena_nueva">Nueva contraseña</string>
+    <string name="cambiar_contrasena_confirmar">Confirmar contraseña</string>
+    <string name="cambiar_contrasena_guardar">Guardar contraseña</string>
+    <string name="cambiar_contrasena_guardando">Guardando…</string>
 
     <!-- Tema -->
     <string name="tema_claro">Modo claro</string>
@@ -41,6 +68,7 @@
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
     <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
     <string name="carteras_cerrar_sesion">Cerrar sesión</string>
+    <string name="carteras_mi_cuenta">Mi cuenta</string>
     <string name="carteras_mis">Mis carteras</string>
     <string name="carteras_compartidas">Compartidas</string>
     <string name="carteras_todas">Todas</string>
@@ -63,7 +91,21 @@
     <string name="carteras_sin_resultados_mensaje">Ninguna cartera coincide con el filtro o la búsqueda.</string>
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
-    <string name="carteras_pendiente_nueva">Nueva cartera llega con la HU #45.</string>
+
+    <!-- Nueva cartera -->
+    <string name="nueva_cartera_titulo">Nueva cartera</string>
+    <string name="nueva_cartera_volver">Volver</string>
+    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
+    <string name="nueva_cartera_tipo">Tipo de cartera</string>
+    <string name="nueva_cartera_descripcion">Descripción (opcional)</string>
+    <string name="nueva_cartera_presupuesto">Presupuesto inicial (opcional)</string>
+    <string name="nueva_cartera_fecha_inicio">Fecha de inicio (opcional)</string>
+    <string name="nueva_cartera_fecha_fin">Fecha de fin (opcional)</string>
+    <string name="nueva_cartera_sin_fecha">Sin fecha</string>
+    <string name="nueva_cartera_guardar">Crear cartera</string>
+    <string name="nueva_cartera_guardando">Creando…</string>
+    <string name="comun_aceptar">Aceptar</string>
+    <string name="comun_cancelar">Cancelar</string>
 
     <!-- Errores -->
     <string name="error_reintentar">Reintentar</string>

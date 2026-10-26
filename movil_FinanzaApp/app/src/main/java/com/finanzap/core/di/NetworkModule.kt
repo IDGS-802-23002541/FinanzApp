@@ -4,6 +4,7 @@ import com.finanzap.BuildConfig
 import com.finanzap.core.network.AuthInterceptor
 import com.finanzap.core.network.TokenAuthenticator
 import com.finanzap.features.auth.data.AuthApi
+import com.finanzap.features.carteras.data.CarterasApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,4 +60,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCarterasApi(retrofit: Retrofit): CarterasApi = retrofit.create(CarterasApi::class.java)
 }
