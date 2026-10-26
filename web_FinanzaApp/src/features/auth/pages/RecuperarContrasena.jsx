@@ -12,10 +12,8 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import CampoContrasena from '../components/CampoContrasena.jsx'
 import { restablecerContrasenia, solicitarCodigo } from '../api.js'
+import { CONTRASENIA_VALIDA, CORREO_VALIDO} from '../../../utils/constantes.js'
 import { IconoFlechaDerecha } from '../../../components/ui/Iconos.jsx'
-
-const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const CONTRASENIA_VALIDA = /^(?=.*[A-Z])(?=.*\d).{8,}$/
 
 const TEXTOS_PASO = {
   1: {

@@ -1,0 +1,44 @@
+name: ci-develop
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    # Sin BD en CI: valores falsos solo para construir la URI y arrancar la app.
+    # /prueba responde 503 y el test lo acepta.
+    env:
+      DB_SERVER: ci
+      DB_NAME: ci
+      DB_USER: ci
+      DB_PASSWORD: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - working-directory: Backend_FinanzaApp
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+          python -m pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: npm
+          cache-dependency-path: web_FinanzaApp/package-lock.json
+      - working-directory: web_FinanzaApp
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+

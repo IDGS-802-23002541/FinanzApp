@@ -1,4 +1,5 @@
 import SvgIcon from '@mui/material/SvgIcon'
+import Avatar from '@mui/material/Avatar';
 
 // Íconos de línea usados en las vistas de autenticación.
 export function IconoFlechaIzquierda(props) {
@@ -55,6 +56,61 @@ export function IconoCheck(props) {
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoCandado(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+// Avatar del usuario en la barra lateral: foto si existe, si no las iniciales.
+export function AvatarUsuario({ imagenUsuario, nombreUsuario, iniciales, tamano = 36 }) {
+  const texto =
+    iniciales ??
+    (nombreUsuario ? nombreUsuario.charAt(0).toUpperCase() : '')
+
+  return (
+    <Avatar
+      src={imagenUsuario}
+      alt="Avatar del usuario"
+      sx={{
+        width: tamano,
+        height: tamano,
+        fontSize: '0.875rem',
+        fontWeight: 700,
+        backgroundColor: 'var(--color-primario)',
+        color: 'var(--color-sobre-primario)',
+      }}
+    >
+      {texto}
+    </Avatar>
+  )
+}
+
+// Salida de la sesión (icono de la barra lateral).
+export function IconoSalir(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 8l-4 4 4 4M6 12h9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
