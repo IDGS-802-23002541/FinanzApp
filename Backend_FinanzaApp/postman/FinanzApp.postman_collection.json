@@ -484,6 +484,33 @@
           },
           "response": [],
           "event": []
+        },
+        {
+          "name": "22 - Listar carteras",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 200. Devuelve las carteras activas propias y donde colabora."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "23 - Listar carteras sin token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 401. Sin token."
+          },
+          "response": [],
+          "event": []
         }
       ]
     }

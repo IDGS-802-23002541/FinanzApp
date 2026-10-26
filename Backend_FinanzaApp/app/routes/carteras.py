@@ -6,7 +6,7 @@ from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.models import Cartera, MiembroCartera
+from app.models import Cartera, MiembroCartera, Usuario
 
 carteras_bp = Blueprint("carteras", __name__, url_prefix="/carteras")
 
@@ -193,10 +193,62 @@ def crear():
         }
     ), 201
 
-    # 9. crear MiembroCartera
-    # 10. commit()
-    # 11. responder 201
 
+# listar todas las carteras del usuario
+@carteras_bp.get("")
+@jwt_required()
+def listar():
+        # trae membresias activas + cartera activa de cada una 
+    try:
+        filas = db.session.execute(
+            db.select(MiembroCartera, Cartera)
+            .join(Cartera, Cartera.idCartera == MiembroCartera.carteraId)
+            .where(
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+                Cartera.estado == "ACTIVA",
+            )
+            .order_by(Cartera.fechaCreacion.desc(), Cartera.idCartera.desc())
+        ).all()
+    
+    except SQLAlchemyError:
+        return jsonify({"ok": False, "mensaje": "No se pudieron obtener las carteras."}), 503
+    
+    # se guardan los ids para buscar a los admins en un solo paso 
+    ids = [cartera.idCartera for _, cartera in filas]
+
+    # una sola solicitud para todos los admins 
+    admins = {}
+    if ids: 
+        admin_filas = db.session.execute(
+            db.select(MiembroCartera.carteraId, Usuario)
+            .join(Usuario, Usuario.idUsuario == MiembroCartera.usuarioId)
+            .where(
+                MiembroCartera.carteraId.in_(ids),
+                MiembroCartera.rol == "ADMIN",
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).all()
+
+        # se arma el mapa id de cartera a usuario admin 
+        admins = {cartera_id: usuario for cartera_id, usuario in admin_filas}
+
+    # le pasamos el rol de la membresia de este usuario y su admin 
+    data = [
+        _serializar_cartera(cartera, membresia.rol, admins.get(cartera.idCartera))
+        for membresia, cartera in filas 
+    ]
+
+    # respuesta 
+    return jsonify(
+        {
+            "ok": True,
+            "data": data,
+            "mensaje": "Carteras obtenidas correctamente.",
+        }
+    ), 200
+
+    
 
 
 

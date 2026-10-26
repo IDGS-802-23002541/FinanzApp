@@ -230,6 +230,33 @@ paths:
                 ok: false
                 mensaje: El código no es válido o ya expiró.
   /carteras:
+    get:
+      tags:
+        - Carteras
+      summary: Listar mis carteras
+      description: Devuelve las carteras activas donde el usuario es propietario o colaborador.
+      operationId: listarCarteras
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Listado de carteras
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarterasLista'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener las carteras
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       tags:
         - Carteras
@@ -598,3 +625,16 @@ components:
         mensaje:
           type: string
           example: Cartera creada correctamente.
+    CarterasLista:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cartera'
+        mensaje:
+          type: string
+          example: Carteras obtenidas correctamente.
