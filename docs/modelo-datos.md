@@ -46,7 +46,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | idCategoriaCartera | int FK | Tipo de cartera |
 | idPropietario | int FK | Dueño/administrador original |
 | presupuestoInicial | decimal? | Opcional |
-| **estado** | enum | `activa` \| `inactiva` \| `finalizada`. **Finalizada solo Viaje/Evento** |
+| **estado** | enum | `ACTIVA` \| `ARCHIVADA` (= inactiva) \| `FINALIZADA`. **Finalizada solo Viaje/Evento** |
 | fechaCreacion | datetime | |
 | fechaInicio | date? | Vigencia |
 | fechaFin | date? | Vigencia |
