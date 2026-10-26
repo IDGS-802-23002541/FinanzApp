@@ -511,6 +511,70 @@
           },
           "response": [],
           "event": []
+        },
+        {
+          "name": "24 - Listar carteras por tipo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?tipo=HOGAR",
+            "description": "Esperado: 200. Solo carteras de tipo HOGAR."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "25 - Listar carteras donde colaboro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?rol=COLABORADOR",
+            "description": "Esperado: 200. Solo carteras compartidas."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "26 - Listar carteras por búsqueda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?busqueda=casa",
+            "description": "Esperado: 200. Coincidencias por nombre."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "27 - Listar carteras con estado inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?estado=INACTIVA",
+            "description": "Esperado: 400. INACTIVA no existe; el valor de BD es ARCHIVADA."
+          },
+          "response": [],
+          "event": []
         }
       ]
     }

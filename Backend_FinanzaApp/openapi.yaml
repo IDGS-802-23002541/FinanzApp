@@ -238,6 +238,45 @@ paths:
       operationId: listarCarteras
       security:
         - bearerAuth: []
+      parameters:
+        - in: query
+          name: estado
+          required: false
+          description: Estado de la cartera. Por defecto solo activas.
+          schema:
+            type: string
+            enum:
+              - ACTIVA
+              - ARCHIVADA
+              - FINALIZADA
+            default: ACTIVA
+        - in: query
+          name: tipo
+          required: false
+          description: Tipo de cartera.
+          schema:
+            type: string
+            enum:
+              - HOGAR
+              - VIAJE
+              - EVENTO
+              - OTRO
+              - OTRA
+        - in: query
+          name: rol
+          required: false
+          description: Rol del usuario en la cartera.
+          schema:
+            type: string
+            enum:
+              - PROPIETARIO
+              - COLABORADOR
+        - in: query
+          name: busqueda
+          required: false
+          description: Texto a buscar en el nombre de la cartera.
+          schema:
+            type: string
       responses:
         '200':
           description: Listado de carteras
@@ -245,6 +284,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CarterasLista'
+        '400':
+          description: Filtro inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Token no proporcionado o inválido
           content:
