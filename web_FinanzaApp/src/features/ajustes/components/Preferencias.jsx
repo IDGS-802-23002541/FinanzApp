@@ -20,10 +20,6 @@ const estiloSeccion = {
   fontWeight: 700,
   color: 'var(--color-texto)',
 }
-const estiloAyuda = {
-  fontSize: '0.78125rem',
-  color: 'var(--color-texto-terciario)',
-}
 
 // Tarjeta "Preferencias" del mockup. Apariencia funciona con la sesión
 // (HU-08.2); los avisos son maqueta de la HU-08.3.
