@@ -21,6 +21,8 @@ class Usuario(db.Model):
     )
     fechaActualizacion = db.Column(DATETIME2)
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVO")
+    # baja logica real, /cuenta lo llena al eliminar. esto es distinto de fechaActualizacion 
+    fechaBaja=db.Column(DATETIME2)
 
 
 class PreferenciaUsuario(db.Model):
