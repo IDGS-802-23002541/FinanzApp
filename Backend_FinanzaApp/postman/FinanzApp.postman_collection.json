@@ -693,6 +693,171 @@
       "event": []
     },
     {
+      "name": "31 - Preferencias: registro de cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Tema\",\"apaterno\":\"Prueba\",\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Cuenta aparte para #180 (prueba4 quedó ELIMINADA en #112)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "32 - Preferencias: login de la cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda el accessToken y debe traer usuario.tema = CLARO."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 - Preferencias: GET sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "34 - Preferencias: GET con token (default CLARO)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = CLARO porque nunca se guardó preferencia (CA3)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "35 - Preferencias: PUT tema OSCURO",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tema\":\"OSCURO\"}"
+        },
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = OSCURO. Crea la fila de preferencia."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "36 - Preferencias: GET después de guardar OSCURO",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = OSCURO (CA2)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "37 - Preferencias: PUT tema inválido",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tema\":\"AZUL\"}"
+        },
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 400. Solo se acepta CLARO u OSCURO."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "38 - Preferencias: login con tema guardado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. data.usuario.tema = OSCURO al iniciar sesión (CA2)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
       "name": "Carteras",
       "item": [
         {
