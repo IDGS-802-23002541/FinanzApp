@@ -527,6 +527,172 @@
       "event": []
     },
     {
+      "name": "24 - Eliminar cuenta: registro de cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Eliminar\",\"apaterno\":\"Prueba\",\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Cuenta aparte porque la #23 deja prueba1 INACTIVA."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "25 - Eliminar cuenta: login de la cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda el accessToken de esta cuenta."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 - Eliminar cuenta sin token",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "27 - Eliminar cuenta con contraseña incorrecta",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"WrongPass1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 400. La cuenta sigue ACTIVA y sin anonimizar."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "28 - Eliminar cuenta: crear cartera para verificar archivado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombre\":\"Cartera eliminar\",\"tipo\":\"HOGAR\"}"
+        },
+        "url": "{{baseUrl}}/carteras",
+        "description": "Esperado: 201. Antes de eliminar; luego en BD debe quedar ARCHIVADA."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "29 - Eliminar cuenta válida",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 200. Anonimiza, marca ELIMINADO con fechaBaja, archiva cartera, revoca sesiones y quema tokens."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "30 - Eliminar cuenta: login después de eliminar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 401. Ya está ELIMINADO y el correo fue anonimizado."
+      },
+      "response": [],
+      "event": []
+    },
+    {
       "name": "Carteras",
       "item": [
         {

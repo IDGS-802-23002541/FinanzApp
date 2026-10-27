@@ -6,7 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import create_access_token, get_jwt, jwt_required
+from flask_jwt_extended import (
+    create_access_token,
+    current_user, 
+    get_jwt,
+    jwt_required,
+    )
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -14,6 +19,8 @@ from app.extensions import db
 from app.models import (
     Cartera,
     MiembroCartera,
+    Notificacion,
+    PreferenciaUsuario,
     SesionUsuario,
     TokenRecuperacion,
     Usuario
@@ -256,6 +263,7 @@ def recuperar():
         {"ok": True, "data": datos_respuesta,"mensaje": MENSAJE_RECUPERACION}
     )
 
+
 @auth_bp.post("/restablecer")
 def restablecer():
     # lee el json que manda postman
@@ -438,12 +446,8 @@ def desactivar_cuenta():
     )
     db.session.execute(
         db.update(Cartera)
-        .where(
-            Cartera.idCartera.in_(mis_carteras),
-            # solo activas: las finalizadas conservan su estado
-            Cartera.estado == "ACTIVA",
-        )
-        .values(estado="ARCHIVADA")
+        .where(Cartera.idCartera.in_(mis_carteras))
+        .values(estado = "ARCHIVADA")
         .execution_options(synchronize_session=False)
     )
 
@@ -463,7 +467,7 @@ def desactivar_cuenta():
     current_user.estado = "INACTIVO"
     current_user.fechaActualizacion = ahora 
 
-    # se revocan todas las sesiones incluida es 
+    # se revocan todas las sesiones incluida esta 
     db.session.execute(
         db.update(SesionUsuario)
         .where(
@@ -480,11 +484,112 @@ def desactivar_cuenta():
     ), 200
 
 
+@auth_bp.delete("/cuenta")
+@jwt_required()
+def eliminar_cuenta():
+    datos = request.get_json(silent=True)
+
+    # el movil manda un obejeto json con la contrasenia 
+    if not isinstance(datos, dict):
+        return jsonify({"ok": False, "mensaje": "El cuerpo debe ser un objeto JSON."}), 400
+
+    contrasenia = datos.get("contrasenia")
+    if not isinstance(contrasenia, str) or not contrasenia: 
+        return jsonify({"ok": False, "mensaje": "La contraseña es obligatoria."}), 400
+
+    # admin y trabajador no pueden eliminarde desde la app 
+    if current_user.rolGlobal in ("ADMIN", "TRABAJADOR"): 
+        return jsonify(
+            {"ok": False, "mensaje": "Esta cuenta no puede eliminarse desde la app."}
+        ), 403
+
+    # se confirma la contrasenia actual 
+    if not check_password_hash(current_user.contrasenia, contrasenia):
+        return jsonify({"ok": False, "mensaje": "La contraseña no es válida."}), 400
+
+    ahora = _ahora_utc()
+
+    # mis carteras como admin pasa a archivadas 
+    mis_carteras = db.select(MiembroCartera.carteraId).where(
+        MiembroCartera.usuarioId == current_user.idUsuario, 
+        MiembroCartera.rol == "ADMIN",
+        MiembroCartera.estado == "ACTIVO",
+    )
+    db.session.execute(
+        db.update(Cartera)
+        .where(Cartera.idCartera.in_(mis_carteras))
+        .values(estado="ARCHIVADA")
+        .execution_options(synchronize_session=False)
+    )
+
+    # mis colaboraciones pasan a baja con fechabaja  
+    # la membresia no se borra, transacciones depende de ella  
+    db.session.execute(
+        db.update(MiembroCartera)
+        .where( 
+            MiembroCartera.usuarioId == current_user.idUsuario,
+            MiembroCartera.rol == "CONTRIBUYENTE",
+            MiembroCartera.estado == "ACTIVO",
+        )
+        .values(estado="BAJA", fechaBaja=ahora)
+        .execution_options(synchronize_session=False)
+    )
+
+    # anonimizar datos y marcar como eliminado 
+    # el correo lleva id para seguir siedno unico  
+    # termina en local.invalida porque el ck usuario correo exige un punto tras la @  
+    current_user.nombreUsuario = "Eliminado"
+    current_user.apaterno = "Eliminado"
+    current_user.amaterno = None
+    current_user.correo = f"elim+{current_user.idUsuario}@local.invalid"
+
+    # hash de un valor aleatorio que nadie conoce para que la contrasenia quede inutilizable  
+    current_user.contrasenia = generate_password_hash(secrets.token_urlsafe(48))
+    current_user.estado = "ELIMINADO"
+    current_user.fechaBaja = ahora
+    current_user.fechaActualizacion = ahora 
+
+    # se borran preferencias y notificaciones 
+    db.session.execute(
+        db.delete(PreferenciaUsuario).where(
+            PreferenciaUsuario.usuarioId == current_user.idUsuario
+        )
+    )
+    db.session.execute(
+        db.delete(Notificacion).where(
+            Notificacion.usuarioId == current_user.idUsuario
+        )
+    )
+
+    # tokens de recuperacion pendientes se queman  
+    db.session.execute(
+        db.update(TokenRecuperacion)
+        .where(
+            TokenRecuperacion.usuarioId == current_user.idUsuario,
+            TokenRecuperacion.fechaUso.is_(None),
+        )
+        .values(fechaUso=ahora)
+    )
+
+    # revocar todas las sesiones incluida la actual 
+    db.session.execute(
+        db.update(SesionUsuario)
+        .where(
+            SesionUsuario.usuarioId == current_user.idUsuario,
+            SesionUsuario.fechaRevocacion.is_(None),
+        )
+        .values(fechaRevocacion=ahora)
+    )
+
+    db.session.commit()
+
+    return jsonify(
+        {"ok": True, "data": None, "mensaje": "Cuenta eliminada correctamente."}
+    ), 200
 
 
 
 
-    
 
 
 @auth_bp.post("/refresh")

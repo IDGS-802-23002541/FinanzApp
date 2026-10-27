@@ -306,6 +306,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /auth/cuenta:
+    delete:
+      tags:
+        - Auth
+      summary: Eliminar mi cuenta conservando transacciones
+      description: Confirma con la contraseña, anonimiza los datos personales, marca la cuenta como ELIMINADO con fechaBaja, archiva sus carteras como propietario, da de baja sus colaboraciones, borra preferencias y notificaciones, quema tokens de recuperación y revoca sesiones. No borra transacciones, pagos recurrentes ni tickets. Admin y trabajador no pueden usar este endpoint.
+      operationId: eliminarCuenta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmacionCuentaRequest'
+            example:
+              contrasenia: Password1
+      responses:
+        '200':
+          description: Cuenta eliminada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Cuenta eliminada correctamente.
+        '400':
+          description: Contraseña incorrecta o faltante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: La cuenta es ADMIN o TRABAJADOR y no puede eliminarse desde la app
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras:
     get:
       tags:
@@ -520,6 +564,11 @@ components:
           type: string
           description: Fecha en formato HTTP-date (RFC 1123).
           example: 'Wed, 21 Oct 2026 18:38:51 GMT'
+        fechaBaja:
+          type: string
+          nullable: true
+          description: Baja lógica. Se llena cuando la cuenta se elimina; en INACTIVO queda null.
+          example: 'Wed, 26 Oct 2026 18:38:51 GMT'
     RegistroExitoso:
       type: object
       properties:
