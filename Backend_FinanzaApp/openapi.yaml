@@ -350,6 +350,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /auth/preferencias:
+    get:
+      tags:
+        - Auth
+      summary: Obtener mi preferencia de tema
+      description: Devuelve el tema guardado del usuario autenticado. Si nunca eligió uno, devuelve el tema por defecto CLARO.
+      operationId: obtenerPreferencias
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Preferencia de tema
+          content:
+            application/json:
+              example:
+                ok: true
+                data:
+                  tema: CLARO
+                mensaje: Preferencia obtenida.
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Auth
+      summary: Guardar mi preferencia de tema
+      description: Crea o actualiza el tema del usuario autenticado. Solo admite CLARO u OSCURO.
+      operationId: guardarPreferencias
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferenciaTemaRequest'
+            example:
+              tema: OSCURO
+      responses:
+        '200':
+          description: Preferencia guardada
+          content:
+            application/json:
+              example:
+                ok: true
+                data:
+                  tema: OSCURO
+                mensaje: Preferencia guardada.
+        '400':
+          description: Cuerpo inválido o tema distinto de CLARO/OSCURO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras:
     get:
       tags:
@@ -569,6 +632,13 @@ components:
           nullable: true
           description: Baja lógica. Se llena cuando la cuenta se elimina; en INACTIVO queda null.
           example: 'Wed, 26 Oct 2026 18:38:51 GMT'
+        tema:
+          type: string
+          enum:
+            - CLARO
+            - OSCURO
+          description: Preferencia de tema guardada. Por defecto CLARO.
+          example: CLARO
     RegistroExitoso:
       type: object
       properties:
@@ -691,6 +761,17 @@ components:
         mensaje:
           type: string
           example: Si el correo esta registrado, recibiras un codigo de recuperacion
+    PreferenciaTemaRequest:
+      type: object
+      required:
+        - tema
+      properties:
+        tema:
+          type: string
+          enum:
+            - CLARO
+            - OSCURO
+          example: OSCURO
     Error:
       type: object
       properties:

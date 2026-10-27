@@ -55,6 +55,8 @@ def _hash_codigo(codigo):
 
 
 def _serializar_usuario(usuario):
+    # tema guardado, ninunca lo eligio se queda el default claro 
+    pref = db.session.get(PreferenciaUsuario, usuario.idUsuario)
     return {
         "idUsuario": usuario.idUsuario,
         "nombreUsuario": usuario.nombreUsuario,
@@ -64,6 +66,7 @@ def _serializar_usuario(usuario):
         "rolGlobal": usuario.rolGlobal,
         "estado": usuario.estado,
         "fechaRegistro": usuario.fechaRegistro,
+        "tema": pref.tema if pref is not None else "CLARO"
     }
 
 
@@ -588,10 +591,6 @@ def eliminar_cuenta():
     ), 200
 
 
-
-
-
-
 @auth_bp.post("/refresh")
 def refresh():
     datos = request.get_json(silent=True)
@@ -648,3 +647,49 @@ def logout():
     return jsonify(
         {"ok": True, "data": None, "mensaje": "Sesión cerrada correctamente."}
     ), 200
+
+
+@auth_bp.get("/preferencias")
+@jwt_required()
+def obtener_preferencias():
+    # si nunca guardo tema se devuelve el defult 
+    pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
+    tema = pref.tema if pref is not None else "CLARO"
+    return jsonify({"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia obtenida."}), 200
+
+
+@auth_bp.put("/preferencias")
+@jwt_required()
+def guardar_preferencias():
+    datos = request.get_json(silent=True)
+
+    if not isinstance(datos, dict):
+        return jsonify({"ok": False, "mensaje": "El cuerpo debe ser un objeto JSON."}), 400
+
+    # un solo valor valido, no hay mas temas por ahora 
+    tema = (datos.get("tema") or "").strip().upper()
+    if tema not in ("CLARO", "OSCURO"):
+        return jsonify({"ok": False, "mensaje": "El tema debe ser CLARO u OSCURO."}), 400
+
+    ahora = _ahora_utc()
+
+    # si no existe fila se crea, si existe solo cambia el tema 
+    pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
+    if pref is None:
+        db.session.add(
+            PreferenciaUsuario(
+                usuarioId = current_user.idUsuario,
+                tema=tema,
+                fechaActualizacion=ahora,
+            )
+        )
+    else:
+        pref.tema = tema 
+        pref.fechaActualizacion = ahora 
+
+    db.session.commit()
+
+    return jsonify({"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia guardada."}), 200
+
+
+
