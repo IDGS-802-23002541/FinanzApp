@@ -6,7 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import create_access_token, get_jwt, jwt_required
+from flask_jwt_extended import (
+    create_access_token,
+    current_user,
+    get_jwt,
+    jwt_required,
+)
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
