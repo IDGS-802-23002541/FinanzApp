@@ -229,6 +229,83 @@ paths:
               example:
                 ok: false
                 mensaje: El código no es válido o ya expiró.
+  /auth/cambiar:
+    post:
+      tags:
+        - Auth
+      summary: Cambiar mi contraseña en sesión
+      description: Valida la contraseña actual, aplica la política y actualiza la contraseña del usuario autenticado. Las demás sesiones del usuario se revocan; la actual sigue viva.
+      operationId: cambiarContrasena
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasenaRequest'
+            example:
+              actual: Password1
+              nueva: NuevaPassword1
+      responses:
+        '200':
+          description: Contraseña actualizada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Contraseña actualizada correctamente.
+        '400':
+          description: Contraseña actual incorrecta, igual a la nueva o que no cumple la política
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/desactivar:
+    post:
+      tags:
+        - Auth
+      summary: Desactivar mi cuenta
+      description: Confirma con la contraseña, marca la cuenta como INACTIVO, archiva sus carteras como propietario, la retira como colaborador y revoca sus sesiones. No borra registros ni transacciones.
+      operationId: desactivarCuenta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmacionCuentaRequest'
+            example:
+              contrasenia: Password1
+      responses:
+        '200':
+          description: Cuenta desactivada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Cuenta desactivada correctamente.
+        '400':
+          description: Contraseña incorrecta o faltante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras:
     get:
       tags:
@@ -527,6 +604,27 @@ components:
           type: string
           description: Mínimo 8 caracteres, al menos una mayúscula y un número.
           example: NuevaPassword1
+    CambiarContrasenaRequest:
+      type: object
+      required:
+        - actual
+        - nueva
+      properties:
+        actual:
+          type: string
+          example: Password1
+        nueva:
+          type: string
+          description: Mínimo 8 caracteres, al menos una mayúscula y un número. Debe ser distinta a la actual.
+          example: NuevaPassword1
+    ConfirmacionCuentaRequest:
+      type: object
+      required:
+        - contrasenia
+      properties:
+        contrasenia:
+          type: string
+          example: Password1
     RecuperacionSolicitada:
       type: object
       properties:
