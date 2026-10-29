@@ -11,6 +11,13 @@ interface CarterasRepository {
 
     suspend fun carteras(): Result<List<Cartera>>
 
+    suspend fun carterasConFiltros(
+        estado: String? = null,
+        tipo: String? = null,
+        rol: String? = null,
+        busqueda: String? = null
+    ): Result<List<Cartera>>
+
     suspend fun crear(
         nombre: String,
         tipo: TipoCartera,

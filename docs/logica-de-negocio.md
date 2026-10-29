@@ -82,9 +82,10 @@ La app móvil resuelve el paso 2 y 3 en una sola pantalla; la web puede separarl
 - Se pueden modificar datos personales (nombre, apellidos, teléfono...).
 - **No se puede modificar**: correo electrónico, fecha de creación ni estado de la cuenta.
 
-### 3.5 Eliminación lógica de cuenta
-- El usuario puede eliminar su cuenta: **no se borra físicamente**; pasa a `estado = eliminado` con `fechaBaja`.
-- Al quedar eliminado, no puede iniciar sesión y sus membresías se dan de baja lógica.
+### 3.5 Eliminación lógica de cuenta (opción B)
+- El usuario puede eliminar su cuenta: **no se borra físicamente**; pasa a `estado = ELIMINADO` con `fechaBaja` (migración TG-113 pendiente en BD).
+- Al quedar eliminado, no puede iniciar sesión, se anonimizan sus datos (`Cuenta eliminada`) y sus membresías se dan de baja lógica.
+- Sus carteras propias se archivan (`ARCHIVADA`), no se borran; las transacciones se conservan.
 
 ---
 
@@ -101,17 +102,18 @@ Nombre, descripción, presupuesto inicial (opcional), fechas de vigencia y tipo.
 | Estado | Descripción | Quién |
 | --- | --- | --- |
 | **Activa** | Operable: admite movimientos, miembros e invitaciones. | Todas las carteras |
-| **Inactiva** | Desactivada temporalmente. Reactivable por su administrador. | Todas las carteras |
+| **Archivada** (= inactiva) | Desactivada temporalmente. Reactivable por su administrador. | Todas las carteras |
 | **Finalizada** | Cierre definitivo, **solo lectura** (balance congelado). | **Solo Viaje y Evento** |
 
 Reglas:
 - **No existen eliminaciones físicas** de carteras. Una baja deja `fechaBaja` y conserva el histórico.
-- Pasar de **Activa → Inactiva** y **Inactiva → Activa** (reactivar) es libre para el administrador.
+- Pasar de **Activa → Archivada** y **Archivada → Activa** (reactivar) es libre para el administrador.
 - **Activa → Finalizada** solo aplica a carteras Viaje/Evento; al finalizar se guarda `fechaCierre`.
 - Una cartera **Finalizada** no admite movimientos, miembros, invitaciones ni edición.
+- Desactivar o eliminar cuenta **no pisa** carteras `FINALIZADA`.
 
 ### 4.4 Filtros y búsqueda
-- Por **estado**: Activas, Inactivas, Finalizadas.
+- Por **estado**: Activas, Archivadas (= inactivas), Finalizadas.
 - Por **pertenencia**: *Mis carteras* (soy propietario/administrador) vs. *Carteras en las que participo* (soy contribuyente).
 - Por **tipo** y búsqueda **por nombre**.
 

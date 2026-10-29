@@ -24,6 +24,13 @@ data class RespuestaCartera(
 )
 
 @Serializable
+data class RespuestaListaCarteras(
+    val ok: Boolean = true,
+    val data: List<CarteraDto> = emptyList(),
+    val mensaje: String = ""
+)
+
+@Serializable
 data class CarteraDto(
     val id: Int,
     val nombre: String,

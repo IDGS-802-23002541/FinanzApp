@@ -8,9 +8,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 
 /**
- * Mientras el backend no expone GET /carteras (tarea #121), el listado muestra solo las
- * carteras creadas en esta sesión, como pide HU-03.1 CA3. Al existir el endpoint solo
- * cambia el cuerpo de [carteras]; la firma y las pantallas no.
+ * Lista desde GET /carteras; lo creado en sesión se conserva en memoria
+ * para HU-03.1 CA3 mientras el backend lo devuelve.
  */
 class CarterasRepositoryImpl @Inject constructor(
     private val carterasApi: CarterasApi
@@ -18,7 +17,23 @@ class CarterasRepositoryImpl @Inject constructor(
 
     private val creadas = mutableListOf<Cartera>()
 
-    override suspend fun carteras(): Result<List<Cartera>> = Result.success(creadas)
+    override suspend fun carteras(): Result<List<Cartera>> =
+        carterasConFiltros()
+
+    override suspend fun carterasConFiltros(
+        estado: String?,
+        tipo: String?,
+        rol: String?,
+        busqueda: String?
+    ): Result<List<Cartera>> =
+        try {
+            val respuesta = carterasApi.listar(estado, tipo, rol, busqueda)
+            Result.success(respuesta.data.map { dto -> dto.aCartera() })
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
     override suspend fun crear(
         nombre: String,

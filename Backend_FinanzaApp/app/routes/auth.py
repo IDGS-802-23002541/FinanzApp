@@ -449,8 +449,12 @@ def desactivar_cuenta():
     )
     db.session.execute(
         db.update(Cartera)
-        .where(Cartera.idCartera.in_(mis_carteras))
-        .values(estado = "ARCHIVADA")
+        .where(
+            Cartera.idCartera.in_(mis_carteras),
+            # solo activas: las finalizadas conservan su estado
+            Cartera.estado == "ACTIVA",
+        )
+        .values(estado="ARCHIVADA")
         .execution_options(synchronize_session=False)
     )
 
@@ -470,7 +474,7 @@ def desactivar_cuenta():
     current_user.estado = "INACTIVO"
     current_user.fechaActualizacion = ahora 
 
-    # se revocan todas las sesiones incluida esta 
+    # se revocan todas las sesiones incluida esta
     db.session.execute(
         db.update(SesionUsuario)
         .where(
@@ -520,7 +524,10 @@ def eliminar_cuenta():
     )
     db.session.execute(
         db.update(Cartera)
-        .where(Cartera.idCartera.in_(mis_carteras))
+        .where(
+            Cartera.idCartera.in_(mis_carteras),
+            Cartera.estado == "ACTIVA",
+        )
         .values(estado="ARCHIVADA")
         .execution_options(synchronize_session=False)
     )
