@@ -4,6 +4,9 @@ import Tarjeta from './Tarjeta.jsx'
 import CampoContrasena from '../../auth/components/CampoContrasena.jsx'
 import { IconoCandado } from '../../../components/ui/Iconos.jsx'
 import { CONTRASENIA_VALIDA } from '../../../utils/constantes.js'
+import { cambiarContrasenia } from '../api.js'
+
+const FORMULARIO_VACIO = { actual: '', nueva: '', confirmar: '' }
 
 const sxBoton = {
   minHeight: 0,
@@ -35,32 +38,44 @@ function validar({ actual, nueva, confirmar }) {
   return errores
 }
 
-// Tarjeta "Seguridad" del interior de Ajustes (HU-02.4).
 function FormularioSeguridad() {
-  const [formulario, setFormulario] = useState({
-    actual: '',
-    nueva: '',
-    confirmar: '',
-  })
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO)
   const [errores, setErrores] = useState({})
-  const [aviso, setAviso] = useState('')
+  const [aviso, setAviso] = useState(null)
+  const [enviando, setEnviando] = useState(false)
 
   const actualizar = (campo) => (evento) => {
-    setAviso('')
+    setAviso(null)
     setErrores((actual) => ({ ...actual, [campo]: undefined }))
     setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
   }
 
-  const cambiar = (evento) => {
+  const cambiar = async (evento) => {
     evento.preventDefault()
 
     const nuevosErrores = validar(formulario)
     setErrores(nuevosErrores)
     if (Object.keys(nuevosErrores).length > 0) return
 
-    setAviso(
-      'Pendiente del backend: aún no existe el endpoint para cambiar la contraseña (HU-02.4).',
-    )
+    setEnviando(true)
+    setAviso(null)
+
+    try {
+      await cambiarContrasenia({
+        actual: formulario.actual,
+        nueva: formulario.nueva,
+      })
+
+      setFormulario(FORMULARIO_VACIO)
+      setAviso({
+        severidad: 'success',
+        texto: 'Contraseña actualizada correctamente.',
+      })
+    } catch (err) {
+      setAviso({ severidad: 'error', texto: err.message })
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -108,8 +123,8 @@ function FormularioSeguridad() {
         </Box>
 
         {aviso && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            {aviso}
+          <Alert severity={aviso.severidad} sx={{ mt: 2 }}>
+            {aviso.texto}
           </Alert>
         )}
 
@@ -117,9 +132,10 @@ function FormularioSeguridad() {
           type="submit"
           variant="outlined"
           startIcon={<IconoCandado />}
+          disabled={enviando}
           sx={{ mt: 2, ...sxBoton }}
         >
-          Cambiar contraseña
+          {enviando ? 'Guardando…' : 'Cambiar contraseña'}
         </Button>
       </Box>
     </Tarjeta>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Alert,
   Box,
@@ -13,6 +14,10 @@ import Tarjeta from './Tarjeta.jsx'
 import CampoContrasena from '../../auth/components/CampoContrasena.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { ROLES } from '../../../utils/constantes.js'
+import { desactivarCuenta } from '../api.js'
+
+//COMENTARIO
+//DESACTIVAR y ELIMINAR hacen la misma acción de desactivar la cuenta, pero el backend aún no tiene el endpoint para eliminarla 
 
 const sxBoton = {
   minHeight: 0,
@@ -21,7 +26,6 @@ const sxBoton = {
   fontSize: '0.875rem',
 }
 
-// CA3/CA4: cada acción advierte lo que pasa con las carteras propias antes de confirmar.
 const ACCIONES = {
   desactivar: {
     titulo: '¿Desactivar tu cuenta?',
@@ -30,8 +34,6 @@ const ACCIONES = {
       'Si tienes carteras propias, éstas pasarán a inactivas y tus colaboradores perderán acceso. ' +
       'Las transacciones que registraste se conservan.',
     boton: 'Desactivar cuenta',
-    aviso:
-      'Pendiente del backend: aún no existe el endpoint para desactivar la cuenta (HU-02.5a).',
   },
   eliminar: {
     titulo: '¿Eliminar tu cuenta?',
@@ -45,18 +47,20 @@ const ACCIONES = {
   },
 }
 
-// Zona de riesgo de Ajustes (HU-02.5a y HU-02.5b)
 function ZonaRiesgo() {
-  const { usuario } = useAuth()
+  const { usuario, cerrarSesion } = useAuth()
+  const navegar = useNavigate()
   const [accion, setAccion] = useState(null)
   const [contrasenia, setContrasenia] = useState('')
   const [errorContrasenia, setErrorContrasenia] = useState('')
   const [aviso, setAviso] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
   const abrir = (clave) => {
     setAccion(clave)
     setContrasenia('')
     setErrorContrasenia('')
+    setAviso('')
   }
 
   const cancelar = () => {
@@ -65,15 +69,31 @@ function ZonaRiesgo() {
     setErrorContrasenia('')
   }
 
-  // La acción se confirma escribiendo la contraseña.
-  const confirmar = () => {
+  const confirmar = async () => {
     if (!contrasenia) {
       setErrorContrasenia('Ingresa tu contraseña para confirmar.')
       return
     }
 
-    setAviso(ACCIONES[accion].aviso)
-    cancelar()
+    if (accion === 'eliminar') {
+      setAviso(ACCIONES.eliminar.aviso)
+      cancelar()
+      return
+    }
+
+    setEnviando(true)
+    setErrorContrasenia('')
+
+    try {
+      await desactivarCuenta(contrasenia)
+
+      await cerrarSesion()
+      navegar('/login')
+    } catch (err) {
+      setErrorContrasenia(err.message)
+    } finally {
+      setEnviando(false)
+    }
   }
 
   if (usuario?.rol !== ROLES.CLIENTE) return null
@@ -151,16 +171,17 @@ function ZonaRiesgo() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancelar} sx={sxBoton}>
+          <Button onClick={cancelar} sx={sxBoton} disabled={enviando}>
             Cancelar
           </Button>
           <Button
             onClick={confirmar}
             variant="contained"
             color={accion === 'eliminar' ? 'error' : 'warning'}
+            disabled={enviando}
             sx={sxBoton}
           >
-            {detalle?.boton}
+            {enviando ? 'Procesando…' : detalle?.boton}
           </Button>
         </DialogActions>
       </Dialog>

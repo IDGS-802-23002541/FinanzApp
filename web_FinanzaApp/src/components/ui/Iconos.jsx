@@ -78,6 +78,181 @@ export function IconoCandado(props) {
   )
 }
 
+// Íconos del dashboard de carteras.
+export function IconoMas(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M12 5v14M5 12h14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoArchivo(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 8.5h16M6 4h12a1 1 0 0 1 1 1v3.5M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5M10 12.5h4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoBuscar(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5.6 12.6L21 21"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoCasa(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-7.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoPin(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoEstrella(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="m12 3.5 2.6 5.4 6 .9-4.3 4.2 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.4 9.8l6-.9L12 3.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoOtro(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M6 12h.01M12 12h.01M18 12h.01"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoCartera(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 8a2 2 0 0 1 2-2h11.5v3M4 8v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H6a2 2 0 0 1-2-2Zm12 4.5h4v3h-4a1.5 1.5 0 0 1 0-3Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoLapiz(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 20h4L20 8l-4-4L4 16v4Zm11.5-13.5 4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoPersonas(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 8.5c0-3.2 2.7-5 6-5s6 1.8 6 5m1-12.5a3.5 3.5 0 0 1 0 7M17.5 15.5c2 .7 3.5 2.3 3.5 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoPapelera(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M5 7h14M10 7V4.5h4V7m-6.5 0 .8 13h7.4l.8-13M10 11v5.5m4-5.5v5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoCalendario(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 7h16v13H4V7Zm4-3v4m8-4v4M4 11h16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </SvgIcon>
+  )
+}
+
 // Avatar del usuario en la barra lateral: foto si existe, si no las iniciales.
 export function AvatarUsuario({ imagenUsuario, nombreUsuario, iniciales, tamano = 36 }) {
   const texto =
