@@ -63,21 +63,23 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Regla: **un solo `administrador` activo** por cartera.
 
-### 1.5 `Transaccion`
+### 1.5 `Transaccion` (tabla real: `TRANSACCIONES`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idTransaccion | int PK | |
-| idCartera | int FK | |
-| idUsuario | int FK | Responsable |
-| idCategoria | int FK | Ver §1.6 |
-| **idPeriodo** | int FK? | **Nuevo**: periodo del movimiento (carteras Hogar) |
-| tipo | enum | `ingreso` \| `gasto` |
-| monto | decimal | |
-| fecha | date | |
-| metodoPago | enum | `efectivo` \| `tarjeta` \| `transferencia` |
-| nota | string | Descripción |
-| **comprobanteUrl** | string? | **Nuevo**: imagen en Cloudinary |
-| **estado** | enum | `activo` \| `eliminado`. **Nuevo** (baja lógica) |
+| carteraId | int FK | |
+| usuarioId | int FK | Responsable (debe ser miembro activo de la cartera) |
+| categoriaId | int FK? | Ver §1.6 |
+| **periodoId** | int FK? | Periodo del movimiento (carteras Hogar) |
+| tipo | enum | `INGRESO` \| `GASTO` |
+| monto | decimal | Mayor a 0 (`CK_TRANSACCIONES_monto`) |
+| fechaTransaccion | datetime | Fecha del movimiento |
+| descripcion | string? | Descripción |
+| metodoPago | enum? | `EFECTIVO` \| `TARJETA` \| `TRANSFERENCIA` |
+| **comprobanteUrl** | string? | Imagen en Cloudinary |
+| **estado** | enum | `ACTIVO` \| `ELIMINADO` (baja lógica) |
+| fechaCreacion | datetime | Inmutable |
+| fechaActualizacion | datetime? | |
 
 > Cambio: se elimina `nombreGasto` duplicado; el nombre se obtiene de la categoría.
 

@@ -283,7 +283,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
   - **Web** (Aideé) — transacciones: registrar ingreso/gasto.
   - **Backend** (Damián) — transacciones: crear, recalcular saldo y emitir evento.
   - **Móvil** (Diego) — transacciones: registrar ingreso/gasto.
-  - **BD** (Vanessa) — transacciones: tabla y modelo.
+  - **BD** (Diego) — transacciones: tabla y modelo. Hecho en T#146: `estado` + `metodoPago` + `comprobanteUrl`.
 
 ### HU-05.2 — Consultar transacciones
 - **Rol:** Propietario / Colaborador · **Quiero:** consultar las transacciones con filtro por periodo y paginación · **Para:** revisar mi historial sin perderme entre muchos registros. · **Prioridad:** Alta

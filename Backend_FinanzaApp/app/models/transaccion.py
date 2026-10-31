@@ -18,11 +18,28 @@ class Transaccion(db.Model):
         db.Index(
             "IX_TRANSACCIONES_usuario_fecha", "usuarioId", "fechaTransaccion"
         ),
+        db.Index("IX_TRANSACCIONES_cartera_estado", "carteraId", "estado"),
+        db.CheckConstraint(
+            "tipo IN ('INGRESO', 'GASTO')",
+            name="CK_TRANSACCIONES_tipo",
+        ),
+        db.CheckConstraint("monto > 0", name="CK_TRANSACCIONES_monto"),
+        db.CheckConstraint(
+            "estado IN ('ACTIVO', 'ELIMINADO')",
+            name="CK_TRANSACCIONES_estado",
+        ),
+        db.CheckConstraint(
+            "metodoPago IS NULL OR metodoPago IN "
+            "('EFECTIVO', 'TARJETA', 'TRANSFERENCIA')",
+            name="CK_TRANSACCIONES_metodo_pago",
+        ),
     )
 
     idTransaccion = db.Column(db.Integer, primary_key=True)
     carteraId = db.Column(
-        db.Integer, db.ForeignKey("CARTERA.idCartera"), nullable=False
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+        nullable=False,
     )
     usuarioId = db.Column(db.Integer, nullable=False)
     categoriaId = db.Column(db.Integer, db.ForeignKey("CATEGORIAS.idCategoria"))
@@ -30,6 +47,9 @@ class Transaccion(db.Model):
     tipo = db.Column(db.String(10), nullable=False)
     monto = db.Column(db.Numeric(12, 2), nullable=False)
     descripcion = db.Column(db.Unicode(500))
+    metodoPago = db.Column(db.String(15))
+    comprobanteUrl = db.Column(db.Unicode(500))
+    estado = db.Column(db.String(10), nullable=False, server_default="ACTIVO")
     fechaTransaccion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
     )

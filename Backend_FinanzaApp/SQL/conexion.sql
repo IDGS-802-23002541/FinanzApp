@@ -78,6 +78,76 @@ IF NOT EXISTS (
         ON dbo.CATEGORIAS (carteraId, estado, orden);
 GO
 
+IF OBJECT_ID('dbo.TRANSACCIONES', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.TRANSACCIONES (
+        idTransaccion INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        carteraId INT NOT NULL
+            CONSTRAINT FK_TRANSACCIONES_CARTERA
+            REFERENCES dbo.CARTERA (idCartera) ON DELETE NO ACTION,
+        usuarioId INT NOT NULL,
+        categoriaId INT NULL
+            CONSTRAINT FK_TRANSACCIONES_CATEGORIA
+            REFERENCES dbo.CATEGORIAS (idCategoria),
+        periodoId INT NULL
+            CONSTRAINT FK_TRANSACCIONES_PERIODO
+            REFERENCES dbo.PERIODO (idPeriodo),
+        tipo VARCHAR(10) NOT NULL,
+        monto DECIMAL(12, 2) NOT NULL,
+        descripcion NVARCHAR(500) NULL,
+        metodoPago VARCHAR(15) NULL,
+        comprobanteUrl NVARCHAR(500) NULL,
+        estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO',
+        fechaTransaccion DATETIME2 NOT NULL DEFAULT sysutcdatetime(),
+        fechaCreacion DATETIME2 NOT NULL DEFAULT sysutcdatetime(),
+        fechaActualizacion DATETIME2 NULL,
+        CONSTRAINT FK_TRANSACCIONES_MIEMBRO FOREIGN KEY (carteraId, usuarioId)
+            REFERENCES dbo.MIEMBROS_CARTERA (carteraId, usuarioId),
+        CONSTRAINT CK_TRANSACCIONES_tipo
+            CHECK (tipo IN ('INGRESO', 'GASTO')),
+        CONSTRAINT CK_TRANSACCIONES_monto CHECK (monto > 0),
+        CONSTRAINT CK_TRANSACCIONES_estado
+            CHECK (estado IN ('ACTIVO', 'ELIMINADO')),
+        CONSTRAINT CK_TRANSACCIONES_metodo_pago
+            CHECK (metodoPago IS NULL
+                OR metodoPago IN ('EFECTIVO', 'TARJETA', 'TRANSFERENCIA'))
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TRANSACCIONES_cartera_fecha' AND object_id = OBJECT_ID('dbo.TRANSACCIONES')
+)
+    CREATE INDEX IX_TRANSACCIONES_cartera_fecha
+        ON dbo.TRANSACCIONES (carteraId, fechaTransaccion);
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TRANSACCIONES_categoria' AND object_id = OBJECT_ID('dbo.TRANSACCIONES')
+)
+    CREATE INDEX IX_TRANSACCIONES_categoria
+        ON dbo.TRANSACCIONES (categoriaId);
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TRANSACCIONES_usuario_fecha' AND object_id = OBJECT_ID('dbo.TRANSACCIONES')
+)
+    CREATE INDEX IX_TRANSACCIONES_usuario_fecha
+        ON dbo.TRANSACCIONES (usuarioId, fechaTransaccion);
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_TRANSACCIONES_cartera_estado' AND object_id = OBJECT_ID('dbo.TRANSACCIONES')
+)
+    CREATE INDEX IX_TRANSACCIONES_cartera_estado
+        ON dbo.TRANSACCIONES (carteraId, estado);
+GO
+GO
+
 
 -- ----------------------------------------------------------
 -- 2) Catálogos base
