@@ -24,7 +24,26 @@ IF OBJECT_ID('CK_CATEGORIAS_global_o_personal', 'C') IS NULL
         CHECK (carteraId IS NULL OR tipoCartera IS NULL);
 GO
 
--- El índice global viejo era solo (nombre); el nuevo incluye tipoCartera.
+-- FK sin CASCADE: la baja de carteras es lógica, nunca DELETE físico.
+IF OBJECT_ID('FK_CATEGORIAS_CARTERA', 'F') IS NOT NULL
+    AND EXISTS (
+        SELECT 1 FROM sys.foreign_keys
+        WHERE name = 'FK_CATEGORIAS_CARTERA'
+          AND delete_referential_action <> 0
+    )
+BEGIN
+    ALTER TABLE dbo.CATEGORIAS DROP CONSTRAINT FK_CATEGORIAS_CARTERA;
+    ALTER TABLE dbo.CATEGORIAS ADD CONSTRAINT FK_CATEGORIAS_CARTERA
+        FOREIGN KEY (carteraId) REFERENCES dbo.CARTERA (idCartera)
+        ON DELETE NO ACTION;
+END;
+GO
+
+-- Rellena orden en filas existentes (0-9 según id) cuando aún es 0.
+IF COL_LENGTH('dbo.CATEGORIAS', 'orden') IS NOT NULL
+    UPDATE dbo.CATEGORIAS SET orden = idCategoria - 1
+    WHERE carteraId IS NULL AND orden = 0;
+GO
 IF EXISTS (
     SELECT 1 FROM sys.indexes
     WHERE name = 'UX_CATEGORIAS_global_nombre'

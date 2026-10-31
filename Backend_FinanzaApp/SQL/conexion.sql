@@ -29,7 +29,7 @@ BEGIN
         idCategoria INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
         carteraId INT NULL
             CONSTRAINT FK_CATEGORIAS_CARTERA
-            REFERENCES dbo.CARTERA (idCartera),
+            REFERENCES dbo.CARTERA (idCartera) ON DELETE NO ACTION,
         nombre NVARCHAR(80) NOT NULL,
         tipo VARCHAR(10) NOT NULL DEFAULT 'AMBOS',
         tipoCartera VARCHAR(10) NULL,

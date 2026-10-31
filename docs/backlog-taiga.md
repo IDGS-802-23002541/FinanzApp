@@ -319,7 +319,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
 - **Tareas:**
   - **Backend** (Damián) — categorías: alta desde el selector.
   - **Web** (Aideé) — categorías: selector con búsqueda y creación al vuelo.
-  - **BD** (Vanessa) — categorías: tabla y modelo.
+  - **BD** (Diego) — categorías: tabla y modelo. Hecho en T#154: `tipoCartera` + `orden`.
   - **Móvil** (Diego) — categorías: selector con creación al vuelo.
 
 ---

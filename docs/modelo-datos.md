@@ -28,14 +28,8 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Cambio: se **elimina `rol`** global; el rol dentro de cartera pasa a `MiembroCartera`.
 
-### 1.2 `CategoriaCartera` (tipo de cartera)
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| idCategoriaCartera | int PK | |
-| nombreCategoriaCartera | enum | `Hogar` \| `Viaje` \| `Evento` \| `Otro` |
-| descripcion | string | |
-| icono | string | |
-| color | string | |
+### 1.2 `CategoriaCartera` (tipo de cartera) — no implementada como tabla
+> Se usa `Cartera.tipo` (`HOGAR` | `VIAJE` | `EVENTO` | `OTRA`) y `CATEGORIAS.tipoCartera` para el catálogo global por tipo. Sin tabla propia.
 
 ### 1.3 `Cartera`
 | Campo | Tipo | Notas |
@@ -75,7 +69,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | idTransaccion | int PK | |
 | idCartera | int FK | |
 | idUsuario | int FK | Responsable |
-| idCategoriaGasto | int FK | Ver §1.6 |
+| idCategoria | int FK | Ver §1.6 |
 | **idPeriodo** | int FK? | **Nuevo**: periodo del movimiento (carteras Hogar) |
 | tipo | enum | `ingreso` \| `gasto` |
 | monto | decimal | |
@@ -122,7 +116,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | --- | --- | --- |
 | idPagoRecurrente | int PK | |
 | idCartera | int FK | |
-| idCategoriaGasto | int FK | |
+| idCategoria | int FK | Ver §1.6 | |
 | descripcion | string | |
 | monto | decimal | |
 | periodicidad | enum | `semanal` \| `quincenal` \| `mensual` \| `anual` |
@@ -193,8 +187,8 @@ Cartera 1 ─── N MiembroCartera
 Cartera 1 ─── N Transaccion
 Cartera 1 ─── N Periodo            (solo Hogar)
 Cartera 1 ─── N PagoRecurrente
-CategoriaCartera 1 ─── N Cartera
-CategoriaGasto 1 ─── N Transaccion
+Cartera 1 ─── N Categoria          (personalizadas; globales con carteraId null)
+Categoria 1 ─── N Transaccion
 Periodo 1 ─── N Transaccion        (carteras Hogar)
 Usuario 1 ─── N TicketSoporte      (como cliente)
 Trabajador 1 ─── N TicketSoporte   (asignado)
@@ -204,7 +198,7 @@ TicketSoporte 1 ─── N RespuestaTicket
 ## 4. Reglas de integridad
 
 1. **Mínimo un administrador activo** por cartera (validado en app y en BD).
-2. `Periodo.idCartera` solo admite carteras con `idCategoriaCartera = Hogar`.
+2. `Periodo.idCartera` solo admite carteras con `tipo = HOGAR`.
 3. `estado = finalizada` solo permitido en carteras `Viaje` o `Evento`.
 4. `codigoInvitacion` es único y de **8 caracteres**.
 5. Toda baja es lógica: nunca `DELETE` físico de entidades de negocio.

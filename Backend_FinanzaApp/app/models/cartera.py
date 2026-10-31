@@ -73,7 +73,10 @@ class Categoria(db.Model):
     )
 
     idCategoria = db.Column(db.Integer, primary_key=True)
-    carteraId = db.Column(db.Integer, db.ForeignKey("CARTERA.idCartera"))
+    carteraId = db.Column(
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+    )
     nombre = db.Column(db.Unicode(80), nullable=False)
     tipo = db.Column(db.String(10), nullable=False, server_default="AMBOS")
     tipoCartera = db.Column(db.String(10))
