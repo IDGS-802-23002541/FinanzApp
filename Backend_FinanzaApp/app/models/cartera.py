@@ -59,8 +59,16 @@ class Categoria(db.Model):
         db.Index(
             "UX_CATEGORIAS_global_nombre",
             "nombre",
+            "tipoCartera",
             unique=True,
             mssql_where=db.text("carteraId IS NULL"),
+        ),
+        db.Index(
+            "IX_CATEGORIAS_consulta", "carteraId", "estado", "orden"
+        ),
+        db.CheckConstraint(
+            "carteraId IS NULL OR tipoCartera IS NULL",
+            name="CK_CATEGORIAS_global_o_personal",
         ),
     )
 
@@ -68,6 +76,8 @@ class Categoria(db.Model):
     carteraId = db.Column(db.Integer, db.ForeignKey("CARTERA.idCartera"))
     nombre = db.Column(db.Unicode(80), nullable=False)
     tipo = db.Column(db.String(10), nullable=False, server_default="AMBOS")
+    tipoCartera = db.Column(db.String(10))
+    orden = db.Column(db.Integer, nullable=False, server_default="0")
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVA")
     esPredeterminada = db.Column(
         db.Boolean,

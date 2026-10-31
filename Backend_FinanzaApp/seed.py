@@ -11,16 +11,16 @@ from app.extensions import db
 from app.models import Categoria
 
 CATEGORIAS_INICIALES = [
-    {"nombre": "Aportación", "tipo": "INGRESO"},
-    {"nombre": "Alimentos", "tipo": "GASTO"},
-    {"nombre": "Transporte", "tipo": "GASTO"},
-    {"nombre": "Servicios", "tipo": "GASTO"},
-    {"nombre": "Vivienda", "tipo": "GASTO"},
-    {"nombre": "Salud", "tipo": "GASTO"},
-    {"nombre": "Educación", "tipo": "GASTO"},
-    {"nombre": "Ocio", "tipo": "GASTO"},
-    {"nombre": "Compras", "tipo": "GASTO"},
-    {"nombre": "Otros", "tipo": "AMBOS"},
+    {"nombre": "Aportación", "tipo": "INGRESO", "tipoCartera": None, "orden": 0},
+    {"nombre": "Alimentos", "tipo": "GASTO", "tipoCartera": None, "orden": 1},
+    {"nombre": "Transporte", "tipo": "GASTO", "tipoCartera": None, "orden": 2},
+    {"nombre": "Servicios", "tipo": "GASTO", "tipoCartera": None, "orden": 3},
+    {"nombre": "Vivienda", "tipo": "GASTO", "tipoCartera": None, "orden": 4},
+    {"nombre": "Salud", "tipo": "GASTO", "tipoCartera": None, "orden": 5},
+    {"nombre": "Educación", "tipo": "GASTO", "tipoCartera": None, "orden": 6},
+    {"nombre": "Ocio", "tipo": "GASTO", "tipoCartera": None, "orden": 7},
+    {"nombre": "Compras", "tipo": "GASTO", "tipoCartera": None, "orden": 8},
+    {"nombre": "Otros", "tipo": "AMBOS", "tipoCartera": None, "orden": 9},
 ]
 
 
@@ -31,6 +31,7 @@ def cargar_categorias():
             db.select(Categoria).where(
                 Categoria.carteraId.is_(None),
                 Categoria.nombre == datos["nombre"],
+                Categoria.tipoCartera.is_(None),
             )
         ).scalar_one_or_none()
         if existe:
@@ -41,6 +42,8 @@ def cargar_categorias():
                 carteraId=None,
                 nombre=datos["nombre"],
                 tipo=datos["tipo"],
+                tipoCartera=None,
+                orden=datos["orden"],
                 estado="ACTIVA",
             )
         )

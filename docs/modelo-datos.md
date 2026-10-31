@@ -87,18 +87,21 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Cambio: se elimina `nombreGasto` duplicado; el nombre se obtiene de la categoría.
 
-### 1.6 `CategoriaGasto`
+### 1.6 `CategoriaGasto` (tabla real: `CATEGORIAS`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| idCategoriaGasto | int PK | |
-| nombreGasto | string | |
-| icono | string | |
-| color | string | |
-| **idCartera** | int FK? | `null` = categoría global; con valor = personalizada. **Nuevo** |
-| **idCategoriaCartera** | int FK? | Para globales: a qué **tipo de cartera** aplica. **Nuevo** |
-| **tipo** | enum | `gasto` \| `ingreso` \| `ambos`. **Nuevo** |
-| **habilitada** | bool | Habilitar/deshabilitar. **Nuevo** |
-| **orden** | int | Ordenamiento personalizado. **Nuevo** |
+| idCategoria | int PK | |
+| nombre | string | |
+| **carteraId** | int FK? | `null` = categoría global; con valor = personalizada de esa cartera |
+| **tipoCartera** | enum? | `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA`; `null` = aplica a todos los tipos. Solo en globales |
+| **tipo** | enum | `GASTO` \| `INGRESO` \| `AMBOS` |
+| **orden** | int | Orden del selector (default 0) |
+| **estado** | enum | `ACTIVA` \| `INACTIVA` (baja lógica; equivale a habilitar/deshabilitar) |
+| esPredeterminada | bool calculado | `1` cuando `carteraId IS NULL` |
+
+> Unicidad: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
+> Sin `icono` ni `color` por ahora: la HU-05.4 solo pide crear por nombre y mostrar en el selector.
+> Si una pantalla futura los pide, se agregan con migración.
 
 ---
 
