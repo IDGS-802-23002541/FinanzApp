@@ -63,7 +63,7 @@ Backend_FinanzaApp/
 2. **Editar/eliminar movimiento**: solo administrador o dueño, y cartera activa.
 3. **Finalizada** solo para Viaje/Evento y bloquea escrituras.
 4. **Sin DELETE físico** en entidades de negocio.
-5. `codigoInvitacion` de **8 caracteres**, único; regenerar invalida el anterior.
+5. Clave de invitación de **8 caracteres**, única; se guarda hasheada (`Invitacion.codigoHash`); regenerar revoca la anterior.
 6. `Periodo` solo en carteras Hogar.
 7. `correo` único e inmutable; contraseña con hash.
 8. Un trabajador **solo cierra** tickets asignados a él.

@@ -214,7 +214,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
 - **Tareas:**
   - **Backend** (Damián) — invitación: QR y registro de ingresos.
   - **Web** (Aideé) — invitación: pantalla de QR y bitácora.
-  - **BD** (Vanessa) — invitación: tabla de invitaciones y accesos.
+  - **BD** (Diego) — invitación: tabla de invitaciones y accesos (T#128). Accesos = `MIEMBROS_CARTERA.fechaUnion`, sin tabla nueva.
   - **Móvil** (Diego) — invitación: unirse a cartera por QR.
 
 ### HU-04.3 — Eliminar contribuyentes

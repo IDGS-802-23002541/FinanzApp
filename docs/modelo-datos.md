@@ -46,8 +46,9 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | fechaFin | date? | Vigencia |
 | fechaCierre | datetime? | Al finalizar |
 | **fechaBaja** | datetime? | **Nuevo** (baja lógica) |
-| codigoInvitacion | string | **8 caracteres** |
 | color | string | |
+
+> La invitación vive en `Invitacion` (ver §1.7): el QR muestra una clave de 8 caracteres que se almacena hasheada en `codigoHash`.
 
 ### 1.4 `MiembroCartera`
 | Campo | Tipo | Notas |
@@ -98,6 +99,21 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 > Unicidad: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
 > Sin `icono` ni `color` por ahora: la HU-05.4 solo pide crear por nombre y mostrar en el selector.
 > Si una pantalla futura los pide, se agregan con migración.
+
+### 1.7 `Invitacion` (tabla real: `INVITACION`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idInvitacion | int PK | |
+| carteraId | int FK | Debe ser miembro activo quien invita |
+| usuarioId | int FK | Creador de la invitación |
+| codigoHash | string | Hash de la clave de 8 caracteres que muestra el QR |
+| fechaCreacion | datetime | Inmutable |
+| fechaExpiracion | datetime | Posterior a la creación |
+| estado | enum | `ACTIVA` \| `REVOCADA` |
+| fechaRevocacion | datetime? | Solo cuando está revocada |
+
+> Regenerar el QR revoca la invitación anterior (`REVOCADA` + fecha) y crea una nueva.
+> Los ingresos quedan registrados en `MiembroCartera.fechaUnion` (bitácora de accesos).
 
 ---
 
@@ -190,6 +206,7 @@ Cartera 1 ─── N Transaccion
 Cartera 1 ─── N Periodo            (solo Hogar)
 Cartera 1 ─── N PagoRecurrente
 Cartera 1 ─── N Categoria          (personalizadas; globales con carteraId null)
+Cartera 1 ─── N Invitacion
 Categoria 1 ─── N Transaccion
 Periodo 1 ─── N Transaccion        (carteras Hogar)
 Usuario 1 ─── N TicketSoporte      (como cliente)
@@ -202,7 +219,7 @@ TicketSoporte 1 ─── N RespuestaTicket
 1. **Mínimo un administrador activo** por cartera (validado en app y en BD).
 2. `Periodo.idCartera` solo admite carteras con `tipo = HOGAR`.
 3. `estado = finalizada` solo permitido en carteras `Viaje` o `Evento`.
-4. `codigoInvitacion` es único y de **8 caracteres**.
+4. La clave de invitación es única y de **8 caracteres**; se almacena hasheada en `Invitacion.codigoHash`. Regenerar revoca la anterior.
 5. Toda baja es lógica: nunca `DELETE` físico de entidades de negocio.
 6. `comprobanteUrl` apunta a **Cloudinary**; nunca se almacenan binarios en la BD.
 7. `correo` es único e inmutable por cuenta.
