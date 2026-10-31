@@ -28,8 +28,8 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Cambio: se **elimina `rol`** global; el rol dentro de cartera pasa a `MiembroCartera`.
 
-### 1.2 `CategoriaCartera` (tipo de cartera) — no implementada como tabla
-> Se usa `Cartera.tipo` (`HOGAR` | `VIAJE` | `EVENTO` | `OTRA`) y `CATEGORIAS.tipoCartera` para el catálogo global por tipo. Sin tabla propia.
+### 1.2 `Tipo de cartera` — no es tabla propia
+> Se usa `Cartera.tipo` (`HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA`) y `CATEGORIAS.tipoCartera` para el catálogo global por tipo.
 
 ### 1.3 `Cartera`
 | Campo | Tipo | Notas |
@@ -37,7 +37,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | idCartera | int PK | |
 | nombreCartera | string | |
 | descripcion | string | |
-| idCategoriaCartera | int FK | Tipo de cartera |
+| tipo | string | `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA` |
 | idPropietario | int FK | Dueño/administrador original |
 | presupuestoInicial | decimal? | Opcional |
 | **estado** | enum | `ACTIVA` \| `ARCHIVADA` (= inactiva) \| `FINALIZADA`. **Finalizada solo Viaje/Evento** |
@@ -81,7 +81,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Cambio: se elimina `nombreGasto` duplicado; el nombre se obtiene de la categoría.
 
-### 1.6 `CategoriaGasto` (tabla real: `CATEGORIAS`)
+### 1.6 `Categoria` (tabla real: `CATEGORIAS`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idCategoria | int PK | |

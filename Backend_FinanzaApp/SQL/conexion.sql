@@ -45,7 +45,9 @@ BEGIN
             CHECK (tipoCartera IS NULL
                 OR tipoCartera IN ('HOGAR', 'VIAJE', 'EVENTO', 'OTRA')),
         CONSTRAINT CK_CATEGORIAS_global_o_personal
-            CHECK (carteraId IS NULL OR tipoCartera IS NULL)
+            CHECK (carteraId IS NULL OR tipoCartera IS NULL),
+        CONSTRAINT CK_CATEGORIAS_nombre
+            CHECK (len(ltrim(rtrim(nombre))) > 0)
     );
 END;
 GO

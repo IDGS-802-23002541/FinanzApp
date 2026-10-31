@@ -39,16 +39,25 @@ BEGIN
 END;
 GO
 
--- Rellena orden en filas existentes (0-9 según id) cuando aún es 0.
+-- Rellena orden en filas existentes (0-9 según id) cuando aún están en el valor por defecto.
+-- Idempotente: solo toca globales con orden = 0 y ninguna global con orden > 0.
 IF COL_LENGTH('dbo.CATEGORIAS', 'orden') IS NOT NULL
     UPDATE dbo.CATEGORIAS SET orden = idCategoria - 1
-    WHERE carteraId IS NULL AND orden = 0;
+    WHERE carteraId IS NULL
+      AND orden = 0
+      AND NOT EXISTS (
+          SELECT 1 FROM dbo.CATEGORIAS c2
+          WHERE c2.carteraId IS NULL AND c2.orden > 0
+      );
 GO
+-- El índice global viejo era solo (nombre); el nuevo incluye tipoCartera.
+-- Requiere que la columna tipoCartera exista (ver bloques ALTER arriba).
 IF EXISTS (
     SELECT 1 FROM sys.indexes
     WHERE name = 'UX_CATEGORIAS_global_nombre'
       AND object_id = OBJECT_ID('dbo.CATEGORIAS')
       AND has_filter = 1
+      AND COL_LENGTH('dbo.CATEGORIAS', 'tipoCartera') IS NOT NULL
 )
 BEGIN
     DECLARE @cols INT = (
@@ -69,6 +78,7 @@ IF NOT EXISTS (
     SELECT 1 FROM sys.indexes
     WHERE name = 'UX_CATEGORIAS_global_nombre'
       AND object_id = OBJECT_ID('dbo.CATEGORIAS')
+      AND COL_LENGTH('dbo.CATEGORIAS', 'tipoCartera') IS NOT NULL
 )
     CREATE UNIQUE INDEX UX_CATEGORIAS_global_nombre
         ON dbo.CATEGORIAS (nombre, tipoCartera)

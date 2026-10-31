@@ -70,6 +70,14 @@ class Categoria(db.Model):
             "carteraId IS NULL OR tipoCartera IS NULL",
             name="CK_CATEGORIAS_global_o_personal",
         ),
+        db.CheckConstraint(
+            "tipo IN ('INGRESO', 'GASTO', 'AMBOS')",
+            name="CK_CATEGORIAS_tipo",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVA', 'INACTIVA')",
+            name="CK_CATEGORIAS_estado",
+        ),
     )
 
     idCategoria = db.Column(db.Integer, primary_key=True)
