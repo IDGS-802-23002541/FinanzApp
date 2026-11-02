@@ -3,8 +3,13 @@ package com.finanzap.core.util
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 
 private val LOCALE_MX = Locale("es", "MX")
+private val UTC = TimeZone.getTimeZone("UTC")
+
+private fun formato(patron: String): SimpleDateFormat =
+    SimpleDateFormat(patron, LOCALE_MX).apply { timeZone = UTC }
 
 /** Montos en MXN con separador de miles; sin centavos cuando el monto es entero. */
 fun formatearMoneda(monto: Double): String {
@@ -15,15 +20,14 @@ fun formatearMoneda(monto: Double): String {
 
 /** "2026-11-10" y "2026-11-17" → "10 – 17 nov 2026"; meses distintos → "10 nov – 17 dic 2026". */
 fun formatearRangoFechas(inicio: String, fin: String): String {
-    val entrada = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-    val dia = SimpleDateFormat("d", LOCALE_MX)
-    val diaMes = SimpleDateFormat("d MMM", LOCALE_MX)
-    val diaMesAnio = SimpleDateFormat("d MMM yyyy", LOCALE_MX)
-    val mesAnio = SimpleDateFormat("MMM yyyy", LOCALE_MX)
-    val anio = SimpleDateFormat("yyyy", LOCALE_MX)
+    val dia = formato("d")
+    val diaMes = formato("d MMM")
+    val diaMesAnio = formato("d MMM yyyy")
+    val mesAnio = formato("MMM yyyy")
+    val anio = formato("yyyy")
 
-    val desde = entrada.parse(inicio) ?: return inicio
-    val hasta = entrada.parse(fin) ?: return fin
+    val desde = parsearFecha(inicio) ?: return inicio
+    val hasta = parsearFecha(fin) ?: return fin
 
     return when {
         mesAnio.format(desde) == mesAnio.format(hasta) ->
