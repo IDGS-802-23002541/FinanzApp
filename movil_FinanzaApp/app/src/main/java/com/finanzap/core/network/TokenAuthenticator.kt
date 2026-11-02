@@ -1,9 +1,9 @@
 package com.finanzap.core.network
 
-import com.finanzap.core.session.EventosSesion
+import com.finanzap.core.storage.EventosSesion
 import com.finanzap.core.storage.SesionLocal
 import com.finanzap.features.auth.data.AuthApi
-import com.finanzap.features.auth.data.dto.RefreshRequest
+import com.finanzap.features.auth.data.RefreshRequest
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request

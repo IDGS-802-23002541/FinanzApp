@@ -1,7 +1,7 @@
 package com.finanzap.features.carteras.data
 
-import com.finanzap.features.carteras.model.Cartera
-import com.finanzap.features.carteras.model.TipoCartera
+import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.TipoCartera
 
 /**
  * Contrato de carteras consumido por los ViewModel.

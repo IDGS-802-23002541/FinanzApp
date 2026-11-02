@@ -1,9 +1,9 @@
 package com.finanzap.features.carteras.data
 
-import com.finanzap.features.carteras.data.dto.CarteraDto
-import com.finanzap.features.carteras.data.dto.CrearCarteraRequest
-import com.finanzap.features.carteras.data.dto.RespuestaCartera
-import com.finanzap.features.carteras.data.dto.RespuestaListaCarteras
+import com.finanzap.features.carteras.data.CarteraDto
+import com.finanzap.features.carteras.data.CrearCarteraRequest
+import com.finanzap.features.carteras.data.RespuestaCartera
+import com.finanzap.features.carteras.data.RespuestaListaCarteras
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

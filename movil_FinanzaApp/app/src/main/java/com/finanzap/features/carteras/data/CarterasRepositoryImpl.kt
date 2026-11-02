@@ -1,9 +1,7 @@
 package com.finanzap.features.carteras.data
 
-import com.finanzap.features.carteras.data.dto.CrearCarteraRequest
-import com.finanzap.features.carteras.data.dto.aCartera
-import com.finanzap.features.carteras.model.Cartera
-import com.finanzap.features.carteras.model.TipoCartera
+import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.TipoCartera
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 

@@ -1,20 +1,19 @@
 package com.finanzap.features.auth.data
 
 import com.finanzap.core.storage.SesionLocalFalsa
-import com.finanzap.features.auth.data.dto.CambiarContrasenaRequest
-import com.finanzap.features.auth.data.dto.ConfirmacionCuentaRequest
-import com.finanzap.features.auth.data.dto.DatosRecuperacion
-import com.finanzap.features.auth.data.dto.DatosSesion
-import com.finanzap.features.auth.data.dto.DatosToken
-import com.finanzap.features.auth.data.dto.LoginRequest
-import com.finanzap.features.auth.data.dto.RecuperarRequest
-import com.finanzap.features.auth.data.dto.RefreshRequest
-import com.finanzap.features.auth.data.dto.RespuestaMensaje
-import com.finanzap.features.auth.data.dto.RespuestaRecuperacion
-import com.finanzap.features.auth.data.dto.RespuestaSesion
-import com.finanzap.features.auth.data.dto.RespuestaToken
-import com.finanzap.features.auth.data.dto.RestablecerRequest
-import com.finanzap.features.auth.data.dto.Usuario
+import com.finanzap.features.auth.data.CambiarContrasenaRequest
+import com.finanzap.features.auth.data.ConfirmacionCuentaRequest
+import com.finanzap.features.auth.data.DatosRecuperacion
+import com.finanzap.features.auth.data.DatosSesion
+import com.finanzap.features.auth.data.DatosToken
+import com.finanzap.features.auth.data.LoginRequest
+import com.finanzap.features.auth.data.RecuperarRequest
+import com.finanzap.features.auth.data.RefreshRequest
+import com.finanzap.features.auth.data.RespuestaMensaje
+import com.finanzap.features.auth.data.RespuestaRecuperacion
+import com.finanzap.features.auth.data.RespuestaSesion
+import com.finanzap.features.auth.data.RespuestaToken
+import com.finanzap.features.auth.data.RestablecerRequest
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -104,18 +103,9 @@ private class ApiFalsa : AuthApi {
     override suspend fun iniciarSesion(peticion: LoginRequest): RespuestaSesion {
         val access = if (accessVacio) "" else "access-1"
         return RespuestaSesion(
-            ok = true,
             data = DatosSesion(
                 accessToken = access,
-                refreshToken = "refresh-1",
-                usuario = Usuario(
-                    idUsuario = 1,
-                    nombreUsuario = "Diego",
-                    apaterno = "Borja",
-                    correo = "diego@correo.com",
-                    rolGlobal = "USUARIO",
-                    estado = "ACTIVO"
-                )
+                refreshToken = "refresh-1"
             )
         )
     }
