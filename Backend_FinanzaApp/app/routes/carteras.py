@@ -285,6 +285,48 @@ def listar():
         }
     ), 200
 
+@carteras_bp.get("/<int:idCartera>")
+@jwt_required()
+def obtener(idCartera):
+    try:
+        fila = db.session.execute(
+            db.select(MiembroCartera, Cartera)
+            .join(Cartera, Cartera.idCartera == MiembroCartera.carteraId)
+            .where(
+                MiembroCartera.carteraId == idCartera,
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).first()
+
+        if not fila:
+            return jsonify({"ok": False, "mensaje": "Cartera no encontrada."}), 404
+
+        membresia, cartera = fila
+
+        # el admin se consulta aparte porque la membresia del usuario actual puede ser colaborador
+        admin_fila = db.session.execute(
+            db.select(Usuario)
+            .join(MiembroCartera, MiembroCartera.usuarioId == Usuario.idUsuario)
+            .where(
+                MiembroCartera.carteraId == idCartera,
+                MiembroCartera.rol == "ADMIN",
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).first()
+
+        admin = admin_fila[0] if admin_fila else None
+
+        return jsonify({
+            "ok": True,
+            "data": _serializar_cartera(cartera, membresia.rol, admin),
+            "mensaje": "Cartera obtenida correctamente.",
+        }), 200
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"ok": False, "mensaje": "No se pudo obtener la cartera."}), 503
+
+
 
     
 
