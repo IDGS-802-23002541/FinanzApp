@@ -20,13 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -47,7 +46,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -66,6 +64,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
 import com.finanzap.core.ui.EstadoError
 import com.finanzap.core.ui.EstadoVacio
+import com.finanzap.core.ui.LocalAbrirMenu
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.core.util.formatearMoneda
 import com.finanzap.features.carteras.Cartera
@@ -77,11 +76,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
-    temaOscuro: Boolean,
-    onAlternarTema: () -> Unit,
     onNuevaCartera: () -> Unit,
-    onCuenta: () -> Unit,
-    onCerrarSesion: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -93,12 +88,8 @@ fun CarterasScreen(
 
     CarterasContenido(
         state = state,
-        temaOscuro = temaOscuro,
         acciones = CarterasAcciones(
-            onAlternarTema = onAlternarTema,
             onNuevaCartera = onNuevaCartera,
-            onCuenta = onCuenta,
-            onCerrarSesion = onCerrarSesion,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
             onBusquedaChange = viewModel::onBusquedaChange,
@@ -108,10 +99,7 @@ fun CarterasScreen(
 }
 
 data class CarterasAcciones(
-    val onAlternarTema: () -> Unit,
     val onNuevaCartera: () -> Unit,
-    val onCuenta: () -> Unit,
-    val onCerrarSesion: () -> Unit,
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
     val onBusquedaChange: (String) -> Unit,
@@ -121,13 +109,9 @@ data class CarterasAcciones(
 @Composable
 fun CarterasContenido(
     state: CarterasUiState,
-    temaOscuro: Boolean,
     acciones: CarterasAcciones
 ) {
-    val onAlternarTema = acciones.onAlternarTema
     val onNuevaCartera = acciones.onNuevaCartera
-    val onCuenta = acciones.onCuenta
-    val onCerrarSesion = acciones.onCerrarSesion
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
     val onBusquedaChange = acciones.onBusquedaChange
@@ -158,11 +142,7 @@ fun CarterasContenido(
                 Encabezado(
                     compartidas = state.segmento == Segmento.COMPARTIDAS,
                     totalCompartidas = state.totalCompartidas,
-                    temaOscuro = temaOscuro,
-                    onAlternarTema = onAlternarTema,
-                    onNuevaCartera = onNuevaCartera,
-                    onCuenta = onCuenta,
-                    onCerrarSesion = onCerrarSesion
+                    onNuevaCartera = onNuevaCartera
                 )
             }
 
@@ -246,65 +226,47 @@ fun CarterasContenido(
 private fun Encabezado(
     compartidas: Boolean,
     totalCompartidas: Int,
-    temaOscuro: Boolean,
-    onAlternarTema: () -> Unit,
-    onNuevaCartera: () -> Unit,
-    onCuenta: () -> Unit,
-    onCerrarSesion: () -> Unit
+    onNuevaCartera: () -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(modifier = Modifier.weight(1f)) {
+    val abrirMenu = LocalAbrirMenu.current
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (abrirMenu != null) {
+                IconButton(onClick = abrirMenu) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = stringResource(R.string.menu_abrir)
+                    )
+                }
+            }
             Text(
                 text = stringResource(R.string.carteras_titulo),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = if (compartidas) {
-                    stringResource(R.string.carteras_descripcion_compartidas, totalCompartidas)
-                } else {
-                    stringResource(R.string.carteras_descripcion)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            FilledIconButton(onClick = onNuevaCartera) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.carteras_nueva)
+                )
+            }
         }
 
-        TextButton(onClick = onAlternarTema) {
-            Text(
-                text = stringResource(
-                    if (temaOscuro) R.string.tema_claro else R.string.tema_oscuro
-                ),
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+        Spacer(modifier = Modifier.height(6.dp))
 
-        Spacer(modifier = Modifier.width(4.dp))
-
-        FilledIconButton(onClick = onNuevaCartera) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = stringResource(R.string.carteras_nueva)
-            )
-        }
-
-        IconButton(onClick = onCuenta) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = stringResource(R.string.carteras_mi_cuenta),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        IconButton(onClick = onCerrarSesion) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                contentDescription = stringResource(R.string.carteras_cerrar_sesion),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        Text(
+            text = if (compartidas) {
+                stringResource(R.string.carteras_descripcion_compartidas, totalCompartidas)
+            } else {
+                stringResource(R.string.carteras_descripcion)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

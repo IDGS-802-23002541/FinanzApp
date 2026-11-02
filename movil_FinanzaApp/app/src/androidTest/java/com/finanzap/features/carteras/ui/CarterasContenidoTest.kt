@@ -27,12 +27,8 @@ class CarterasContenidoTest {
                         cargando = false,
                         error = "No se pudieron cargar tus carteras."
                     ),
-                    temaOscuro = false,
                     acciones = CarterasAcciones(
-                        onAlternarTema = {},
                         onNuevaCartera = {},
-                        onCuenta = {},
-                        onCerrarSesion = {},
                         onSegmentoChange = {},
                         onTipoChange = {},
                         onBusquedaChange = {},
@@ -55,12 +51,8 @@ class CarterasContenidoTest {
             FinanzAppTheme {
                 CarterasContenido(
                     state = CarterasUiState(cargando = false),
-                    temaOscuro = false,
                     acciones = CarterasAcciones(
-                        onAlternarTema = {},
                         onNuevaCartera = { creada = true },
-                        onCuenta = {},
-                        onCerrarSesion = {},
                         onSegmentoChange = {},
                         onTipoChange = {},
                         onBusquedaChange = {},

@@ -10,6 +10,11 @@
     <string name="comun_ocultar_contrasena">Ocultar contraseña</string>
     <string name="comun_volver">Volver</string>
     <string name="comun_guardando">Guardando…</string>
+    <string name="comun_pendiente_titulo">Próximamente</string>
+    <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
+    <string name="menu_abrir">Abrir menú</string>
+    <string name="reportes_titulo">Reportes</string>
+    <string name="soporte_titulo">Soporte</string>
 
     <!-- Login -->
     <string name="login_lema">Las cuentas claras también se ven bien</string>

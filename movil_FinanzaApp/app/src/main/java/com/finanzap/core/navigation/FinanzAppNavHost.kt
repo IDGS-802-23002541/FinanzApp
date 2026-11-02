@@ -1,17 +1,31 @@
 package com.finanzap.core.navigation
 
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.finanzap.R
+import com.finanzap.core.ui.LocalAbrirMenu
+import com.finanzap.core.ui.MenuLateral
+import com.finanzap.core.ui.PantallaPendiente
+import com.finanzap.core.ui.SeccionMenu
 import com.finanzap.features.auth.ui.CambiarContrasenaScreen
-import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.LoginScreen
+import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.NuevaCarteraScreen
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 @Composable
 fun FinanzAppNavHost(
@@ -22,6 +36,24 @@ fun FinanzAppNavHost(
     onAlternarTema: () -> Unit
 ) {
     val navController = rememberNavController()
+    val entrada by navController.currentBackStackEntryAsState()
+    val ruta = entrada?.destination?.route
+    val autenticada = ruta != null &&
+        ruta != Rutas.Login &&
+        ruta != Rutas.RecuperarContrasena
+
+    val estadoDrawer = rememberDrawerState(DrawerValue.Closed)
+    val alcance = rememberCoroutineScope()
+    val abrirMenu: (() -> Unit)? = if (autenticada) {
+        { alcance.launch { estadoDrawer.open() } }
+    } else {
+        null
+    }
+
+    // Al salir de una sección autenticada el menú no debe quedar abierto.
+    LaunchedEffect(autenticada) {
+        if (!autenticada) estadoDrawer.close()
+    }
 
     // Logout o refresh rechazado: se limpia toda la pila y se vuelve al login.
     LaunchedEffect(Unit) {
@@ -35,68 +67,131 @@ fun FinanzAppNavHost(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = if (haySesionInicial) Rutas.Carteras else Rutas.Login
-    ) {
-        composable(Rutas.Login) {
-            LoginScreen(
-                temaOscuro = temaOscuro,
-                onAlternarTema = onAlternarTema,
-                onLoginExitoso = {
-                    navController.navigate(Rutas.Carteras) {
-                        popUpTo(Rutas.Login) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onRecuperarContrasena = {
-                    navController.navigate(Rutas.RecuperarContrasena)
+    CompositionLocalProvider(LocalAbrirMenu provides abrirMenu) {
+        ModalNavigationDrawer(
+            drawerState = estadoDrawer,
+            gesturesEnabled = autenticada,
+            drawerContent = {
+                if (autenticada) {
+                    MenuLateral(
+                        temaOscuro = temaOscuro,
+                        seccionActual = seccionDeRuta(ruta),
+                        onSeccion = { seccion ->
+                            alcance.launch { estadoDrawer.close() }
+                            navController.navigate(rutaDeSeccion(seccion)) {
+                                popUpTo(Rutas.Carteras) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        onAlternarTema = {
+                            alcance.launch { estadoDrawer.close() }
+                            onAlternarTema()
+                        },
+                        onCerrarSesion = {
+                            alcance.launch { estadoDrawer.close() }
+                            onCerrarSesion()
+                        }
+                    )
                 }
-            )
-        }
-
-        composable(Rutas.RecuperarContrasena) {
-            RecuperarContrasenaScreen(
-                onVolver = { navController.popBackStack() },
-                onCompletada = { navController.popBackStack() }
-            )
-        }
-
-        composable(Rutas.Carteras) {
-            CarterasScreen(
-                temaOscuro = temaOscuro,
-                onAlternarTema = onAlternarTema,
-                onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
-                onCuenta = { navController.navigate(Rutas.MiCuenta) },
-                onCerrarSesion = onCerrarSesion
-            )
-        }
-
-        composable(Rutas.MiCuenta) {
-            MiCuentaScreen(
-                onVolver = { navController.popBackStack() },
-                onCambiarContrasena = { navController.navigate(Rutas.CambiarContrasena) },
-                onCuentaCerrada = {
-                    navController.navigate(Rutas.Login) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
+            }
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = if (haySesionInicial) Rutas.Carteras else Rutas.Login
+            ) {
+                composable(Rutas.Login) {
+                    LoginScreen(
+                        temaOscuro = temaOscuro,
+                        onAlternarTema = onAlternarTema,
+                        onLoginExitoso = {
+                            navController.navigate(Rutas.Carteras) {
+                                popUpTo(Rutas.Login) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                        onRecuperarContrasena = {
+                            navController.navigate(Rutas.RecuperarContrasena)
+                        }
+                    )
                 }
-            )
-        }
 
-        composable(Rutas.CambiarContrasena) {
-            CambiarContrasenaScreen(
-                onVolver = { navController.popBackStack() },
-                onCambiada = { navController.popBackStack() }
-            )
-        }
+                composable(Rutas.RecuperarContrasena) {
+                    RecuperarContrasenaScreen(
+                        onVolver = { navController.popBackStack() },
+                        onCompletada = { navController.popBackStack() }
+                    )
+                }
 
-        composable(Rutas.NuevaCartera) {
-            NuevaCarteraScreen(
-                onVolver = { navController.popBackStack() },
-                onCreada = { navController.popBackStack() }
-            )
+                composable(Rutas.Carteras) {
+                    CarterasScreen(
+                        onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) }
+                    )
+                }
+
+                composable(Rutas.MiCuenta) {
+                    MiCuentaScreen(
+                        onVolver = { navController.popBackStack() },
+                        onCambiarContrasena = { navController.navigate(Rutas.CambiarContrasena) },
+                        onCuentaCerrada = {
+                            navController.navigate(Rutas.Login) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                composable(Rutas.CambiarContrasena) {
+                    CambiarContrasenaScreen(
+                        onVolver = { navController.popBackStack() },
+                        onCambiada = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.NuevaCartera) {
+                    NuevaCarteraScreen(
+                        onVolver = { navController.popBackStack() },
+                        onCreada = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.Reportes) {
+                    PantallaPendiente(
+                        titulo = stringResource(R.string.reportes_titulo),
+                        descripcionVolver = stringResource(R.string.comun_volver),
+                        mensaje = stringResource(R.string.comun_pendiente_mensaje),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.Soporte) {
+                    PantallaPendiente(
+                        titulo = stringResource(R.string.soporte_titulo),
+                        descripcionVolver = stringResource(R.string.comun_volver),
+                        mensaje = stringResource(R.string.comun_pendiente_mensaje),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+            }
         }
     }
+}
+
+private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
+    Rutas.Carteras,
+    Rutas.NuevaCartera -> SeccionMenu.CARTERAS
+
+    Rutas.Reportes -> SeccionMenu.REPORTES
+    Rutas.Soporte -> SeccionMenu.SOPORTE
+    Rutas.MiCuenta,
+    Rutas.CambiarContrasena -> SeccionMenu.MI_CUENTA
+
+    else -> null
+}
+
+private fun rutaDeSeccion(seccion: SeccionMenu): String = when (seccion) {
+    SeccionMenu.CARTERAS -> Rutas.Carteras
+    SeccionMenu.REPORTES -> Rutas.Reportes
+    SeccionMenu.SOPORTE -> Rutas.Soporte
+    SeccionMenu.MI_CUENTA -> Rutas.MiCuenta
 }
