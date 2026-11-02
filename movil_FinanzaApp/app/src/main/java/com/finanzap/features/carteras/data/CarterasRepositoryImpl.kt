@@ -8,14 +8,12 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 
 /**
- * Lista desde GET /carteras; lo creado en sesión se conserva en memoria
- * para HU-03.1 CA3 mientras el backend lo devuelve.
+ * Lista y crea carteras contra la API. El listado se refresca cada vez
+ * que el dashboard vuelve a primer plano.
  */
 class CarterasRepositoryImpl @Inject constructor(
     private val carterasApi: CarterasApi
 ) : CarterasRepository {
-
-    private val creadas = mutableListOf<Cartera>()
 
     override suspend fun carteras(): Result<List<Cartera>> =
         carterasConFiltros()
@@ -55,7 +53,6 @@ class CarterasRepositoryImpl @Inject constructor(
                 )
             )
             val creada = respuesta.data.aCartera()
-            creadas.add(0, creada)
             Result.success(creada)
         } catch (e: CancellationException) {
             throw e

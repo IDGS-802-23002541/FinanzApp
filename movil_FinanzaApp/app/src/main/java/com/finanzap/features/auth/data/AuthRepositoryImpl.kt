@@ -1,6 +1,6 @@
 package com.finanzap.features.auth.data
 
-import com.finanzap.core.storage.TokenStorage
+import com.finanzap.core.storage.SesionLocal
 import com.finanzap.features.auth.data.dto.CambiarContrasenaRequest
 import com.finanzap.features.auth.data.dto.ConfirmacionCuentaRequest
 import com.finanzap.features.auth.data.dto.LoginRequest
@@ -12,7 +12,7 @@ import javax.inject.Inject
 // Único punto que habla con la API de autenticación.
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
-    private val tokenStorage: TokenStorage
+    private val sesionLocal: SesionLocal
 ) : AuthRepository {
 
     override suspend fun iniciarSesion(correo: String, contrasena: String): Result<Unit> =
@@ -22,7 +22,7 @@ class AuthRepositoryImpl @Inject constructor(
             )
             val sesion = respuesta.data
             check(sesion.accessToken.isNotBlank()) { "El servidor devolvió un token vacío." }
-            tokenStorage.guardarSesion(
+            sesionLocal.guardarSesion(
                 accessToken = sesion.accessToken,
                 refreshToken = sesion.refreshToken
             )
@@ -76,7 +76,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun desactivarCuenta(contrasena: String): Result<Unit> =
         try {
             authApi.desactivarCuenta(ConfirmacionCuentaRequest(contrasena))
-            tokenStorage.limpiar()
+            sesionLocal.limpiar()
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -87,7 +87,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun eliminarCuenta(contrasena: String): Result<Unit> =
         try {
             authApi.eliminarCuenta(ConfirmacionCuentaRequest(contrasena))
-            tokenStorage.limpiar()
+            sesionLocal.limpiar()
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
@@ -107,8 +107,8 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (_: Exception) {
             // La sesión local debe cerrarse aunque el backend no responda.
         }
-        tokenStorage.limpiar()
+        sesionLocal.limpiar()
     }
 
-    override fun haySesion(): Boolean = tokenStorage.haySesion()
+    override fun haySesion(): Boolean = sesionLocal.haySesion()
 }

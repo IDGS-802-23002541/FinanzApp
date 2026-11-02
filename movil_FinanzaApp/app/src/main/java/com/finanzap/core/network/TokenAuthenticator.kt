@@ -1,7 +1,7 @@
 package com.finanzap.core.network
 
 import com.finanzap.core.session.EventosSesion
-import com.finanzap.core.storage.TokenStorage
+import com.finanzap.core.storage.SesionLocal
 import com.finanzap.features.auth.data.AuthApi
 import com.finanzap.features.auth.data.dto.RefreshRequest
 import kotlinx.coroutines.runBlocking
@@ -19,7 +19,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class TokenAuthenticator @Inject constructor(
-    private val tokenStorage: TokenStorage,
+    private val sesionLocal: SesionLocal,
     private val eventosSesion: EventosSesion,
     private val authApi: Provider<AuthApi>
 ) : Authenticator {
@@ -29,7 +29,7 @@ class TokenAuthenticator @Inject constructor(
         if (response.priorResponse != null) return null
         if (response.request.url.encodedPath.startsWith("/auth/")) return null
 
-        val refreshToken = tokenStorage.refreshToken() ?: return cerrarSesion()
+        val refreshToken = sesionLocal.refreshToken() ?: return cerrarSesion()
 
         val nuevoAccessToken = runBlocking {
             try {
@@ -41,14 +41,14 @@ class TokenAuthenticator @Inject constructor(
 
         if (nuevoAccessToken.isNullOrBlank()) return cerrarSesion()
 
-        tokenStorage.guardarAccessToken(nuevoAccessToken)
+        sesionLocal.guardarAccessToken(nuevoAccessToken)
         return response.request.newBuilder()
             .header("Authorization", "Bearer $nuevoAccessToken")
             .build()
     }
 
     private fun cerrarSesion(): Request? {
-        tokenStorage.limpiar()
+        sesionLocal.limpiar()
         eventosSesion.notificarSesionTerminada()
         return null
     }

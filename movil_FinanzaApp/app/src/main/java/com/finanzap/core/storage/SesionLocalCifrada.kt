@@ -17,9 +17,10 @@ import javax.inject.Singleton
  * sus APIs están marcadas como deprecadas pero siguen siendo la opción vigente.
  */
 @Singleton
-class TokenStorage @Inject constructor(
+class SesionLocalCifrada @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : SesionLocal {
+
     private val preferencias by lazy {
         val claveMaestra = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -34,25 +35,24 @@ class TokenStorage @Inject constructor(
         )
     }
 
-    fun guardarSesion(accessToken: String, refreshToken: String) {
+    override fun guardarSesion(accessToken: String, refreshToken: String) {
         preferencias.edit()
             .putString(CLAVE_ACCESS, accessToken)
             .putString(CLAVE_REFRESH, refreshToken)
             .apply()
     }
 
-    /** El access token dura 15 minutos: se reemplaza cuando el backend lo renueva. */
-    fun guardarAccessToken(accessToken: String) {
+    override fun guardarAccessToken(accessToken: String) {
         preferencias.edit().putString(CLAVE_ACCESS, accessToken).apply()
     }
 
-    fun accessToken(): String? = preferencias.getString(CLAVE_ACCESS, null)
+    override fun accessToken(): String? = preferencias.getString(CLAVE_ACCESS, null)
 
-    fun refreshToken(): String? = preferencias.getString(CLAVE_REFRESH, null)
+    override fun refreshToken(): String? = preferencias.getString(CLAVE_REFRESH, null)
 
-    fun haySesion(): Boolean = !accessToken().isNullOrBlank() && !refreshToken().isNullOrBlank()
+    override fun haySesion(): Boolean = !accessToken().isNullOrBlank() && !refreshToken().isNullOrBlank()
 
-    fun limpiar() {
+    override fun limpiar() {
         preferencias.edit()
             .remove(CLAVE_ACCESS)
             .remove(CLAVE_REFRESH)
