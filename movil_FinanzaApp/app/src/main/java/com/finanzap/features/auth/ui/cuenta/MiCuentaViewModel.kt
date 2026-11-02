@@ -6,9 +6,12 @@ import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,6 +22,9 @@ class MiCuentaViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(MiCuentaUiState())
     val state: StateFlow<MiCuentaUiState> = _state.asStateFlow()
+
+    private val _eventos = Channel<MiCuentaEvento>(Channel.BUFFERED)
+    val eventos: Flow<MiCuentaEvento> = _eventos.receiveAsFlow()
 
     fun onPedirAccion(accion: AccionCuenta) {
         _state.update {
@@ -65,7 +71,8 @@ class MiCuentaViewModel @Inject constructor(
             }
             resultado
                 .onSuccess {
-                    _state.update { it.copy(procesando = false, cuentaCerrada = true) }
+                    _state.update { it.copy(procesando = false) }
+                    _eventos.trySend(MiCuentaEvento.CuentaCerrada)
                 }
                 .onFailure { error ->
                     _state.update {

@@ -7,9 +7,12 @@ import com.finanzap.core.util.requisitosContrasena
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -20,6 +23,9 @@ class CambiarContrasenaViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(CambiarContrasenaUiState())
     val state: StateFlow<CambiarContrasenaUiState> = _state.asStateFlow()
+
+    private val _eventos = Channel<CambiarContrasenaEvento>(Channel.BUFFERED)
+    val eventos: Flow<CambiarContrasenaEvento> = _eventos.receiveAsFlow()
 
     fun onActualChange(actual: String) {
         _state.update { it.copy(actual = actual, errorActual = null, errorGeneral = null) }
@@ -70,7 +76,8 @@ class CambiarContrasenaViewModel @Inject constructor(
             _state.update { it.copy(guardando = true, errorGeneral = null) }
             authRepository.cambiarContrasenia(actual = actual.actual, nueva = actual.nueva)
                 .onSuccess {
-                    _state.update { it.copy(guardando = false, cambioCompletado = true) }
+                    _state.update { it.copy(guardando = false) }
+                    _eventos.trySend(CambiarContrasenaEvento.ContrasenaCambiada)
                 }
                 .onFailure { error ->
                     _state.update {

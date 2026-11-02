@@ -4,15 +4,16 @@ import com.finanzap.features.auth.data.AuthRepository
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -54,7 +55,7 @@ class MiCuentaViewModelTest {
         viewModel.confirmarAccion()
 
         val estado = viewModel.state.value
-        assertTrue(estado.cuentaCerrada)
+        assertEquals(MiCuentaEvento.CuentaCerrada, viewModel.eventos.first())
         assertFalse(estado.procesando)
         assertEquals(1, repositorio.llamadasDesactivar)
         assertEquals(0, repositorio.llamadasEliminar)
@@ -69,7 +70,7 @@ class MiCuentaViewModelTest {
         viewModel.confirmarAccion()
 
         val estado = viewModel.state.value
-        assertTrue(estado.cuentaCerrada)
+        assertEquals(MiCuentaEvento.CuentaCerrada, viewModel.eventos.first())
         assertEquals(1, repositorio.llamadasEliminar)
         assertEquals(0, repositorio.llamadasDesactivar)
     }
@@ -84,7 +85,7 @@ class MiCuentaViewModelTest {
         viewModel.confirmarAccion()
 
         val estado = viewModel.state.value
-        assertFalse(estado.cuentaCerrada)
+        assertNull(withTimeoutOrNull(100) { viewModel.eventos.first() })
         assertEquals("No se pudo conectar. Revisa tu conexión.", estado.errorGeneral)
     }
 

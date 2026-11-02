@@ -61,8 +61,12 @@ fun NuevaCarteraScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.creada) {
-        if (state.creada) onCreada()
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                NuevaCarteraEvento.CarteraCreada -> onCreada()
+            }
+        }
     }
 
     NuevaCarteraContenido(

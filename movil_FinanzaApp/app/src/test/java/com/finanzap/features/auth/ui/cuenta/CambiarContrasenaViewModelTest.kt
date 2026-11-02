@@ -4,10 +4,12 @@ import com.finanzap.features.auth.data.AuthRepository
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -96,7 +98,10 @@ class CambiarContrasenaViewModelTest {
         viewModel.guardar()
 
         val estado = viewModel.state.value
-        assertTrue(estado.cambioCompletado)
+        assertEquals(
+            CambiarContrasenaEvento.ContrasenaCambiada,
+            viewModel.eventos.first()
+        )
         assertFalse(estado.guardando)
         assertNull(estado.errorGeneral)
         assertEquals(1, repositorio.llamadasCambiar)
@@ -113,7 +118,7 @@ class CambiarContrasenaViewModelTest {
         viewModel.guardar()
 
         val estado = viewModel.state.value
-        assertFalse(estado.cambioCompletado)
+        assertNull(withTimeoutOrNull(100) { viewModel.eventos.first() })
         assertEquals("No se pudo conectar. Revisa tu conexión.", estado.errorGeneral)
     }
 }

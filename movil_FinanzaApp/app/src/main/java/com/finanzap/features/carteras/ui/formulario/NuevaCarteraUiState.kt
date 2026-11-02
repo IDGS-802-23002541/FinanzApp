@@ -10,7 +10,6 @@ data class NuevaCarteraUiState(
     val fechaInicio: String? = null,
     val fechaFin: String? = null,
     val guardando: Boolean = false,
-    val creada: Boolean = false,
     val errorNombre: String? = null,
     val errorTipo: String? = null,
     val errorDescripcion: String? = null,

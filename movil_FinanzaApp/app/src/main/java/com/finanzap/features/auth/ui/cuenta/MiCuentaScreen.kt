@@ -40,8 +40,12 @@ fun MiCuentaScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.cuentaCerrada) {
-        if (state.cuentaCerrada) onCuentaCerrada()
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                MiCuentaEvento.CuentaCerrada -> onCuentaCerrada()
+            }
+        }
     }
 
     MiCuentaContenido(

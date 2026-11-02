@@ -9,9 +9,12 @@ import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.core.util.requisitosContrasena
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,6 +26,9 @@ class RecuperarViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(RecuperarUiState())
     val state: StateFlow<RecuperarUiState> = _state.asStateFlow()
+
+    private val _eventos = Channel<RecuperarEvento>(Channel.BUFFERED)
+    val eventos: Flow<RecuperarEvento> = _eventos.receiveAsFlow()
 
     fun onCorreoChange(correo: String) {
         _state.update { it.copy(correo = correo, errorCorreo = null, errorGeneral = null) }
@@ -142,7 +148,8 @@ class RecuperarViewModel @Inject constructor(
                 contrasena = actual.contrasena
             )
                 .onSuccess {
-                    _state.update { it.copy(cargando = false, recuperacionCompletada = true) }
+                    _state.update { it.copy(cargando = false) }
+                    _eventos.trySend(RecuperarEvento.ContrasenaRestablecida)
                 }
                 .onFailure { error ->
                     _state.update {

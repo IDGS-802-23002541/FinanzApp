@@ -7,15 +7,16 @@ import com.finanzap.features.carteras.model.TipoCartera
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -96,7 +97,7 @@ class NuevaCarteraViewModelTest {
         viewModel.onPresupuestoChange("5,000")
         viewModel.guardar()
 
-        assertTrue(viewModel.state.value.creada)
+        assertEquals(NuevaCarteraEvento.CarteraCreada, viewModel.eventos.first())
         assertFalse(viewModel.state.value.guardando)
         assertEquals(1, repositorio.llamadasCrear)
         assertEquals("Casa Borja", repositorio.ultimoNombre)
@@ -114,7 +115,7 @@ class NuevaCarteraViewModelTest {
         viewModel.onTipoChange(TipoCartera.HOGAR)
         viewModel.guardar()
 
-        assertFalse(viewModel.state.value.creada)
+        assertNull(withTimeoutOrNull(100) { viewModel.eventos.first() })
         assertEquals(
             "No se pudo conectar. Revisa tu conexión.",
             viewModel.state.value.errorGeneral

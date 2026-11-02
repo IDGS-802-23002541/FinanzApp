@@ -14,7 +14,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -37,9 +41,19 @@ fun RecuperarContrasenaScreen(
     viewModel: RecuperarViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var mostrarExito by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                RecuperarEvento.ContrasenaRestablecida -> mostrarExito = true
+            }
+        }
+    }
 
     RecuperarContenido(
         state = state,
+        mostrarExito = mostrarExito,
         onVolver = {
             if (state.paso == PasoRecuperacion.CODIGO) {
                 viewModel.volverPaso()
@@ -61,6 +75,7 @@ fun RecuperarContrasenaScreen(
 @Composable
 fun RecuperarContenido(
     state: RecuperarUiState,
+    mostrarExito: Boolean,
     onVolver: () -> Unit,
     onCompletada: () -> Unit,
     onCorreoChange: (String) -> Unit,
@@ -191,7 +206,7 @@ fun RecuperarContenido(
         }
     }
 
-    if (state.recuperacionCompletada) {
+    if (mostrarExito) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text(stringResource(R.string.recuperar_exito_titulo)) },

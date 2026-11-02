@@ -7,9 +7,12 @@ import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.model.TipoCartera
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -20,6 +23,9 @@ class NuevaCarteraViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(NuevaCarteraUiState())
     val state: StateFlow<NuevaCarteraUiState> = _state.asStateFlow()
+
+    private val _eventos = Channel<NuevaCarteraEvento>(Channel.BUFFERED)
+    val eventos: Flow<NuevaCarteraEvento> = _eventos.receiveAsFlow()
 
     fun onNombreChange(nombre: String) {
         _state.update { it.copy(nombre = nombre, errorNombre = null, errorGeneral = null) }
@@ -106,7 +112,8 @@ class NuevaCarteraViewModel @Inject constructor(
                 fechaFin = actual.fechaFin
             )
                 .onSuccess {
-                    _state.update { it.copy(guardando = false, creada = true) }
+                    _state.update { it.copy(guardando = false) }
+                    _eventos.trySend(NuevaCarteraEvento.CarteraCreada)
                 }
                 .onFailure { error ->
                     _state.update {

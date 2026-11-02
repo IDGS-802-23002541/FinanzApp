@@ -6,7 +6,6 @@ data class CambiarContrasenaUiState(
     val confirmar: String = "",
     val visibles: Boolean = false,
     val guardando: Boolean = false,
-    val cambioCompletado: Boolean = false,
     val errorActual: String? = null,
     val errorNueva: String? = null,
     val errorConfirmar: String? = null,

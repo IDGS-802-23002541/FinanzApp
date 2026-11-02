@@ -25,8 +25,12 @@ fun CambiarContrasenaScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.cambioCompletado) {
-        if (state.cambioCompletado) onCambiada()
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                CambiarContrasenaEvento.ContrasenaCambiada -> onCambiada()
+            }
+        }
     }
 
     CambiarContrasenaContenido(
