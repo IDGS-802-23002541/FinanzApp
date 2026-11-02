@@ -91,7 +91,7 @@ fun RecuperarContenido(
     PantallaFormulario(
         titulo = stringResource(R.string.recuperar_titulo),
         onVolver = onVolver,
-        descripcionVolver = stringResource(R.string.recuperar_volver)
+        descripcionVolver = stringResource(R.string.comun_volver)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,7 +111,7 @@ fun RecuperarContenido(
             CampoCorreo(
                 valor = state.correo,
                 onValorChange = onCorreoChange,
-                etiqueta = stringResource(R.string.recuperar_correo),
+                etiqueta = stringResource(R.string.comun_correo),
                 error = state.errorCorreo,
                 habilitado = !state.cargando
             )
@@ -154,7 +154,7 @@ fun RecuperarContenido(
             CampoContrasena(
                 valor = state.contrasena,
                 onValorChange = onContrasenaChange,
-                etiqueta = stringResource(R.string.recuperar_contrasena_nueva),
+                etiqueta = stringResource(R.string.comun_nueva_contrasena),
                 error = state.errorContrasena,
                 visible = state.contrasenaVisible,
                 onToggleVisible = onToggleContrasena,
@@ -167,7 +167,7 @@ fun RecuperarContenido(
             CampoContrasena(
                 valor = state.confirmarContrasena,
                 onValorChange = onConfirmarChange,
-                etiqueta = stringResource(R.string.recuperar_confirmar_contrasena),
+                etiqueta = stringResource(R.string.comun_confirmar_contrasena),
                 error = state.errorConfirmar,
                 visible = state.contrasenaVisible,
                 onToggleVisible = onToggleContrasena,
@@ -189,7 +189,7 @@ fun RecuperarContenido(
                 if (enSolicitud) R.string.recuperar_enviar_codigo else R.string.recuperar_cambiar_contrasena
             ),
             textoCargando = stringResource(
-                if (enSolicitud) R.string.recuperar_enviando else R.string.recuperar_guardando
+                if (enSolicitud) R.string.recuperar_enviando else R.string.comun_guardando
             ),
             cargando = state.cargando,
             onClick = if (enSolicitud) onSolicitarCodigo else onRestablecer

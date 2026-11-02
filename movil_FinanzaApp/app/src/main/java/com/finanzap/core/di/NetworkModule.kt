@@ -3,6 +3,7 @@ package com.finanzap.core.di
 import com.finanzap.BuildConfig
 import com.finanzap.core.network.AuthInterceptor
 import com.finanzap.core.network.TokenAuthenticator
+import com.finanzap.core.network.jsonApi
 import com.finanzap.features.auth.data.AuthApi
 import com.finanzap.features.carteras.data.CarterasApi
 import dagger.Module
@@ -23,9 +24,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-    }
+    fun provideJson(): Json = jsonApi
 
     @Provides
     @Singleton

@@ -57,7 +57,7 @@ fun CambiarContrasenaContenido(
     PantallaFormulario(
         titulo = stringResource(R.string.cambiar_contrasena_titulo),
         onVolver = onVolver,
-        descripcionVolver = stringResource(R.string.cambiar_contrasena_volver)
+        descripcionVolver = stringResource(R.string.comun_volver)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -77,7 +77,7 @@ fun CambiarContrasenaContenido(
         CampoContrasena(
             valor = state.nueva,
             onValorChange = onNuevaChange,
-            etiqueta = stringResource(R.string.cambiar_contrasena_nueva),
+            etiqueta = stringResource(R.string.comun_nueva_contrasena),
             error = state.errorNueva,
             visible = state.visibles,
             onToggleVisible = onToggleVisibles,
@@ -90,7 +90,7 @@ fun CambiarContrasenaContenido(
         CampoContrasena(
             valor = state.confirmar,
             onValorChange = onConfirmarChange,
-            etiqueta = stringResource(R.string.cambiar_contrasena_confirmar),
+            etiqueta = stringResource(R.string.comun_confirmar_contrasena),
             error = state.errorConfirmar,
             visible = state.visibles,
             onToggleVisible = onToggleVisibles,
@@ -108,7 +108,7 @@ fun CambiarContrasenaContenido(
 
         BotonPrincipal(
             texto = stringResource(R.string.cambiar_contrasena_guardar),
-            textoCargando = stringResource(R.string.cambiar_contrasena_guardando),
+            textoCargando = stringResource(R.string.comun_guardando),
             cargando = state.guardando,
             onClick = onGuardar
         )

@@ -4,9 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.BuildConfig
 import com.finanzap.core.util.codigoValido
-import com.finanzap.core.util.correoValido
+import com.finanzap.core.util.errorConfirmacion
+import com.finanzap.core.util.errorContrasenaNueva
+import com.finanzap.core.util.errorCorreo
 import com.finanzap.core.util.mensajeErrorApi
-import com.finanzap.core.util.requisitosContrasena
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -75,13 +76,9 @@ class RecuperarViewModel @Inject constructor(
         if (actual.cargando) return
 
         val correo = actual.correo.trim()
-        val errorCorreo = when {
-            correo.isBlank() -> "Ingresa tu correo."
-            !correoValido(correo) -> "Ingresa un correo válido."
-            else -> null
-        }
-        if (errorCorreo != null) {
-            _state.update { it.copy(errorCorreo = errorCorreo, errorGeneral = null) }
+        val errorDeCorreo = errorCorreo(correo)
+        if (errorDeCorreo != null) {
+            _state.update { it.copy(errorCorreo = errorDeCorreo, errorGeneral = null) }
             return
         }
 
@@ -121,12 +118,8 @@ class RecuperarViewModel @Inject constructor(
         val errorCodigo = if (codigoValido(actual.codigo)) null
         else "Ingresa el código de 6 dígitos."
 
-        val requisitos = requisitosContrasena(actual.contrasena)
-        val errorContrasena = if (requisitos.isEmpty()) null
-        else "Debe incluir: ${requisitos.joinToString(", ")}."
-
-        val errorConfirmar = if (actual.confirmarContrasena == actual.contrasena) null
-        else "Las contraseñas no coinciden."
+        val errorContrasena = errorContrasenaNueva(actual.contrasena)
+        val errorConfirmar = errorConfirmacion(actual.contrasena, actual.confirmarContrasena)
 
         if (errorCodigo != null || errorContrasena != null || errorConfirmar != null) {
             _state.update {

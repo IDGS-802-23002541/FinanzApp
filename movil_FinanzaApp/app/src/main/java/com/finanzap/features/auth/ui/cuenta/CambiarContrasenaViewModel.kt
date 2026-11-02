@@ -2,8 +2,9 @@ package com.finanzap.features.auth.ui.cuenta
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.finanzap.core.util.errorConfirmacion
+import com.finanzap.core.util.errorContrasenaNueva
 import com.finanzap.core.util.mensajeErrorApi
-import com.finanzap.core.util.requisitosContrasena
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -49,16 +50,13 @@ class CambiarContrasenaViewModel @Inject constructor(
 
         val errorActual = if (actual.actual.isBlank()) "Ingresa tu contraseña actual." else null
 
-        val requisitos = requisitosContrasena(actual.nueva)
         val errorNueva = when {
             actual.nueva.isBlank() -> "Ingresa tu nueva contraseña."
-            requisitos.isNotEmpty() -> "Debe incluir: ${requisitos.joinToString(", ")}."
             actual.nueva == actual.actual -> "La nueva contraseña debe ser distinta de la actual."
-            else -> null
+            else -> errorContrasenaNueva(actual.nueva)
         }
 
-        val errorConfirmar = if (actual.confirmar == actual.nueva) null
-        else "Las contraseñas no coinciden."
+        val errorConfirmar = errorConfirmacion(actual.nueva, actual.confirmar)
 
         if (errorActual != null || errorNueva != null || errorConfirmar != null) {
             _state.update {

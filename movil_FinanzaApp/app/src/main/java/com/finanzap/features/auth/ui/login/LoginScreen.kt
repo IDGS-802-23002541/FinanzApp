@@ -138,7 +138,7 @@ fun LoginContenido(
                 CampoCorreo(
                     valor = state.correo,
                     onValorChange = onCorreoChange,
-                    etiqueta = stringResource(R.string.login_correo),
+                    etiqueta = stringResource(R.string.comun_correo),
                     error = state.errorCorreo,
                     habilitado = !state.cargando,
                     onNext = { focoContrasena.requestFocus() }
@@ -148,7 +148,7 @@ fun LoginContenido(
                 CampoContrasena(
                     valor = state.contrasena,
                     onValorChange = onContrasenaChange,
-                    etiqueta = stringResource(R.string.login_contrasena),
+                    etiqueta = stringResource(R.string.comun_contrasena),
                     error = state.errorContrasena,
                     visible = state.contrasenaVisible,
                     onToggleVisible = onToggleContrasena,

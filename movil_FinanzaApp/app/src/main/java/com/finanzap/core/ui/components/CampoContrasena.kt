@@ -50,9 +50,9 @@ fun CampoContrasena(
                     ),
                     contentDescription = stringResource(
                         if (visible) {
-                            R.string.login_ocultar_contrasena
+                            R.string.comun_ocultar_contrasena
                         } else {
-                            R.string.login_mostrar_contrasena
+                            R.string.comun_mostrar_contrasena
                         }
                     )
                 )

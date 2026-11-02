@@ -72,7 +72,7 @@ fun MiCuentaContenido(
     PantallaFormulario(
         titulo = stringResource(R.string.mi_cuenta_titulo),
         onVolver = onVolver,
-        descripcionVolver = stringResource(R.string.mi_cuenta_volver)
+        descripcionVolver = stringResource(R.string.comun_volver)
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -172,7 +172,7 @@ private fun DialogoConfirmacion(
                 OutlinedTextField(
                     value = contrasena,
                     onValueChange = onContrasenaChange,
-                    label = { Text(stringResource(R.string.mi_cuenta_contrasena)) },
+                    label = { Text(stringResource(R.string.comun_contrasena)) },
                     isError = errorContrasena != null,
                     supportingText = errorContrasena?.let { { Text(it) } },
                     singleLine = true,

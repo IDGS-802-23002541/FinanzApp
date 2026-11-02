@@ -100,7 +100,7 @@ fun NuevaCarteraContenido(
     PantallaFormulario(
         titulo = stringResource(R.string.nueva_cartera_titulo),
         onVolver = onVolver,
-        descripcionVolver = stringResource(R.string.nueva_cartera_volver)
+        descripcionVolver = stringResource(R.string.comun_volver)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 

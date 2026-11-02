@@ -2,7 +2,8 @@ package com.finanzap.features.auth.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.finanzap.core.util.correoValido
+import com.finanzap.core.util.errorCorreo
+import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,11 +45,11 @@ class LoginViewModel @Inject constructor(
         if (actual.cargando) return
 
         val correo = actual.correo.trim()
-        val errorCorreo = validarCorreo(correo)
+        val errorDeCorreo = errorCorreo(correo)
         val errorContrasena = validarContrasena(actual.contrasena)
-        if (errorCorreo != null || errorContrasena != null) {
+        if (errorDeCorreo != null || errorContrasena != null) {
             _state.update {
-                it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena, errorGeneral = null)
+                it.copy(errorCorreo = errorDeCorreo, errorContrasena = errorContrasena, errorGeneral = null)
             }
             return
         }
@@ -69,22 +69,13 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun validarCorreo(correo: String): String? = when {
-        correo.isBlank() -> "Ingresa tu correo."
-        !correoValido(correo) -> "Ingresa un correo válido."
-        else -> null
-    }
-
     private fun validarContrasena(contrasena: String): String? =
         if (contrasena.isBlank()) "Ingresa tu contraseña." else null
 
-    private fun mensajeError(error: Throwable): String = when (error) {
-        is HttpException -> if (error.code() == 401 || error.code() == 403) {
+    private fun mensajeError(error: Throwable): String =
+        if (error is HttpException && (error.code() == 401 || error.code() == 403)) {
             "Correo o contraseña incorrectos."
         } else {
-            "No se pudo iniciar sesión. Intenta de nuevo."
+            mensajeErrorApi(error, "No se pudo iniciar sesión. Intenta de nuevo.")
         }
-        is IOException -> "No se pudo conectar. Revisa tu conexión."
-        else -> "Ocurrió un error. Intenta de nuevo."
-    }
 }
