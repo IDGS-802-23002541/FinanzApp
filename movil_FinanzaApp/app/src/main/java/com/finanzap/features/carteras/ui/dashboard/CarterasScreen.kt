@@ -20,12 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
@@ -85,13 +85,41 @@ fun CarterasScreen(
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val alcance = rememberCoroutineScope()
 
     // Al volver de crear una cartera la pantalla se recompone: se recarga el listado.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar()
     }
+
+    CarterasContenido(
+        state = state,
+        temaOscuro = temaOscuro,
+        onAlternarTema = onAlternarTema,
+        onNuevaCartera = onNuevaCartera,
+        onCuenta = onCuenta,
+        onCerrarSesion = onCerrarSesion,
+        onSegmentoChange = viewModel::onSegmentoChange,
+        onTipoChange = viewModel::onTipoChange,
+        onBusquedaChange = viewModel::onBusquedaChange,
+        onReintentar = viewModel::cargar
+    )
+}
+
+@Composable
+fun CarterasContenido(
+    state: CarterasUiState,
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit,
+    onNuevaCartera: () -> Unit,
+    onCuenta: () -> Unit,
+    onCerrarSesion: () -> Unit,
+    onSegmentoChange: (Segmento) -> Unit,
+    onTipoChange: (TipoCartera?) -> Unit,
+    onBusquedaChange: (String) -> Unit,
+    onReintentar: () -> Unit
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val alcance = rememberCoroutineScope()
 
     val avisar: (String) -> Unit = { mensaje ->
         alcance.launch { snackbarHostState.showSnackbar(mensaje) }
@@ -130,21 +158,21 @@ fun CarterasScreen(
                         segmento = state.segmento,
                         totalMis = state.totalMis,
                         totalCompartidas = state.totalCompartidas,
-                        onSegmentoChange = viewModel::onSegmentoChange
+                        onSegmentoChange = onSegmentoChange
                     )
                 }
 
                 item {
                     FiltrosTipo(
                         seleccionado = state.tipo,
-                        onTipoChange = viewModel::onTipoChange
+                        onTipoChange = onTipoChange
                     )
                 }
 
                 item {
                     Buscador(
                         busqueda = state.busqueda,
-                        onBusquedaChange = viewModel::onBusquedaChange
+                        onBusquedaChange = onBusquedaChange
                     )
                 }
             }
@@ -155,7 +183,7 @@ fun CarterasScreen(
                 error != null -> item {
                     EstadoError(
                         mensaje = error,
-                        onReintentar = viewModel::cargar
+                        onReintentar = onReintentar
                     )
                 }
 
@@ -168,7 +196,7 @@ fun CarterasScreen(
                         )
                     } else if (state.segmento == Segmento.COMPARTIDAS) {
                         EstadoVacio(
-                            icono = Icons.Default.List,
+                            icono = Icons.AutoMirrored.Filled.List,
                             titulo = stringResource(R.string.carteras_vacio_compartidas_titulo),
                             mensaje = stringResource(R.string.carteras_vacio_compartidas_mensaje)
                         )
@@ -257,7 +285,7 @@ private fun Encabezado(
 
         IconButton(onClick = onCerrarSesion) {
             Icon(
-                imageVector = Icons.Default.ExitToApp,
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                 contentDescription = stringResource(R.string.carteras_cerrar_sesion),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -722,7 +750,7 @@ private fun iconoDeTipo(tipo: TipoCartera): ImageVector = when (tipo) {
     TipoCartera.HOGAR -> Icons.Default.Home
     TipoCartera.VIAJE -> Icons.Default.Place
     TipoCartera.EVENTO -> Icons.Default.Star
-    TipoCartera.OTRO -> Icons.Default.List
+    TipoCartera.OTRO -> Icons.AutoMirrored.Filled.List
 }
 
 @Composable

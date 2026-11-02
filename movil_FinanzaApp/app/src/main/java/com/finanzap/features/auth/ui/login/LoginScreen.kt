@@ -15,20 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,15 +41,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
 import com.finanzap.core.ui.components.BannerError
+import com.finanzap.core.ui.components.BotonPrincipal
+import com.finanzap.core.ui.components.CampoContrasena
+import com.finanzap.core.ui.components.CampoCorreo
 import com.finanzap.core.ui.theme.Blanco
 import com.finanzap.core.ui.theme.Coral
 import com.finanzap.core.ui.theme.Petroleo
@@ -73,8 +65,6 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val foco = LocalFocusManager.current
-    val focoContrasena = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         viewModel.eventos.collect { evento ->
@@ -83,6 +73,32 @@ fun LoginScreen(
             }
         }
     }
+
+    LoginContenido(
+        state = state,
+        temaOscuro = temaOscuro,
+        onAlternarTema = onAlternarTema,
+        onCorreoChange = viewModel::onCorreoChange,
+        onContrasenaChange = viewModel::onContrasenaChange,
+        onToggleContrasena = viewModel::onToggleContrasena,
+        onIniciarSesion = viewModel::iniciarSesion,
+        onRecuperarContrasena = onRecuperarContrasena
+    )
+}
+
+@Composable
+fun LoginContenido(
+    state: LoginUiState,
+    temaOscuro: Boolean,
+    onAlternarTema: () -> Unit,
+    onCorreoChange: (String) -> Unit,
+    onContrasenaChange: (String) -> Unit,
+    onToggleContrasena: () -> Unit,
+    onIniciarSesion: () -> Unit,
+    onRecuperarContrasena: () -> Unit
+) {
+    val foco = LocalFocusManager.current
+    val focoContrasena = remember { FocusRequester() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -119,92 +135,30 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(28.dp))
 
-                val errorCorreo = state.errorCorreo
-                OutlinedTextField(
-                    value = state.correo,
-                    onValueChange = viewModel::onCorreoChange,
-                    label = { Text(stringResource(R.string.login_correo)) },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Email, contentDescription = null)
-                    },
-                    isError = errorCorreo != null,
-                    supportingText = if (errorCorreo != null) {
-                        { Text(errorCorreo) }
-                    } else {
-                        null
-                    },
-                    singleLine = true,
-                    enabled = !state.cargando,
-                    shape = RoundedCornerShape(10.dp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focoContrasena.requestFocus() }
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                CampoCorreo(
+                    valor = state.correo,
+                    onValorChange = onCorreoChange,
+                    etiqueta = stringResource(R.string.login_correo),
+                    error = state.errorCorreo,
+                    habilitado = !state.cargando,
+                    onNext = { focoContrasena.requestFocus() }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                val errorContrasena = state.errorContrasena
-                OutlinedTextField(
-                    value = state.contrasena,
-                    onValueChange = viewModel::onContrasenaChange,
-                    label = { Text(stringResource(R.string.login_contrasena)) },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Lock, contentDescription = null)
-                    },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = viewModel::onToggleContrasena,
-                            enabled = !state.cargando
-                        ) {
-                            Icon(
-                                painter = painterResource(
-                                    if (state.contrasenaVisible) {
-                                        R.drawable.ic_visibilidad_oculto
-                                    } else {
-                                        R.drawable.ic_visibilidad
-                                    }
-                                ),
-                                contentDescription = stringResource(
-                                    if (state.contrasenaVisible) {
-                                        R.string.login_ocultar_contrasena
-                                    } else {
-                                        R.string.login_mostrar_contrasena
-                                    }
-                                )
-                            )
-                        }
-                    },
-                    isError = errorContrasena != null,
-                    supportingText = if (errorContrasena != null) {
-                        { Text(errorContrasena) }
-                    } else {
-                        null
-                    },
-                    singleLine = true,
-                    enabled = !state.cargando,
-                    shape = RoundedCornerShape(10.dp),
-                    visualTransformation = if (state.contrasenaVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            foco.clearFocus()
-                            viewModel.iniciarSesion()
-                        }
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focoContrasena)
+                CampoContrasena(
+                    valor = state.contrasena,
+                    onValorChange = onContrasenaChange,
+                    etiqueta = stringResource(R.string.login_contrasena),
+                    error = state.errorContrasena,
+                    visible = state.contrasenaVisible,
+                    onToggleVisible = onToggleContrasena,
+                    habilitado = !state.cargando,
+                    imeAction = ImeAction.Done,
+                    modifier = Modifier.focusRequester(focoContrasena),
+                    onDone = {
+                        foco.clearFocus()
+                        onIniciarSesion()
+                    }
                 )
 
                 TextButton(
@@ -223,32 +177,13 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    onClick = viewModel::iniciarSesion,
-                    enabled = !state.cargando,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    if (state.cargando) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(stringResource(R.string.login_entrando))
-                    } else {
-                        Text(stringResource(R.string.login_entrar))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
+                BotonPrincipal(
+                    texto = stringResource(R.string.login_entrar),
+                    textoCargando = stringResource(R.string.login_entrando),
+                    cargando = state.cargando,
+                    onClick = onIniciarSesion,
+                    iconoFinal = Icons.AutoMirrored.Filled.KeyboardArrowRight
+                )
             }
         }
     }
