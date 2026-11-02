@@ -9,7 +9,7 @@ App móvil oficial de FinanzApp (registro rápido en campo, unión por QR/códig
 - Navegación con **Navigation Compose**.
 - Inyección de dependencias con **Hilt** (procesador vía **KSP**).
 - Red con **Retrofit + OkHttp** y **kotlinx.serialization**.
-- Almacenamiento del token con **androidx.security-crypto**.
+- Almacenamiento de la sesión con **androidx.security-crypto**.
 - Imágenes desde Cloudinary con Coil (pendiente).
 
 ## Estructura
@@ -19,37 +19,40 @@ movil_FinanzaApp/app/src/main/java/com/finanzap/
 ├── FinanzapApp.kt                 # Application (@HiltAndroidApp)
 ├── MainActivity.kt                # única actividad (@AndroidEntryPoint)
 ├── core/
-│   ├── network/                   # cliente HTTP, AuthInterceptor (agrega el JWT), manejo de errores
-│   ├── storage/                   # TokenStorage: guarda el token cifrado
-│   ├── di/                        # módulos de inyección de dependencias
-│   ├── navigation/                # rutas y grafo de navegación
-│   ├── ui/
-│   │   ├── components/            # componentes compartidos
-│   │   └── theme/                 # Color.kt, Type.kt, Theme.kt
-│   └── util/                      # validadores, formateo de montos y fechas, constantes
+│   ├── network/                   # AuthInterceptor (JWT), TokenAuthenticator (refresh), jsonApi
+│   ├── storage/                   # SesionLocal, SesionLocalCifrada, PreferenciasTema, EventosSesion
+│   ├── di/                        # Modulos.kt: repositorios, almacenamiento y red
+│   ├── navigation/                # Rutas, grafo de navegación y estado raíz
+│   ├── ui/                        # componentes, tema y dimensiones
+│   └── util/                      # validadores, errores de API, montos y fechas
 └── features/
-    ├── auth/                      # login, logout, recuperar y cambiar contraseña
-    ├── cuenta/                    # ver y eliminar cuenta
-    ├── carteras/                  # dashboard y detalle de cartera
-    ├── transacciones/
-    ├── reportes/
-    ├── pagosrecurrentes/          # sin guiones: los paquetes de Kotlin no los admiten
-    ├── ajustes/
-    └── soporte/
+    ├── auth/
+    │   ├── data/                  # AuthApi, AuthRepository(+Impl), AuthDtos
+    │   └── ui/                    # Login, Recuperar, MiCuenta y CambiarContrasena
+    ├── carteras/
+    │   ├── Cartera.kt
+    │   ├── data/                  # CarterasApi, CarterasRepository(+Impl), CarterasDtos
+    │   └── ui/                    # Carteras y NuevaCartera
+    └── (las demás features se crean cuando se trabajen)
 ```
 
-Cada feature sigue la forma `data/` (`XxxApi`, `XxxRepository`, `dto/`), `model/` y `ui/` (pantalla + ViewModel + UiState).
+Cada pantalla se resuelve con **dos archivos** dentro de `ui/`:
+
+- `XxxViewModel.kt`: `XxxUiState`, `XxxEvento` y `XxxViewModel`.
+- `XxxScreen.kt`: `XxxScreen` (conectada) y `XxxContenido` (sin ViewModel).
 
 ### Contrato de una pantalla
 
 Todas las pantallas siguen la misma forma, para que una feature nueva se lea igual que las existentes:
 
-- **`XxxUiState`**: `data class` inmutable con `cargando`, errores y datos. La pantalla solo dibuja lo que recibe.
-- **`XxxViewModel`**: expone `state: StateFlow<XxxUiState>` y `eventos: Flow<XxxEvento>` para navegación o avisos de una sola vez.
-- Los **eventos** se consumen con `LaunchedEffect` en la pantalla; nunca se guardan en el estado.
+- **`XxxViewModel.kt`**: reúne `XxxUiState` (inmutable, con `cargando`, errores y datos), `XxxEvento` y el ViewModel, que expone `state: StateFlow<XxxUiState>` y `eventos: Flow<XxxEvento>` para navegación o avisos de una sola vez.
+- Los **eventos** se emiten con `Channel` y se consumen con `LaunchedEffect` en la pantalla; nunca se guardan en el estado.
 - **`XxxRepository`**: única puerta a la API y devuelve `Result<T>`; el ViewModel traduce el fallo a mensaje.
 - La pantalla **no conoce DTOs ni Retrofit**, solo los modelos de `model/`.
-- Estados de UI obligatorios: **cargando**, **error con reintento** (`EstadoError`) y **vacío** (`EstadoVacio`).
+- Estados de UI obligatorios en listados: **cargando**, **error con reintento** (`EstadoError`) y **vacío** (`EstadoVacio`).
+- La pantalla se divide en **`XxxScreen`** (conectada a Hilt y al ciclo de vida) y **`XxxContenido`** (sin ViewModel, recibe `state` y callbacks).
+- Los formularios reutilizan `core/ui/components/` (`CampoCorreo`, `CampoContrasena`, `BotonPrincipal`, `EncabezadoVolver`, `PantallaFormulario`, `ErrorCampo`).
+- Las validaciones, montos y fechas se resuelven con `core/util/`.
 
 ## Primeros pasos
 
