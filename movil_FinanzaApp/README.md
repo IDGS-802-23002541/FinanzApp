@@ -23,7 +23,7 @@ movil_FinanzaApp/app/src/main/java/com/finanzap/
 │   ├── storage/                   # SesionLocal, SesionLocalCifrada, PreferenciasTema, EventosSesion
 │   ├── di/                        # Modulos.kt: repositorios, almacenamiento y red
 │   ├── navigation/                # Rutas, grafo de navegación y estado raíz
-│   ├── ui/                        # componentes, tema y dimensiones
+│   ├── ui/                        # componentes, tema, menú lateral y pantalla pendiente
 │   └── util/                      # validadores, errores de API, montos y fechas
 └── features/
     ├── auth/
@@ -40,6 +40,14 @@ Cada pantalla se resuelve con **dos archivos** dentro de `ui/`:
 
 - `XxxViewModel.kt`: `XxxUiState`, `XxxEvento` y `XxxViewModel`.
 - `XxxScreen.kt`: `XxxScreen` (conectada) y `XxxContenido` (sin ViewModel).
+
+## Navegación
+
+El menú lateral vive en `core/navigation/FinanzAppNavHost.kt` (`ModalNavigationDrawer`) y está disponible en **todas las secciones autenticadas**. Se abre con el botón `☰` de cada encabezado y contiene: Carteras, Reportes, Soporte, Mi cuenta, Modo oscuro/claro y Cerrar sesión. En Login y Recuperar no aparece.
+
+**Por qué:** el encabezado anterior mezclaba título, botón de tema y tres iconos; en pantallas angostas “Carteras” se partía en dos líneas y la descripción quedaba en una columna mínima. Al mover esos accesos al menú, el encabezado conserva solo `☰`, título y la acción principal.
+
+Reportes y Soporte todavía no tienen módulo: muestran `core/ui/PantallaPendiente.kt` con “Próximamente”. La navegación desde el menú usa `popUpTo(Rutas.Carteras)` para no acumular secciones.
 
 ### Contrato de una pantalla
 
