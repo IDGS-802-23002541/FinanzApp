@@ -41,6 +41,24 @@ Cada pantalla se resuelve con **dos archivos** dentro de `ui/`:
 - `XxxViewModel.kt`: `XxxUiState`, `XxxEvento` y `XxxViewModel`.
 - `XxxScreen.kt`: `XxxScreen` (conectada) y `XxxContenido` (sin ViewModel).
 
+### Por qué se reestructuró
+
+La estructura anterior creaba una carpeta por capa (`data/dto/`, `model/`, `ui/login/`, `ui/cuenta/`…) y hasta **cuatro archivos por pantalla** (`Screen`, `UiState`, `Evento`, `ViewModel`). Para el tamaño actual del módulo eso generaba ≈33 carpetas y ≈39 archivos en `features`, con muchos archivos de 5–10 líneas y saltos constantes entre carpetas.
+
+Se aplanó a una organización por feature:
+
+| Antes | Ahora |
+| --- | --- |
+| `data/`, `data/dto/`, `model/`, `ui/<pantalla>/` | `data/` + `ui/` (y el modelo en la raíz de la feature si es compartido) |
+| 4 archivos por pantalla | 2 archivos: `XxxViewModel.kt` (estado + evento + ViewModel) y `XxxScreen.kt` (pantalla + contenido) |
+| 8 archivos de DTO de auth | 1 archivo `AuthDtos.kt` |
+| 3 módulos de Hilt | 1 archivo `Modulos.kt` |
+| Carpetas de features vacías | se crean cuando la feature empieza |
+
+El objetivo era **menos carpetas y archivos, no menos arquitectura**: se conservan MVVM, Repository, `Result`, Hilt, `StateFlow`/`Channel`, la separación `Screen`/`Contenido` y los tests. No se agregaron `UseCase`, `Factory`, `Adapter` con interfaz, MVI ni `BaseViewModel`; tampoco se eliminaron dependencias.
+
+El costo es que algunos archivos son más largos. Si una pantalla crece demasiado, se vuelve a dividir; hoy no se justificaba.
+
 ## Navegación
 
 El menú lateral vive en `core/navigation/FinanzAppNavHost.kt` (`ModalNavigationDrawer`) y está disponible en **todas las secciones autenticadas**. Se abre con el botón `☰` de cada encabezado y contiene: Carteras, Reportes, Soporte, Mi cuenta, Modo oscuro/claro y Cerrar sesión. En Login y Recuperar no aparece.
