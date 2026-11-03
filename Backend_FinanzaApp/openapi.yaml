@@ -735,6 +735,134 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /transacciones/{idTransaccion}:
+    put:
+      tags:
+        - Transacciones
+      summary: Editar una transacción
+      description: >-
+        Reemplaza los datos de una transacción ACTIVA. Solo el propietario o
+        administrador de la cartera puede editar, y la cartera debe estar
+        ACTIVA. Aplica las mismas validaciones del registro y recalcula saldo.
+      operationId: actualizarTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTransaccion
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionCrearRequest'
+            example:
+              tipo: GASTO
+              monto: 300
+              fecha: '2026-11-03'
+              categoriaId: 2
+              descripcion: Despensa corregida
+              metodoPago: TARJETA
+      responses:
+        '200':
+          description: Transacción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transacción no encontrada o usuario no miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Transacciones
+      summary: Eliminar lógicamente una transacción
+      description: >-
+        Cambia el estado de la transacción a ELIMINADO. Solo el propietario o
+        administrador de la cartera puede eliminarla, y la cartera debe estar
+        ACTIVA. El registro se conserva y deja de contar en saldos y listas.
+      operationId: eliminarTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTransaccion
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Transacción eliminada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionEliminada'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transacción no encontrada o usuario no miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo eliminar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -1357,3 +1485,26 @@ components:
         mensaje:
           type: string
           example: Transacciones obtenidas correctamente.
+    TransaccionEliminada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            idTransaccion:
+              type: integer
+              example: 1
+            estado:
+              type: string
+              enum:
+                - ACTIVO
+                - ELIMINADO
+              example: ELIMINADO
+            resumen:
+              $ref: '#/components/schemas/ResumenTransacciones'
+        mensaje:
+          type: string
+          example: Transacción eliminada correctamente.

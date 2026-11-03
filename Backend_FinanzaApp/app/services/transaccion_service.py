@@ -3,7 +3,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 
 from flask_jwt_extended import current_user
-from sqlalchemy import func, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
@@ -46,74 +46,14 @@ def crear(id_cartera, datos):
             "mensaje": "No se pueden registrar movimientos en una cartera inactiva o finalizada.",
         }, 409
 
-    tipo = datos.get("tipo", "GASTO")
-    if not isinstance(tipo, str):
-        return {"ok": False, "mensaje": "El tipo es obligatorio."}, 400
-    tipo = tipo.strip().upper()
-    if tipo not in TIPOS:
-        return {"ok": False, "mensaje": "El tipo debe ser INGRESO o GASTO."}, 400
-
-    monto, error = _validar_monto(datos.get("monto"))
+    campos, error = _validar_datos(datos, id_cartera, cartera.tipo)
     if error:
-        return {"ok": False, "mensaje": error}, 400
-
-    fecha, error = _validar_fecha(datos.get("fecha"))
-    if error:
-        return {"ok": False, "mensaje": error}, 400
-
-    descripcion = datos.get("descripcion")
-    if descripcion is not None and not isinstance(descripcion, str):
-        return {"ok": False, "mensaje": "La descripción debe ser texto."}, 400
-    if isinstance(descripcion, str):
-        descripcion = descripcion.strip() or None
-    if descripcion and len(descripcion) > 500:
-        return {
-            "ok": False,
-            "mensaje": "La descripción admite hasta 500 caracteres.",
-        }, 400
-
-    metodo_pago = datos.get("metodoPago")
-    if metodo_pago is not None and not isinstance(metodo_pago, str):
-        return {"ok": False, "mensaje": "El método de pago no es válido."}, 400
-    if isinstance(metodo_pago, str):
-        metodo_pago = metodo_pago.strip().upper() or None
-    if metodo_pago and metodo_pago not in METODOS_PAGO:
-        return {"ok": False, "mensaje": "El método de pago no es válido."}, 400
-
-    comprobante = datos.get("comprobanteUrl")
-    if comprobante is not None and not isinstance(comprobante, str):
-        return {"ok": False, "mensaje": "El comprobante debe ser una URL."}, 400
-    if isinstance(comprobante, str):
-        comprobante = comprobante.strip() or None
-    if comprobante and len(comprobante) > 500:
-        return {
-            "ok": False,
-            "mensaje": "El comprobante admite hasta 500 caracteres.",
-        }, 400
-
-    try:
-        categoria, error = _buscar_categoria(
-            id_cartera,
-            cartera.tipo,
-            tipo,
-            datos.get("categoriaId"),
-        )
-    except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudo validar la categoría."}, 503
-    if error:
-        return {"ok": False, "mensaje": error}, 400
+        return {"ok": False, "mensaje": error[0]}, error[1]
 
     transaccion = Transaccion(
         carteraId=id_cartera,
         usuarioId=current_user.idUsuario,
-        categoriaId=categoria.idCategoria,
-        tipo=tipo,
-        monto=monto,
-        descripcion=descripcion,
-        metodoPago=metodo_pago,
-        comprobanteUrl=comprobante,
-        estado="ACTIVO",
-        fechaTransaccion=datetime.combine(fecha, time.min),
+        **campos,
     )
     db.session.add(transaccion)
 
@@ -249,6 +189,195 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
         },
         "mensaje": mensaje,
     }, 200
+
+
+def actualizar(id_transaccion, datos):
+    transaccion, cartera, error = _buscar_editable(id_transaccion)
+    if error:
+        return error
+
+    campos, error = _validar_datos(datos, cartera.idCartera, cartera.tipo)
+    if error:
+        return {"ok": False, "mensaje": error[0]}, error[1]
+
+    for campo, valor in campos.items():
+        setattr(transaccion, campo, valor)
+    transaccion.fechaActualizacion = datetime.now()
+
+    try:
+        db.session.flush()
+        resumen = _recalcular_saldo(cartera)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo actualizar la transacción."}, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "transaccion": _serializar(transaccion),
+            "resumen": resumen,
+        },
+        "mensaje": "Transacción actualizada correctamente.",
+    }, 200
+
+
+def eliminar(id_transaccion):
+    transaccion, cartera, error = _buscar_editable(id_transaccion)
+    if error:
+        return error
+
+    transaccion.estado = "ELIMINADO"
+    transaccion.fechaActualizacion = datetime.now()
+
+    try:
+        db.session.flush()
+        resumen = _recalcular_saldo(cartera)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo eliminar la transacción."}, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "idTransaccion": transaccion.idTransaccion,
+            "estado": transaccion.estado,
+            "resumen": resumen,
+        },
+        "mensaje": "Transacción eliminada correctamente.",
+    }, 200
+
+
+def _buscar_editable(id_transaccion):
+    try:
+        fila = db.session.execute(
+            db.select(Transaccion, MiembroCartera, Cartera)
+            .join(
+                MiembroCartera,
+                and_(
+                    MiembroCartera.carteraId == Transaccion.carteraId,
+                    MiembroCartera.usuarioId == current_user.idUsuario,
+                    MiembroCartera.estado == "ACTIVO",
+                ),
+            )
+            .join(Cartera, Cartera.idCartera == Transaccion.carteraId)
+            .where(Transaccion.idTransaccion == id_transaccion)
+        ).first()
+    except SQLAlchemyError:
+        return (
+            None,
+            None,
+            ({"ok": False, "mensaje": "No se pudo validar la transacción."}, 503),
+        )
+
+    if not fila:
+        return (
+            None,
+            None,
+            ({"ok": False, "mensaje": "Transacción no encontrada."}, 404),
+        )
+
+    transaccion, membresia, cartera = fila
+
+    if transaccion.estado != "ACTIVO":
+        return (
+            None,
+            None,
+            ({"ok": False, "mensaje": "Transacción no encontrada."}, 404),
+        )
+
+    if cartera.estado != "ACTIVA":
+        return (
+            None,
+            None,
+            (
+                {
+                    "ok": False,
+                    "mensaje": "No se pueden modificar movimientos en una cartera inactiva o finalizada.",
+                },
+                409,
+            ),
+        )
+
+    if membresia.rol != "ADMIN":
+        return (
+            None,
+            None,
+            (
+                {
+                    "ok": False,
+                    "mensaje": "Solo el propietario o administrador puede editar o eliminar transacciones.",
+                },
+                403,
+            ),
+        )
+
+    return transaccion, cartera, None
+
+
+def _validar_datos(datos, id_cartera, tipo_cartera):
+    tipo = datos.get("tipo", "GASTO")
+    if not isinstance(tipo, str):
+        return None, ("El tipo es obligatorio.", 400)
+    tipo = tipo.strip().upper()
+    if tipo not in TIPOS:
+        return None, ("El tipo debe ser INGRESO o GASTO.", 400)
+
+    monto, error = _validar_monto(datos.get("monto"))
+    if error:
+        return None, (error, 400)
+
+    fecha, error = _validar_fecha(datos.get("fecha"))
+    if error:
+        return None, (error, 400)
+
+    descripcion = datos.get("descripcion")
+    if descripcion is not None and not isinstance(descripcion, str):
+        return None, ("La descripción debe ser texto.", 400)
+    if isinstance(descripcion, str):
+        descripcion = descripcion.strip() or None
+    if descripcion and len(descripcion) > 500:
+        return None, ("La descripción admite hasta 500 caracteres.", 400)
+
+    metodo_pago = datos.get("metodoPago")
+    if metodo_pago is not None and not isinstance(metodo_pago, str):
+        return None, ("El método de pago no es válido.", 400)
+    if isinstance(metodo_pago, str):
+        metodo_pago = metodo_pago.strip().upper() or None
+    if metodo_pago and metodo_pago not in METODOS_PAGO:
+        return None, ("El método de pago no es válido.", 400)
+
+    comprobante = datos.get("comprobanteUrl")
+    if comprobante is not None and not isinstance(comprobante, str):
+        return None, ("El comprobante debe ser una URL.", 400)
+    if isinstance(comprobante, str):
+        comprobante = comprobante.strip() or None
+    if comprobante and len(comprobante) > 500:
+        return None, ("El comprobante admite hasta 500 caracteres.", 400)
+
+    try:
+        categoria, error = _buscar_categoria(
+            id_cartera,
+            tipo_cartera,
+            tipo,
+            datos.get("categoriaId"),
+        )
+    except SQLAlchemyError:
+        return None, ("No se pudo validar la categoría.", 503)
+    if error:
+        return None, (error, 400)
+
+    return {
+        "categoriaId": categoria.idCategoria,
+        "tipo": tipo,
+        "monto": monto,
+        "descripcion": descripcion,
+        "metodoPago": metodo_pago,
+        "comprobanteUrl": comprobante,
+        "estado": "ACTIVO",
+        "fechaTransaccion": datetime.combine(fecha, time.min),
+    }, None
 
 
 def _validar_monto(valor):

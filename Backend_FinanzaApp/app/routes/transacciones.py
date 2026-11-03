@@ -29,3 +29,23 @@ def crear(idCartera):
         )
     payload, status = transaccion_service.crear(idCartera, datos)
     return jsonify(payload), status
+
+
+@transacciones_bp.put("/transacciones/<int:idTransaccion>")
+@jwt_required()
+def actualizar(idTransaccion):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return (
+            jsonify({"ok": False, "mensaje": "El cuerpo debe ser un objeto JSON"}),
+            400,
+        )
+    payload, status = transaccion_service.actualizar(idTransaccion, datos)
+    return jsonify(payload), status
+
+
+@transacciones_bp.delete("/transacciones/<int:idTransaccion>")
+@jwt_required()
+def eliminar(idTransaccion):
+    payload, status = transaccion_service.eliminar(idTransaccion)
+    return jsonify(payload), status

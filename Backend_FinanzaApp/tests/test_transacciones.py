@@ -31,6 +31,23 @@ def test_listar_transacciones_requiere_token():
     assert respuesta.is_json
 
 
+def test_ruta_edicion_transaccion_registrada():
+    app = create_app()
+    rutas = {regla.rule for regla in app.url_map.iter_rules()}
+    assert "/transacciones/<int:idTransaccion>" in rutas
+
+
+def test_editar_y_eliminar_requieren_token():
+    app = create_app()
+    cliente = app.test_client()
+    editar = cliente.put("/transacciones/1", json={"monto": 10})
+    eliminar = cliente.delete("/transacciones/1")
+    assert editar.status_code == 401
+    assert eliminar.status_code == 401
+    assert editar.is_json
+    assert eliminar.is_json
+
+
 def test_entero_parametro():
     assert transaccion_service._entero_parametro("pagina", "2", 1) == (2, None)
     assert transaccion_service._entero_parametro("pagina", "0", 1)[1] is not None
