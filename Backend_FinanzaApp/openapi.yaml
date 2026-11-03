@@ -532,6 +532,167 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/invitaciones:
+    get:
+      tags:
+        - Invitaciones
+      summary: Consultar la invitación activa y los ingresos
+      description: >-
+        Devuelve la invitación activa de la cartera y los colaboradores que se
+        han unido con fecha y hora. Solo el propietario o administrador puede
+        consultarla.
+      operationId: consultarInvitacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invitación y colaboradores que ingresaron
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitacionesCartera'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener la invitación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Invitaciones
+      summary: Generar el QR de invitación
+      description: >-
+        Genera una clave única de 8 caracteres y revoca la invitación activa
+        anterior. Solo el propietario o administrador puede generarla y la
+        cartera debe estar ACTIVA. El front renderiza el QR a partir de
+        qrContenido.
+      operationId: generarInvitacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Invitación generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitacionGenerada'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo generar la invitación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /invitaciones/unirse:
+    post:
+      tags:
+        - Invitaciones
+      summary: Unirse a una cartera con la clave
+      description: >-
+        Valida la clave de 8 caracteres, su vigencia y que la cartera esté
+        ACTIVA, y da de alta al usuario como colaborador activo con la fecha
+        y hora de ingreso. Si ya es miembro activo, rechaza la petición.
+      operationId: unirseCartera
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnirseRequest'
+            example:
+              codigo: ABCD2345
+      responses:
+        '201':
+          description: El usuario se unió a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnionCartera'
+        '400':
+          description: Clave con formato inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Invitación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Invitación vencida/revocada, cartera inactiva o ya es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo unir a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras/{idCartera}:
     get:
       tags:
@@ -1699,3 +1860,134 @@ components:
               $ref: '#/components/schemas/ResumenPeriodo'
             series:
               $ref: '#/components/schemas/SeriesCartera'
+    Invitacion:
+      type: object
+      properties:
+        idInvitacion:
+          type: integer
+          example: 4
+        carteraId:
+          type: integer
+          example: 3
+        codigo:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: ABCD2345
+        qrContenido:
+          type: string
+          example: finanzapp://invitacion/ABCD2345
+        fechaCreacion:
+          type: string
+          format: date-time
+        fechaExpiracion:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+            - REVOCADA
+          example: ACTIVA
+        expirada:
+          type: boolean
+          example: false
+    InvitacionGenerada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Invitacion'
+        mensaje:
+          type: string
+          example: Invitación generada correctamente.
+    IngresoInvitacion:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+          example: 9
+        nombre:
+          type: string
+          example: Aideé Casillas
+        iniciales:
+          type: string
+          example: AC
+        fechaUnion:
+          type: string
+          format: date-time
+    InvitacionesCartera:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            invitacion:
+              $ref: '#/components/schemas/Invitacion'
+            ingresos:
+              type: array
+              items:
+                $ref: '#/components/schemas/IngresoInvitacion'
+        mensaje:
+          type: string
+          example: Invitación obtenida correctamente.
+    UnirseRequest:
+      type: object
+      required:
+        - codigo
+      properties:
+        codigo:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: ABCD2345
+    UnionCartera:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            invitacionId:
+              type: integer
+              example: 4
+            cartera:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 3
+                nombre:
+                  type: string
+                  example: Casa
+                estado:
+                  type: string
+                  example: ACTIVA
+            miembro:
+              type: object
+              properties:
+                usuarioId:
+                  type: integer
+                  example: 9
+                rol:
+                  type: string
+                  enum:
+                    - PROPIETARIO
+                    - COLABORADOR
+                  example: COLABORADOR
+                estado:
+                  type: string
+                  example: ACTIVO
+                fechaUnion:
+                  type: string
+                  format: date-time
+        mensaje:
+          type: string
+          example: Te uniste a la cartera correctamente.
