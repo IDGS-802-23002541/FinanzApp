@@ -20,15 +20,12 @@ interface AuthRepository {
         contrasena: String
     ): Result<Unit>
 
-    /**
-     * Pendiente de backend (tarea #106): el endpoint aún no existe.
-     * La firma ya queda fijada para no tocar pantallas cuando llegue.
-     */
+    /** Cambia la contraseña del usuario con sesión activa. */
     suspend fun cambiarContrasenia(actual: String, nueva: String): Result<Unit>
 
     /**
-     * Pendientes de backend (tareas #110 y #112): los endpoints aún no existen.
-     * Al confirmar, la sesión local se borra igual que al cerrar sesión.
+     * Desactivar o eliminar cierra la sesión local cuando el backend confirma
+     * que la cuenta ya no puede iniciar sesión (CA2 de HU-02.5a y HU-02.5b).
      */
     suspend fun desactivarCuenta(contrasena: String): Result<Unit>
 
