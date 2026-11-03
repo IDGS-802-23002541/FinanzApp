@@ -6,6 +6,18 @@ from app.services import transaccion_service
 transacciones_bp = Blueprint("transacciones", __name__)
 
 
+@transacciones_bp.get("/carteras/<int:idCartera>/transacciones")
+@jwt_required()
+def listar(idCartera):
+    payload, status = transaccion_service.listar(
+        idCartera,
+        pagina=request.args.get("pagina", "1"),
+        por_pagina=request.args.get("porPagina", "20"),
+        periodo_id=request.args.get("periodoId"),
+    )
+    return jsonify(payload), status
+
+
 @transacciones_bp.post("/carteras/<int:idCartera>/transacciones")
 @jwt_required()
 def crear(idCartera):

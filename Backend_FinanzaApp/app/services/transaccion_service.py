@@ -1,5 +1,7 @@
-from datetime import date, datetime, time
+import math
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
+
 from flask_jwt_extended import current_user
 from sqlalchemy import func, or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,10 +12,11 @@ from app.models import (
     Categoria,
     MiembroCartera,
     Notificacion,
+    Periodo,
     PreferenciaUsuario,
     Transaccion,
+    Usuario,
 )
-
 TIPOS = {"INGRESO", "GASTO"}
 METODOS_PAGO = {"EFECTIVO", "TARJETA", "TRANSFERENCIA"}
 
@@ -131,6 +134,121 @@ def crear(id_cartera, datos):
         },
         "mensaje": "Transacción registrada correctamente.",
     }, 201
+
+
+def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
+    pagina, error = _entero_parametro("pagina", pagina, 1)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+    por_pagina, error = _entero_parametro("porPagina", por_pagina, 1, 100)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    try:
+        miembro = db.session.execute(
+            db.select(MiembroCartera).where(
+                MiembroCartera.carteraId == id_cartera,
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).scalar_one_or_none()
+    except SQLAlchemyError:
+        return {"ok": False, "mensaje": "No se pudo validar la cartera."}, 503
+
+    if not miembro:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+
+    filtros = [
+        Transaccion.carteraId == id_cartera,
+        Transaccion.estado == "ACTIVO",
+    ]
+
+    if periodo_id not in (None, ""):
+        periodo_id, error = _entero_parametro("periodoId", periodo_id, 1)
+        if error:
+            return {"ok": False, "mensaje": error}, 400
+        try:
+            periodo = db.session.get(Periodo, periodo_id)
+        except SQLAlchemyError:
+            return {"ok": False, "mensaje": "No se pudo validar el periodo."}, 503
+        if periodo is None or periodo.carteraId != id_cartera:
+            return {
+                "ok": False,
+                "mensaje": "El periodo no es válido para esta cartera.",
+            }, 400
+        filtros.append(
+            Transaccion.fechaTransaccion
+            >= datetime.combine(periodo.fechaInicio, time.min)
+        )
+        filtros.append(
+            Transaccion.fechaTransaccion
+            < datetime.combine(
+                periodo.fechaFin + timedelta(days=1),
+                time.min,
+            )
+        )
+
+    try:
+        total = db.session.execute(
+            db.select(func.count()).select_from(Transaccion).where(*filtros)
+        ).scalar_one()
+        filas = db.session.execute(
+            db.select(Transaccion, Usuario, Categoria)
+            .join(Usuario, Usuario.idUsuario == Transaccion.usuarioId)
+            .outerjoin(
+                Categoria,
+                Categoria.idCategoria == Transaccion.categoriaId,
+            )
+            .where(*filtros)
+            .order_by(
+                Transaccion.fechaTransaccion.desc(),
+                Transaccion.idTransaccion.desc(),
+            )
+            .offset((pagina - 1) * por_pagina)
+            .limit(por_pagina)
+        ).all()
+        totales = db.session.execute(
+            db.select(
+                Transaccion.tipo,
+                func.coalesce(func.sum(Transaccion.monto), 0),
+            )
+            .where(*filtros)
+            .group_by(Transaccion.tipo)
+        ).all()
+    except SQLAlchemyError:
+        return {"ok": False, "mensaje": "No se pudieron obtener las transacciones."}, 503
+
+    por_tipo = {tipo: Decimal(monto) for tipo, monto in totales}
+    ingresos = por_tipo.get("INGRESO", Decimal("0"))
+    gastos = por_tipo.get("GASTO", Decimal("0"))
+    total_paginas = math.ceil(total / por_pagina) if total else 0
+    items = [
+        _serializar_listado(transaccion, autor, categoria)
+        for transaccion, autor, categoria in filas
+    ]
+    mensaje = (
+        "Transacciones obtenidas correctamente."
+        if items
+        else "Sin transacciones en el periodo solicitado."
+    )
+    return {
+        "ok": True,
+        "data": {
+            "items": items,
+            "paginacion": {
+                "pagina": pagina,
+                "porPagina": por_pagina,
+                "total": total,
+                "totalPaginas": total_paginas,
+            },
+            "totales": {
+                "totalIngresos": float(ingresos),
+                "totalGastos": float(gastos),
+                "balance": float(ingresos - gastos),
+            },
+        },
+        "mensaje": mensaje,
+    }, 200
 
 
 def _validar_monto(valor):
@@ -259,3 +377,27 @@ def _serializar(transaccion):
         "estado": transaccion.estado,
         "fecha": transaccion.fechaTransaccion.date().isoformat(),
     }
+
+
+def _serializar_listado(transaccion, autor, categoria):
+    datos = _serializar(transaccion)
+    datos["categoria"] = (
+        {"idCategoria": categoria.idCategoria, "nombre": categoria.nombre}
+        if categoria
+        else None
+    )
+    datos["autor"] = {
+        "idUsuario": autor.idUsuario,
+        "nombre": f"{autor.nombreUsuario} {autor.apaterno or ''}".strip(),
+    }
+    return datos
+
+
+def _entero_parametro(nombre, valor, minimo, maximo=None):
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return None, f"El parámetro {nombre} debe ser un número entero."
+    if numero < minimo or (maximo is not None and numero > maximo):
+        return None, f"El parámetro {nombre} está fuera de rango."
+    return numero, None

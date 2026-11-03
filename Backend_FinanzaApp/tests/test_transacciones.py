@@ -23,6 +23,25 @@ def test_crear_transaccion_requiere_token():
     assert respuesta.is_json
 
 
+def test_listar_transacciones_requiere_token():
+    app = create_app()
+    cliente = app.test_client()
+    respuesta = cliente.get("/carteras/1/transacciones?pagina=1")
+    assert respuesta.status_code == 401
+    assert respuesta.is_json
+
+
+def test_entero_parametro():
+    assert transaccion_service._entero_parametro("pagina", "2", 1) == (2, None)
+    assert transaccion_service._entero_parametro("pagina", "0", 1)[1] is not None
+    assert transaccion_service._entero_parametro("pagina", "abc", 1)[1] is not None
+    assert transaccion_service._entero_parametro("porPagina", "101", 1, 100)[1] is not None
+    assert transaccion_service._entero_parametro("porPagina", "100", 1, 100) == (
+        100,
+        None,
+    )
+
+
 def test_monto_debe_ser_mayor_a_cero():
     assert transaccion_service._validar_monto(0)[1] is not None
     assert transaccion_service._validar_monto(-5)[1] is not None
