@@ -19,6 +19,9 @@ Backend_FinanzaApp/
 ├── app/
 │   ├── __init__.py          # create_app() y registro de blueprints
 │   ├── extensions.py        # db (SQL Server), cloudinary, jwt
+│   ├── routes/              # endpoints delgados: request → servicio → jsonify
+│   ├── services/            # lógica de negocio (auth_service, cartera_service)
+│   ├── utils/               # seguridad, validacion, respuestas, serializers
 │   ├── blueprints/
 │   │   ├── auth/            # registro, login, recuperar contraseña
 │   │   ├── usuarios/        # perfil, baja lógica, admin de clientes
@@ -32,12 +35,19 @@ Backend_FinanzaApp/
 │   │   ├── soporte/         # tickets cliente/admin
 │   │   └── admin/           # métricas, trabajadores, comentarios
 │   ├── models/              # entidades SQLAlchemy
-│   └── utils/               # validaciones, permisos, respuestas
+│   ├── utils/               # validaciones, permisos, respuestas
+│   ├── services/            # lógica de negocio (auth_service, cartera_service)
 ├── config.py
 ├── run.py
 ├── requirements.txt
 └── .env.example
 ```
+
+## Capas
+
+- `routes/`: solo endpoints. Lee `request`, llama al servicio, devuelve `jsonify`. Sin consultas DB ni validaciones.
+- `services/`: lógica de negocio y acceso a DB. Recibe datos simples, devuelve `(payload, status)`.
+- `utils/`: `seguridad` (tokens, hash, códigos), `validacion` (correo, contraseña, fechas), `respuestas` (`ok`/`error`), `serializers` (usuario, cartera, mapas tipo/rol).
 
 ## Blueprints y responsabilidades
 
