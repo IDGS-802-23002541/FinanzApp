@@ -10,6 +10,7 @@
     <string name="comun_ocultar_contrasena">Ocultar contraseña</string>
     <string name="comun_volver">Volver</string>
     <string name="comun_guardando">Guardando…</string>
+    <string name="comun_crear">Crear</string>
     <string name="comun_pendiente_titulo">Próximamente</string>
     <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
     <string name="menu_abrir">Abrir menú</string>
@@ -92,9 +93,25 @@
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
 
+    <!-- Transacciones -->
+    <string name="transaccion_titulo">Nueva transacción</string>
+    <string name="transaccion_tipo">Tipo</string>
+    <string name="transaccion_ingreso">Ingreso</string>
+    <string name="transaccion_gasto">Gasto</string>
+    <string name="transaccion_monto">Monto</string>
+    <string name="transaccion_categoria">Categoría</string>
+    <string name="transaccion_fecha">Fecha</string>
+    <string name="transaccion_descripcion">Descripción (opcional)</string>
+    <string name="transaccion_guardar">Guardar transacción</string>
+    <string name="transaccion_pendiente_titulo">Vista previa</string>
+    <string name="transaccion_pendiente_mensaje">La lógica de guardado se implementará con el equipo.</string>
+    <string name="categoria_buscar">Buscar o crear categoría</string>
+    <string name="categoria_crear">Crear «%1$s»</string>
+    <string name="categoria_confirmar_titulo">Crear categoría</string>
+    <string name="categoria_confirmar_mensaje">¿Agregar «%1$s» a tus categorías?</string>
+
     <!-- Nueva cartera -->
-    <string name="nueva_cartera_titulo">Nueva cartera</string>
-    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
+    <string name="nueva_cartera_titulo">Nueva cartera</string>    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
     <string name="nueva_cartera_tipo">Tipo de cartera</string>
     <string name="nueva_cartera_descripcion">Descripción (opcional)</string>
     <string name="nueva_cartera_presupuesto">Presupuesto inicial (opcional)</string>

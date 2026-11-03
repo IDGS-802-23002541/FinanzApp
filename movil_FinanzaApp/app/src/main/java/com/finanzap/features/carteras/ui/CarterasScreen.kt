@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CarterasScreen(
     onNuevaCartera: () -> Unit,
+    onRegistrarGasto: (Cartera) -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,6 +91,7 @@ fun CarterasScreen(
         state = state,
         acciones = CarterasAcciones(
             onNuevaCartera = onNuevaCartera,
+            onRegistrarGasto = onRegistrarGasto,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
             onBusquedaChange = viewModel::onBusquedaChange,
@@ -100,6 +102,7 @@ fun CarterasScreen(
 
 data class CarterasAcciones(
     val onNuevaCartera: () -> Unit,
+    val onRegistrarGasto: (Cartera) -> Unit,
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
     val onBusquedaChange: (String) -> Unit,
@@ -112,6 +115,7 @@ fun CarterasContenido(
     acciones: CarterasAcciones
 ) {
     val onNuevaCartera = acciones.onNuevaCartera
+    val onRegistrarGasto = acciones.onRegistrarGasto
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
     val onBusquedaChange = acciones.onBusquedaChange
@@ -125,7 +129,6 @@ fun CarterasContenido(
     }
 
     val mensajeDetalle = stringResource(R.string.carteras_pendiente_detalle)
-    val mensajeGasto = stringResource(R.string.carteras_pendiente_gasto)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -208,11 +211,15 @@ fun CarterasContenido(
 
                 else -> items(items = state.carteras, key = { it.id }) { cartera ->
                     if (cartera.rol == RolEnCartera.PROPIETARIO) {
-                        TarjetaPropia(cartera = cartera, onAbrir = { avisar(mensajeDetalle) })
+                        TarjetaPropia(
+                            cartera = cartera,
+                            onAbrir = { avisar(mensajeDetalle) },
+                            onRegistrarGasto = { onRegistrarGasto(cartera) }
+                        )
                     } else {
                         TarjetaCompartida(
                             cartera = cartera,
-                            onRegistrarGasto = { avisar(mensajeGasto) },
+                            onRegistrarGasto = { onRegistrarGasto(cartera) },
                             onVerCartera = { avisar(mensajeDetalle) }
                         )
                     }
@@ -426,7 +433,11 @@ private fun Buscador(busqueda: String, onBusquedaChange: (String) -> Unit) {
 }
 
 @Composable
-private fun TarjetaPropia(cartera: Cartera, onAbrir: () -> Unit) {
+private fun TarjetaPropia(
+    cartera: Cartera,
+    onAbrir: () -> Unit,
+    onRegistrarGasto: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -496,12 +507,28 @@ private fun TarjetaPropia(cartera: Cartera, onAbrir: () -> Unit) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    onClick = onAbrir,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(percent = 50)
-                ) {
-                    Text(stringResource(R.string.carteras_abrir))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onRegistrarGasto,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.carteras_registrar_gasto),
+                            maxLines = 1
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onAbrir,
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.carteras_abrir),
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
