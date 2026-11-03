@@ -532,6 +532,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}:
+    get:
+      tags:
+        - Carteras
+      summary: Detalle de una cartera
+      description: >-
+        Devuelve los datos de la cartera, sus miembros activos, el resumen de
+        saldo y totales, y las series para las gráficas (ingresos vs egresos
+        por periodo y gastos por categoría). Las transacciones eliminadas no
+        se incluyen. Si se envía periodoId, se agrega resumenPeriodo y los
+        gastos por categoría se filtran a ese periodo.
+      operationId: obtenerDetalleCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: periodoId
+          required: false
+          description: Periodo presupuestal para filtrar resumen y gastos por categoría.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalle de la cartera
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CarteraDetalle'
+                  mensaje:
+                    type: string
+                    example: Cartera obtenida correctamente.
+        '400':
+          description: Periodo inválido o ajeno a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener el detalle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras/{idCartera}/transacciones:
     get:
       tags:
@@ -1508,3 +1574,128 @@ components:
         mensaje:
           type: string
           example: Transacción eliminada correctamente.
+    Colaborador:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+          example: 7
+        nombre:
+          type: string
+          example: Vanesa Rea
+        iniciales:
+          type: string
+          example: VR
+        rol:
+          type: string
+          enum:
+            - PROPIETARIO
+            - COLABORADOR
+          example: COLABORADOR
+    ResumenCartera:
+      type: object
+      properties:
+        presupuestoInicial:
+          type: number
+          example: 1000
+        totalIngresos:
+          type: number
+          example: 500
+        totalGastos:
+          type: number
+          example: 350.5
+        saldo:
+          type: number
+          example: 1149.5
+    ResumenPeriodo:
+      type: object
+      nullable: true
+      properties:
+        periodoId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: Octubre 2026
+        fechaInicio:
+          type: string
+          format: date
+          example: '2026-10-01'
+        fechaFin:
+          type: string
+          format: date
+          example: '2026-10-31'
+        totalIngresos:
+          type: number
+          example: 500
+        totalGastos:
+          type: number
+          example: 100
+        balance:
+          type: number
+          example: 400
+    SeriePeriodo:
+      type: object
+      properties:
+        periodoId:
+          type: integer
+          nullable: true
+          example: 3
+        nombre:
+          type: string
+          example: Octubre 2026
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-10-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-10-31'
+        ingresos:
+          type: number
+          example: 500
+        gastos:
+          type: number
+          example: 100
+    SerieCategoria:
+      type: object
+      properties:
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 2
+        nombre:
+          type: string
+          example: Alimentos
+        total:
+          type: number
+          example: 350.5
+    SeriesCartera:
+      type: object
+      properties:
+        ingresosVsEgresos:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriePeriodo'
+        gastosPorCategoria:
+          type: array
+          items:
+            $ref: '#/components/schemas/SerieCategoria'
+    CarteraDetalle:
+      allOf:
+        - $ref: '#/components/schemas/Cartera'
+        - type: object
+          properties:
+            colaboradores:
+              type: array
+              items:
+                $ref: '#/components/schemas/Colaborador'
+            resumen:
+              $ref: '#/components/schemas/ResumenCartera'
+            resumenPeriodo:
+              $ref: '#/components/schemas/ResumenPeriodo'
+            series:
+              $ref: '#/components/schemas/SeriesCartera'
