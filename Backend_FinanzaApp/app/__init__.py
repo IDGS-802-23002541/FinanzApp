@@ -25,9 +25,11 @@ def create_app():
     from app import models
     from app.routes.auth import auth_bp
     from app.routes.carteras import carteras_bp
+    from app.routes.transacciones import transacciones_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(carteras_bp)
+    app.register_blueprint(transacciones_bp)
 
     @jwt.user_lookup_loader
     def cargar_usuario(_jwt_header, jwt_data):

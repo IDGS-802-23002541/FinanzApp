@@ -532,6 +532,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/transacciones:
+    post:
+      tags:
+        - Transacciones
+      summary: Registrar un ingreso o gasto
+      description: >-
+        Crea una transacción ACTIVA en una cartera ACTIVA donde el usuario es
+        miembro. Recalcula los totales de la cartera y notifica a los demás
+        miembros con notificaciones de la app activas. Para INGRESO se usa
+        siempre la categoría global Aportación; para GASTO, categoriaId es
+        obligatorio.
+      operationId: crearTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionCrearRequest'
+            example:
+              tipo: GASTO
+              monto: 250.5
+              fecha: '2026-11-03'
+              categoriaId: 2
+              descripcion: Despensa
+              metodoPago: EFECTIVO
+      responses:
+        '201':
+          description: Transacción registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo registrar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -911,3 +981,118 @@ components:
         mensaje:
           type: string
           example: Carteras obtenidas correctamente.
+    TransaccionCrearRequest:
+      type: object
+      required:
+        - monto
+      properties:
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+          default: GASTO
+        monto:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+          example: 250.5
+        fecha:
+          type: string
+          format: date
+          description: Por defecto se usa la fecha actual.
+          example: '2026-11-03'
+        categoriaId:
+          type: integer
+          description: Obligatorio para GASTO; en INGRESO se ignora y se usa Aportación.
+          example: 2
+        descripcion:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: Despensa
+        metodoPago:
+          type: string
+          enum:
+            - EFECTIVO
+            - TARJETA
+            - TRANSFERENCIA
+          nullable: true
+        comprobanteUrl:
+          type: string
+          maxLength: 500
+          nullable: true
+    Transaccion:
+      type: object
+      properties:
+        idTransaccion:
+          type: integer
+          example: 1
+        carteraId:
+          type: integer
+          example: 3
+        usuarioId:
+          type: integer
+          example: 7
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 2
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+          example: GASTO
+        monto:
+          type: number
+          example: 250.5
+        descripcion:
+          type: string
+          nullable: true
+          example: Despensa
+        metodoPago:
+          type: string
+          nullable: true
+          example: EFECTIVO
+        comprobanteUrl:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - ELIMINADO
+          example: ACTIVO
+        fecha:
+          type: string
+          format: date
+          example: '2026-11-03'
+    ResumenTransacciones:
+      type: object
+      properties:
+        totalIngresos:
+          type: number
+          example: 1000
+        totalGastos:
+          type: number
+          example: 250.5
+        saldo:
+          type: number
+          example: 749.5
+    TransaccionCreada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            transaccion:
+              $ref: '#/components/schemas/Transaccion'
+            resumen:
+              $ref: '#/components/schemas/ResumenTransacciones'
+        mensaje:
+          type: string
+          example: Transacción registrada correctamente.
