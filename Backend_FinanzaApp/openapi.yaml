@@ -602,6 +602,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/categorias:
+    post:
+      tags:
+        - Categorías
+      summary: Crear una categoría personalizada
+      description: >-
+        Crea una categoría personalizada para una cartera ACTIVA donde el
+        usuario es miembro. El nombre solo admite letras, números y espacios.
+      operationId: crearCategoria
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaCrearRequest'
+            example:
+              nombre: Servicio de internet
+              tipo: GASTO
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera no está activa o la categoría ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo crear la categoría
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -1096,3 +1159,60 @@ components:
         mensaje:
           type: string
           example: Transacción registrada correctamente.
+    CategoriaCrearRequest:
+      type: object
+      required:
+        - nombre
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Solo letras, números y espacios.
+          example: Servicio de internet
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+            - AMBOS
+          default: AMBOS
+    Categoria:
+      type: object
+      properties:
+        idCategoria:
+          type: integer
+          example: 12
+        carteraId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: Servicio de internet
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+            - AMBOS
+          example: GASTO
+        orden:
+          type: integer
+          example: 1
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+            - INACTIVA
+          example: ACTIVA
+    CategoriaCreada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Categoria'
+        mensaje:
+          type: string
+          example: Categoría creada correctamente.
