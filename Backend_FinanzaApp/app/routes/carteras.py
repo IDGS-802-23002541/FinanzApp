@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
 from app.models import Cartera, MiembroCartera, Usuario
+from app.services import cartera_detalle_service
 
 carteras_bp = Blueprint("carteras", __name__, url_prefix="/carteras")
 
@@ -317,9 +318,21 @@ def obtener(idCartera):
 
         admin = admin_fila[0] if admin_fila else None
 
+        try:
+            detalle = cartera_detalle_service.resumen_y_series(
+                cartera,
+                request.args.get("periodoId"),
+            )
+        except ValueError as exc:
+            return jsonify({"ok": False, "mensaje": str(exc)}), 400
+
+        data = _serializar_cartera(cartera, membresia.rol, admin)
+        data["colaboradores"] = cartera_detalle_service.colaboradores(idCartera)
+        data.update(detalle)
+
         return jsonify({
             "ok": True,
-            "data": _serializar_cartera(cartera, membresia.rol, admin),
+            "data": data,
             "mensaje": "Cartera obtenida correctamente.",
         }), 200
     except SQLAlchemyError:
