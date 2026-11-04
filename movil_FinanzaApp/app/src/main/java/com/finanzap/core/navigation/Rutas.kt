@@ -8,6 +8,7 @@ object Rutas {
     const val Carteras = "carteras"
     const val NuevaCartera = "carteras/nueva"
     const val CarteraDetalle = "carteras/detalle/{carteraId}"
+    const val Transacciones = "carteras/detalle/{carteraId}/transacciones?nombre={nombre}"
     const val NuevaTransaccion = "transacciones/nueva/{carteraId}?nombre={nombre}"
     const val MiCuenta = "cuenta"
     const val CambiarContrasena = "cuenta/contrasena"
@@ -18,4 +19,7 @@ object Rutas {
         "transacciones/nueva/$carteraId?nombre=${Uri.encode(nombre)}"
 
     fun carteraDetalle(carteraId: Int): String = "carteras/detalle/$carteraId"
+
+    fun transacciones(carteraId: Int, nombre: String): String =
+        "carteras/detalle/$carteraId/transacciones?nombre=${Uri.encode(nombre)}"
 }

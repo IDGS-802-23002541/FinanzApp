@@ -28,6 +28,7 @@ import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.NuevaCarteraScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
+import com.finanzap.features.transacciones.ui.TransaccionesScreen
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -151,7 +152,27 @@ fun FinanzAppNavHost(
                         onVolver = { navController.popBackStack() },
                         onRegistrarGasto = { id, nombre ->
                             navController.navigate(Rutas.nuevaTransaccion(id, nombre))
+                        },
+                        onVerTransacciones = { id, nombre ->
+                            navController.navigate(Rutas.transacciones(id, nombre))
                         }
+                    )
+                }
+
+                composable(
+                    route = Rutas.Transacciones,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType },
+                        navArgument("nombre") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }
+                    )
+                ) { entrada ->
+                    TransaccionesScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        onVolver = { navController.popBackStack() }
                     )
                 }
 
@@ -225,6 +246,7 @@ private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Carteras,
     Rutas.NuevaCartera,
     Rutas.CarteraDetalle,
+    Rutas.Transacciones,
     Rutas.NuevaTransaccion -> SeccionMenu.CARTERAS
 
     Rutas.Reportes -> SeccionMenu.REPORTES

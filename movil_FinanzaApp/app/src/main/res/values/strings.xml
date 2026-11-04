@@ -11,6 +11,8 @@
     <string name="comun_volver">Volver</string>
     <string name="comun_guardando">Guardando…</string>
     <string name="comun_crear">Crear</string>
+    <string name="comun_anterior">Anterior</string>
+    <string name="comun_siguiente">Siguiente</string>
     <string name="comun_pendiente_titulo">Próximamente</string>
     <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
     <string name="menu_abrir">Abrir menú</string>
@@ -101,6 +103,14 @@
 
     <!-- Transacciones -->
     <string name="transaccion_titulo">Nueva transacción</string>
+    <string name="transacciones_titulo">Transacciones</string>
+    <string name="transacciones_vacio_titulo">Sin transacciones</string>
+    <string name="transacciones_vacio_mensaje">Cuando registres un ingreso o gasto aparecerá aquí.</string>
+    <string name="transacciones_ingresos">Ingresos</string>
+    <string name="transacciones_gastos">Gastos</string>
+    <string name="transacciones_balance">Balance</string>
+    <string name="transacciones_pagina">Página %1$d de %2$d</string>
+    <string name="transacciones_ver">Ver transacciones</string>
     <string name="transaccion_tipo">Tipo</string>
     <string name="transaccion_ingreso">Ingreso</string>
     <string name="transaccion_gasto">Gasto</string>

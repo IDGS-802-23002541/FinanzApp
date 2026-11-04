@@ -13,10 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
 import com.finanzap.core.ui.BotonPrincipal
@@ -42,19 +44,20 @@ fun CarteraDetalleScreen(
     carteraId: Int,
     onVolver: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String) -> Unit,
     viewModel: CarteraDetalleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(carteraId) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
     }
-
     CarteraDetalleContenido(
         state = state,
         onVolver = onVolver,
         onReintentar = { viewModel.cargar(carteraId) },
-        onRegistrarGasto = onRegistrarGasto
+        onRegistrarGasto = onRegistrarGasto,
+        onVerTransacciones = onVerTransacciones
     )
 }
 
@@ -63,7 +66,8 @@ fun CarteraDetalleContenido(
     state: CarteraDetalleUiState,
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
-    onRegistrarGasto: (Int, String) -> Unit
+    onRegistrarGasto: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String) -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -90,7 +94,8 @@ fun CarteraDetalleContenido(
 
             state.cartera != null -> DetalleCartera(
                 cartera = state.cartera,
-                onRegistrarGasto = onRegistrarGasto
+                onRegistrarGasto = onRegistrarGasto,
+                onVerTransacciones = onVerTransacciones
             )
         }
     }
@@ -99,7 +104,8 @@ fun CarteraDetalleContenido(
 @Composable
 private fun DetalleCartera(
     cartera: Cartera,
-    onRegistrarGasto: (Int, String) -> Unit
+    onRegistrarGasto: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String) -> Unit
 ) {
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -252,6 +258,16 @@ private fun DetalleCartera(
         texto = stringResource(R.string.carteras_registrar_gasto),
         onClick = { onRegistrarGasto(cartera.id, cartera.nombre) }
     )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    OutlinedButton(
+        onClick = { onVerTransacciones(cartera.id, cartera.nombre) },
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.transacciones_ver))
+    }
 }
 
 @Composable
