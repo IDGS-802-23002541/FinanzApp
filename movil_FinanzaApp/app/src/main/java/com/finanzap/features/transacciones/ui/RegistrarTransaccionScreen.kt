@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,33 +40,70 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
+import com.finanzap.core.ui.BannerError
 import com.finanzap.core.ui.BotonPrincipal
-import com.finanzap.core.ui.PantallaFormulario
 import com.finanzap.core.ui.Dimensiones
+import com.finanzap.core.ui.ErrorCampo
+import com.finanzap.core.ui.PantallaFormulario
 import com.finanzap.core.util.fechaIsoDesdeMillis
 import com.finanzap.core.util.formatearFechaCorta
+import com.finanzap.features.transacciones.Categoria
+import com.finanzap.features.transacciones.TipoTransaccion
 
-private enum class TipoTransaccion { INGRESO, GASTO }
-
-/**
- * Interior del formulario de transacción. Sin ViewModel ni llamadas a la API:
- * la lógica de validación y guardado se implementa con el equipo.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrarTransaccionScreen(
     carteraId: Int,
     carteraNombre: String,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    viewModel: RegistrarTransaccionViewModel = hiltViewModel()
 ) {
-    var tipo by remember { mutableStateOf<TipoTransaccion?>(null) }
-    var monto by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf<String?>(null) }
-    var fecha by remember { mutableStateOf(fechaIsoDesdeMillis(System.currentTimeMillis())) }
-    var descripcion by remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(carteraId) {
+        viewModel.iniciar(carteraId)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                TransaccionEvento.Guardada -> onVolver()
+            }
+        }
+    }
+
+    RegistrarTransaccionContenido(
+        state = state,
+        carteraNombre = carteraNombre,
+        onVolver = onVolver,
+        onTipoChange = viewModel::onTipoChange,
+        onMontoChange = viewModel::onMontoChange,
+        onCategoriaChange = viewModel::onCategoriaChange,
+        onCrearCategoria = viewModel::crearCategoria,
+        onFechaChange = viewModel::onFechaChange,
+        onDescripcionChange = viewModel::onDescripcionChange,
+        onGuardar = viewModel::guardar
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RegistrarTransaccionContenido(
+    state: RegistrarTransaccionUiState,
+    carteraNombre: String,
+    onVolver: () -> Unit,
+    onTipoChange: (TipoTransaccion) -> Unit,
+    onMontoChange: (String) -> Unit,
+    onCategoriaChange: (Categoria) -> Unit,
+    onCrearCategoria: (String) -> Unit,
+    onFechaChange: (String) -> Unit,
+    onDescripcionChange: (String) -> Unit,
+    onGuardar: () -> Unit
+) {
     var fechaEnEdicion by remember { mutableStateOf(false) }
-    var mostrarAviso by remember { mutableStateOf(false) }
 
     PantallaFormulario(
         titulo = stringResource(R.string.transaccion_titulo),
@@ -87,7 +124,7 @@ fun RegistrarTransaccionScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = carteraNombre.ifBlank { "#$carteraId" },
+                    text = carteraNombre.ifBlank { "#${state.idCartera}" },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -106,25 +143,31 @@ fun RegistrarTransaccionScreen(
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
-                selected = tipo == TipoTransaccion.INGRESO,
-                onClick = { tipo = TipoTransaccion.INGRESO },
+                selected = state.tipo == TipoTransaccion.INGRESO,
+                onClick = { onTipoChange(TipoTransaccion.INGRESO) },
                 label = { Text(stringResource(R.string.transaccion_ingreso)) }
             )
             FilterChip(
-                selected = tipo == TipoTransaccion.GASTO,
-                onClick = { tipo = TipoTransaccion.GASTO },
+                selected = state.tipo == TipoTransaccion.GASTO,
+                onClick = { onTipoChange(TipoTransaccion.GASTO) },
                 label = { Text(stringResource(R.string.transaccion_gasto)) }
             )
+        }
+        state.errorTipo?.let {
+            Spacer(modifier = Modifier.height(4.dp))
+            ErrorCampo(mensaje = it)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
         OutlinedTextField(
-            value = monto,
-            onValueChange = { monto = it },
+            value = state.monto,
+            onValueChange = onMontoChange,
             label = { Text(stringResource(R.string.transaccion_monto)) },
             prefix = { Text("$") },
             singleLine = true,
+            isError = state.errorMonto != null,
+            supportingText = state.errorMonto?.let { { Text(it) } },
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
@@ -133,34 +176,52 @@ fun RegistrarTransaccionScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         SelectorCategoria(
-            seleccionada = categoria,
-            onSeleccionar = { categoria = it }
+            categorias = state.categorias,
+            seleccionada = state.categoria,
+            onSeleccionar = onCategoriaChange,
+            onCrear = onCrearCategoria,
+            creando = state.creandoCategoria,
+            error = state.errorCategoria ?: state.errorCategorias
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         CampoFechaTransaccion(
-            valor = formatearFechaCorta(fecha),
+            valor = formatearFechaCorta(state.fecha),
             onClick = { fechaEnEdicion = true }
         )
+        state.errorFecha?.let {
+            Spacer(modifier = Modifier.height(4.dp))
+            ErrorCampo(mensaje = it)
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = descripcion,
-            onValueChange = { descripcion = it },
+            value = state.descripcion,
+            onValueChange = onDescripcionChange,
             label = { Text(stringResource(R.string.transaccion_descripcion)) },
+            isError = state.errorDescripcion != null,
+            supportingText = state.errorDescripcion?.let { { Text(it) } },
             minLines = 3,
             maxLines = 5,
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
             modifier = Modifier.fillMaxWidth()
         )
 
+        val errorGeneral = state.errorGeneral
+        if (errorGeneral != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            BannerError(mensaje = errorGeneral)
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         BotonPrincipal(
             texto = stringResource(R.string.transaccion_guardar),
-            onClick = { mostrarAviso = true }
+            textoCargando = stringResource(R.string.comun_guardando),
+            cargando = state.guardando,
+            onClick = onGuardar
         )
     }
 
@@ -176,7 +237,7 @@ fun RegistrarTransaccionScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        selector.selectedDateMillis?.let { fecha = fechaIsoDesdeMillis(it) }
+                        selector.selectedDateMillis?.let { onFechaChange(fechaIsoDesdeMillis(it)) }
                         fechaEnEdicion = false
                     }
                 ) {
@@ -191,19 +252,6 @@ fun RegistrarTransaccionScreen(
         ) {
             DatePicker(state = selector)
         }
-    }
-
-    if (mostrarAviso) {
-        AlertDialog(
-            onDismissRequest = { mostrarAviso = false },
-            title = { Text(stringResource(R.string.transaccion_pendiente_titulo)) },
-            text = { Text(stringResource(R.string.transaccion_pendiente_mensaje)) },
-            confirmButton = {
-                TextButton(onClick = { mostrarAviso = false }) {
-                    Text(stringResource(R.string.comun_aceptar))
-                }
-            }
-        )
     }
 }
 

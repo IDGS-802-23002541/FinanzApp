@@ -12,6 +12,12 @@ import com.finanzap.features.auth.data.AuthRepositoryImpl
 import com.finanzap.features.carteras.data.CarterasApi
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.data.CarterasRepositoryImpl
+import com.finanzap.features.transacciones.data.CategoriasApi
+import com.finanzap.features.transacciones.data.CategoriasRepository
+import com.finanzap.features.transacciones.data.CategoriasRepositoryImpl
+import com.finanzap.features.transacciones.data.TransaccionesApi
+import com.finanzap.features.transacciones.data.TransaccionesRepository
+import com.finanzap.features.transacciones.data.TransaccionesRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -37,6 +43,18 @@ abstract class Modulos {
     @Binds
     @Singleton
     abstract fun bindCarterasRepository(impl: CarterasRepositoryImpl): CarterasRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransaccionesRepository(
+        impl: TransaccionesRepositoryImpl
+    ): TransaccionesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCategoriasRepository(
+        impl: CategoriasRepositoryImpl
+    ): CategoriasRepository
 
     @Binds
     @Singleton
@@ -86,5 +104,15 @@ abstract class Modulos {
         @Singleton
         fun provideCarterasApi(retrofit: Retrofit): CarterasApi =
             retrofit.create(CarterasApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideTransaccionesApi(retrofit: Retrofit): TransaccionesApi =
+            retrofit.create(TransaccionesApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideCategoriasApi(retrofit: Retrofit): CategoriasApi =
+            retrofit.create(CategoriasApi::class.java)
     }
 }
