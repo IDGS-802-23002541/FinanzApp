@@ -66,6 +66,12 @@
 
     <!-- Carteras -->
     <string name="carteras_titulo">Carteras</string>
+    <string name="detalle_titulo">Detalle de cartera</string>
+    <string name="detalle_estado">Estado</string>
+    <string name="detalle_presupuesto">Presupuesto inicial</string>
+    <string name="detalle_graficas">Gráficas</string>
+    <string name="detalle_graficas_pendiente">Las series por periodo se conectarán cuando el backend las exponga.</string>
+    <string name="detalle_error">No se pudo cargar la cartera.</string>
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
     <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
     <string name="carteras_cerrar_sesion">Cerrar sesión</string>

@@ -11,6 +11,8 @@ interface CarterasRepository {
 
     suspend fun carteras(): Result<List<Cartera>>
 
+    suspend fun detalle(idCartera: Int): Result<Cartera>
+
     suspend fun carterasConFiltros(
         estado: String? = null,
         tipo: String? = null,

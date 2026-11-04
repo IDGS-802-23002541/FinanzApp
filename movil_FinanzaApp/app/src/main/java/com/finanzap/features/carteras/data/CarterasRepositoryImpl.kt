@@ -16,6 +16,15 @@ class CarterasRepositoryImpl @Inject constructor(
     override suspend fun carteras(): Result<List<Cartera>> =
         carterasConFiltros()
 
+    override suspend fun detalle(idCartera: Int): Result<Cartera> =
+        try {
+            Result.success(carterasApi.detalle(idCartera).data.aCartera())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     override suspend fun carterasConFiltros(
         estado: String?,
         tipo: String?,

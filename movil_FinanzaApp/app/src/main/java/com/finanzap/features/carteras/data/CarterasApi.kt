@@ -3,6 +3,7 @@ package com.finanzap.features.carteras.data
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface CarterasApi {
@@ -17,4 +18,7 @@ interface CarterasApi {
         @Query("rol") rol: String? = null,
         @Query("busqueda") busqueda: String? = null
     ): RespuestaListaCarteras
+
+    @GET("carteras/{idCartera}")
+    suspend fun detalle(@Path("idCartera") idCartera: Int): RespuestaCartera
 }

@@ -41,6 +41,13 @@ class CarterasRepositoryImplTest {
         override suspend fun crear(peticion: CrearCarteraRequest): RespuestaCartera =
             throw UnsupportedOperationException()
 
+        override suspend fun detalle(idCartera: Int): RespuestaCartera {
+            falla?.let { throw it }
+            return RespuestaCartera(
+                data = CarteraDto(id = idCartera, nombre = "Casa", tipo = "HOGAR")
+            )
+        }
+
         override suspend fun listar(
             estado: String?,
             tipo: String?,

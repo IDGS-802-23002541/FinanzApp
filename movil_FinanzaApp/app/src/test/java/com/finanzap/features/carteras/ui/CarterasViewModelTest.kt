@@ -111,6 +111,14 @@ private class RepositorioCarterasFalso : CarterasRepository {
         busqueda: String?
     ): Result<List<Cartera>> = carteras()
 
+    override suspend fun detalle(idCartera: Int): Result<Cartera> {
+        val error = falla
+        if (error != null) return Result.failure(error)
+        return Result.success(
+            Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO)
+        )
+    }
+
     override suspend fun crear(
         nombre: String,
         tipo: TipoCartera,

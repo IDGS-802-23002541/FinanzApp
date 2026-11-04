@@ -42,14 +42,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -72,11 +68,11 @@ import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.TipoCartera
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
     onNuevaCartera: () -> Unit,
+    onAbrirCartera: (Cartera) -> Unit,
     onRegistrarGasto: (Cartera) -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
@@ -91,6 +87,7 @@ fun CarterasScreen(
         state = state,
         acciones = CarterasAcciones(
             onNuevaCartera = onNuevaCartera,
+            onAbrirCartera = onAbrirCartera,
             onRegistrarGasto = onRegistrarGasto,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
@@ -102,6 +99,7 @@ fun CarterasScreen(
 
 data class CarterasAcciones(
     val onNuevaCartera: () -> Unit,
+    val onAbrirCartera: (Cartera) -> Unit,
     val onRegistrarGasto: (Cartera) -> Unit,
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
@@ -115,24 +113,15 @@ fun CarterasContenido(
     acciones: CarterasAcciones
 ) {
     val onNuevaCartera = acciones.onNuevaCartera
+    val onAbrirCartera = acciones.onAbrirCartera
     val onRegistrarGasto = acciones.onRegistrarGasto
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
     val onBusquedaChange = acciones.onBusquedaChange
     val onReintentar = acciones.onReintentar
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val alcance = rememberCoroutineScope()
-
-    val avisar: (String) -> Unit = { mensaje ->
-        alcance.launch { snackbarHostState.showSnackbar(mensaje) }
-    }
-
-    val mensajeDetalle = stringResource(R.string.carteras_pendiente_detalle)
-
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        containerColor = MaterialTheme.colorScheme.background
     ) { margen ->
         LazyColumn(
             modifier = Modifier
@@ -213,14 +202,14 @@ fun CarterasContenido(
                     if (cartera.rol == RolEnCartera.PROPIETARIO) {
                         TarjetaPropia(
                             cartera = cartera,
-                            onAbrir = { avisar(mensajeDetalle) },
+                            onAbrir = { onAbrirCartera(cartera) },
                             onRegistrarGasto = { onRegistrarGasto(cartera) }
                         )
                     } else {
                         TarjetaCompartida(
                             cartera = cartera,
                             onRegistrarGasto = { onRegistrarGasto(cartera) },
-                            onVerCartera = { avisar(mensajeDetalle) }
+                            onVerCartera = { onAbrirCartera(cartera) }
                         )
                     }
                 }

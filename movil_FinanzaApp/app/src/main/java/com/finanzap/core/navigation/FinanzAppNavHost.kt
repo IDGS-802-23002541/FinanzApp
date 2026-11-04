@@ -24,6 +24,7 @@ import com.finanzap.features.auth.ui.CambiarContrasenaScreen
 import com.finanzap.features.auth.ui.LoginScreen
 import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
+import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.NuevaCarteraScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
@@ -128,10 +129,28 @@ fun FinanzAppNavHost(
                 composable(Rutas.Carteras) {
                     CarterasScreen(
                         onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
+                        onAbrirCartera = { cartera ->
+                            navController.navigate(Rutas.carteraDetalle(cartera.id))
+                        },
                         onRegistrarGasto = { cartera ->
                             navController.navigate(
                                 Rutas.nuevaTransaccion(cartera.id, cartera.nombre)
                             )
+                        }
+                    )
+                }
+
+                composable(
+                    route = Rutas.CarteraDetalle,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType }
+                    )
+                ) { entrada ->
+                    CarteraDetalleScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        onVolver = { navController.popBackStack() },
+                        onRegistrarGasto = { id, nombre ->
+                            navController.navigate(Rutas.nuevaTransaccion(id, nombre))
                         }
                     )
                 }
@@ -205,6 +224,7 @@ fun FinanzAppNavHost(
 private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Carteras,
     Rutas.NuevaCartera,
+    Rutas.CarteraDetalle,
     Rutas.NuevaTransaccion -> SeccionMenu.CARTERAS
 
     Rutas.Reportes -> SeccionMenu.REPORTES

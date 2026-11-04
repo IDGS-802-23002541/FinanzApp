@@ -145,6 +145,11 @@ private class RepositorioNuevaCarteraFalso : CarterasRepository {
 
     override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
 
+    override suspend fun detalle(idCartera: Int): Result<Cartera> =
+        Result.success(
+            Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO)
+        )
+
     override suspend fun carterasConFiltros(
         estado: String?,
         tipo: String?,
