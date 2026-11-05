@@ -1,7 +1,7 @@
 import re
 
 from flask_jwt_extended import current_user
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.extensions import db
@@ -11,24 +11,54 @@ TIPOS = {"INGRESO", "GASTO", "AMBOS"}
 NOMBRE_VALIDO = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]+")
 
 
-def crear(id_cartera, datos):
+def listar(id_cartera, tipo=None):
+    cartera, error = _cartera_del_miembro(id_cartera)
+    if error:
+        return error
+
+    if tipo not in (None, ""):
+        if not isinstance(tipo, str):
+            return {"ok": False, "mensaje": "El tipo no es válido."}, 400
+        tipo = tipo.strip().upper()
+        if tipo not in {"INGRESO", "GASTO"}:
+            return {"ok": False, "mensaje": "El tipo debe ser INGRESO o GASTO."}, 400
+
+    filtros = [
+        Categoria.estado == "ACTIVA",
+        or_(
+            Categoria.carteraId == id_cartera,
+            and_(
+                Categoria.carteraId.is_(None),
+                or_(
+                    Categoria.tipoCartera.is_(None),
+                    Categoria.tipoCartera == cartera.tipo,
+                ),
+            ),
+        ),
+    ]
+    if tipo:
+        filtros.append(Categoria.tipo.in_((tipo, "AMBOS")))
+
     try:
-        fila = db.session.execute(
-            db.select(MiembroCartera, Cartera)
-            .join(Cartera, Cartera.idCartera == MiembroCartera.carteraId)
-            .where(
-                MiembroCartera.carteraId == id_cartera,
-                MiembroCartera.usuarioId == current_user.idUsuario,
-                MiembroCartera.estado == "ACTIVO",
-            )
-        ).first()
+        filas = db.session.execute(
+            db.select(Categoria)
+            .where(*filtros)
+            .order_by(Categoria.orden, Categoria.nombre)
+        ).scalars().all()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudo validar la cartera."}, 503
+        return {"ok": False, "mensaje": "No se pudieron obtener las categorías."}, 503
 
-    if not fila:
-        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+    return {
+        "ok": True,
+        "data": [_serializar(categoria) for categoria in filas],
+        "mensaje": "Categorías obtenidas correctamente.",
+    }, 200
 
-    _, cartera = fila
+
+def crear(id_cartera, datos):
+    cartera, error = _cartera_del_miembro(id_cartera)
+    if error:
+        return error
 
     if cartera.estado != "ACTIVA":
         return {
@@ -96,6 +126,28 @@ def crear(id_cartera, datos):
         "data": _serializar(categoria),
         "mensaje": "Categoría creada correctamente.",
     }, 201
+
+
+def _cartera_del_miembro(id_cartera):
+    try:
+        fila = db.session.execute(
+            db.select(Cartera)
+            .join(MiembroCartera, MiembroCartera.carteraId == Cartera.idCartera)
+            .where(
+                MiembroCartera.carteraId == id_cartera,
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).scalar_one_or_none()
+    except SQLAlchemyError:
+        return None, (
+            {"ok": False, "mensaje": "No se pudo validar la cartera."},
+            503,
+        )
+
+    if fila is None:
+        return None, ({"ok": False, "mensaje": "Cartera no encontrada."}, 404)
+    return fila, None
 
 
 def _validar_nombre(valor):

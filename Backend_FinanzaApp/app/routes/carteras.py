@@ -286,6 +286,32 @@ def listar():
         }
     ), 200
 
+@carteras_bp.get("/<int:idCartera>/periodos")
+@jwt_required()
+def listar_periodos(idCartera):
+    try:
+        miembro = db.session.execute(
+            db.select(MiembroCartera).where(
+                MiembroCartera.carteraId == idCartera,
+                MiembroCartera.usuarioId == current_user.idUsuario,
+                MiembroCartera.estado == "ACTIVO",
+            )
+        ).scalar_one_or_none()
+
+        if miembro is None:
+            return jsonify({"ok": False, "mensaje": "Cartera no encontrada."}), 404
+
+        data = cartera_detalle_service.listar_periodos(idCartera)
+    except SQLAlchemyError:
+        return jsonify({"ok": False, "mensaje": "No se pudieron obtener los periodos."}), 503
+
+    return jsonify({
+        "ok": True,
+        "data": data,
+        "mensaje": "Periodos obtenidos correctamente.",
+    }), 200
+
+
 @carteras_bp.get("/<int:idCartera>")
 @jwt_required()
 def obtener(idCartera):

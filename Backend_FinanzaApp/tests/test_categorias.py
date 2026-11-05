@@ -21,6 +21,14 @@ def test_crear_categoria_requiere_token():
     assert respuesta.is_json
 
 
+def test_listar_categorias_requiere_token():
+    app = create_app()
+    cliente = app.test_client()
+    respuesta = cliente.get("/carteras/1/categorias?tipo=GASTO")
+    assert respuesta.status_code == 401
+    assert respuesta.is_json
+
+
 def test_nombre_valido_normaliza_espacios():
     assert categoria_service._validar_nombre("  Servicio   de internet ") == (
         "Servicio de internet",
