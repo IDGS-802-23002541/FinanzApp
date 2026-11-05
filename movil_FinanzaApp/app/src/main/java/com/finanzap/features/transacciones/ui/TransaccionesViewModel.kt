@@ -3,13 +3,17 @@ package com.finanzap.features.transacciones.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
+import com.finanzap.features.transacciones.TipoTransaccion
 import com.finanzap.features.transacciones.Transaccion
 import com.finanzap.features.transacciones.data.TransaccionesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -20,6 +24,9 @@ class TransaccionesViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(TransaccionesUiState())
     val state: StateFlow<TransaccionesUiState> = _state.asStateFlow()
+
+    private val _eventos = Channel<TransaccionesEvento>(Channel.BUFFERED)
+    val eventos: Flow<TransaccionesEvento> = _eventos.receiveAsFlow()
 
     fun cargar(idCartera: Int) {
         if (_state.value.cargando) return
@@ -39,6 +46,72 @@ class TransaccionesViewModel @Inject constructor(
 
     fun reintentar() {
         cargarPagina(_state.value.pagina.coerceAtLeast(1))
+    }
+
+    fun actualizar(
+        idTransaccion: Int,
+        tipo: TipoTransaccion,
+        monto: Double,
+        fecha: String,
+        categoriaId: Int?,
+        descripcion: String?
+    ) {
+        val actual = _state.value
+        if (actual.operando) return
+
+        _state.update { it.copy(operando = true, errorOperacion = null) }
+        viewModelScope.launch {
+            transaccionesRepository.actualizar(
+                idTransaccion = idTransaccion,
+                tipo = tipo,
+                monto = monto,
+                fecha = fecha,
+                categoriaId = categoriaId,
+                descripcion = descripcion
+            )
+                .onSuccess {
+                    _state.update { it.copy(operando = false) }
+                    _eventos.trySend(TransaccionesEvento.Actualizada)
+                    cargarPagina(_state.value.pagina)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            operando = false,
+                            errorOperacion = mensajeErrorApi(
+                                error,
+                                "No se pudo actualizar la transacción."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    fun eliminar(idTransaccion: Int) {
+        val actual = _state.value
+        if (actual.operando) return
+
+        _state.update { it.copy(operando = true, errorOperacion = null) }
+        viewModelScope.launch {
+            transaccionesRepository.eliminar(idTransaccion)
+                .onSuccess {
+                    _state.update { it.copy(operando = false) }
+                    _eventos.trySend(TransaccionesEvento.Eliminada)
+                    cargarPagina(_state.value.pagina)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            operando = false,
+                            errorOperacion = mensajeErrorApi(
+                                error,
+                                "No se pudo eliminar la transacción."
+                            )
+                        )
+                    }
+                }
+        }
     }
 
     private fun cargarPagina(pagina: Int) {
@@ -88,6 +161,8 @@ class TransaccionesViewModel @Inject constructor(
 data class TransaccionesUiState(
     val cargando: Boolean = false,
     val error: String? = null,
+    val operando: Boolean = false,
+    val errorOperacion: String? = null,
     val idCartera: Int = 0,
     val pagina: Int = 1,
     val totalPaginas: Int = 0,
@@ -97,3 +172,8 @@ data class TransaccionesUiState(
     val totalGastos: Double = 0.0,
     val balance: Double = 0.0
 )
+
+sealed interface TransaccionesEvento {
+    data object Actualizada : TransaccionesEvento
+    data object Eliminada : TransaccionesEvento
+}

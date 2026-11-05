@@ -131,6 +131,7 @@ private class RepositorioTransaccionesFalso : TransaccionesRepository {
                 tipo = tipo,
                 monto = monto,
                 descripcion = descripcion,
+                categoriaId = categoriaId,
                 categoria = null,
                 autor = null,
                 fecha = fecha,
@@ -138,6 +139,30 @@ private class RepositorioTransaccionesFalso : TransaccionesRepository {
             )
         )
     }
+
+    override suspend fun actualizar(
+        idTransaccion: Int,
+        tipo: TipoTransaccion,
+        monto: Double,
+        fecha: String,
+        categoriaId: Int?,
+        descripcion: String?
+    ): Result<Transaccion> = Result.success(
+        Transaccion(
+            id = idTransaccion,
+            carteraId = 7,
+            tipo = tipo,
+            monto = monto,
+            descripcion = descripcion,
+            categoriaId = categoriaId,
+            categoria = null,
+            autor = null,
+            fecha = fecha,
+            metodoPago = null
+        )
+    )
+
+    override suspend fun eliminar(idTransaccion: Int): Result<Unit> = Result.success(Unit)
 }
 
 private class RepositorioCategoriasFalso : CategoriasRepository {

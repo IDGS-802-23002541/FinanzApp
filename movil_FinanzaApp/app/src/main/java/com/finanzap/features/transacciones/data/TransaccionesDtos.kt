@@ -88,12 +88,25 @@ data class ResumenTransaccionesDto(
     val saldo: Double = 0.0
 )
 
+@Serializable
+data class RespuestaTransaccionEliminada(
+    val data: DatosTransaccionEliminada
+)
+
+@Serializable
+data class DatosTransaccionEliminada(
+    val idTransaccion: Int,
+    val estado: String,
+    val resumen: ResumenTransaccionesDto = ResumenTransaccionesDto()
+)
+
 fun TransaccionDto.aTransaccion(): Transaccion = Transaccion(
     id = idTransaccion,
     carteraId = carteraId,
     tipo = if (tipo == "INGRESO") TipoTransaccion.INGRESO else TipoTransaccion.GASTO,
     monto = monto,
     descripcion = descripcion,
+    categoriaId = categoriaId,
     categoria = categoria?.nombre,
     autor = autor?.nombre,
     fecha = fecha,

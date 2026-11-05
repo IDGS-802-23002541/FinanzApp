@@ -21,4 +21,15 @@ interface TransaccionesRepository {
         categoriaId: Int?,
         descripcion: String?
     ): Result<Transaccion>
+
+    suspend fun actualizar(
+        idTransaccion: Int,
+        tipo: TipoTransaccion,
+        monto: Double,
+        fecha: String,
+        categoriaId: Int?,
+        descripcion: String?
+    ): Result<Transaccion>
+
+    suspend fun eliminar(idTransaccion: Int): Result<Unit>
 }

@@ -11,6 +11,7 @@ data class Transaccion(
     val tipo: TipoTransaccion,
     val monto: Double,
     val descripcion: String?,
+    val categoriaId: Int?,
     val categoria: String?,
     val autor: String?,
     val fecha: String?,

@@ -7,6 +7,7 @@ import com.finanzap.features.transacciones.data.TransaccionesRepository
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -72,6 +73,33 @@ class TransaccionesViewModelTest {
             viewModel.state.value.error
         )
     }
+
+    @Test
+    fun `actualizar emite evento`() = runTest {
+        val viewModel = TransaccionesViewModel(repositorio)
+        viewModel.cargar(7)
+
+        viewModel.actualizar(
+            idTransaccion = 1,
+            tipo = TipoTransaccion.GASTO,
+            monto = 150.0,
+            fecha = "2026-11-04",
+            categoriaId = 1,
+            descripcion = "Editada"
+        )
+
+        assertEquals(TransaccionesEvento.Actualizada, viewModel.eventos.first())
+    }
+
+    @Test
+    fun `eliminar emite evento`() = runTest {
+        val viewModel = TransaccionesViewModel(repositorio)
+        viewModel.cargar(7)
+
+        viewModel.eliminar(1)
+
+        assertEquals(TransaccionesEvento.Eliminada, viewModel.eventos.first())
+    }
 }
 
 private class RepositorioFalso : TransaccionesRepository {
@@ -95,6 +123,7 @@ private class RepositorioFalso : TransaccionesRepository {
                         tipo = TipoTransaccion.GASTO,
                         monto = 50.0,
                         descripcion = "Prueba",
+                        categoriaId = 1,
                         categoria = "Alimentos",
                         autor = "Aideé",
                         fecha = "2026-11-03",
@@ -125,10 +154,35 @@ private class RepositorioFalso : TransaccionesRepository {
             tipo = tipo,
             monto = monto,
             descripcion = descripcion,
+            categoriaId = categoriaId,
             categoria = null,
             autor = null,
             fecha = fecha,
             metodoPago = null
         )
     )
+
+    override suspend fun actualizar(
+        idTransaccion: Int,
+        tipo: TipoTransaccion,
+        monto: Double,
+        fecha: String,
+        categoriaId: Int?,
+        descripcion: String?
+    ): Result<Transaccion> = Result.success(
+        Transaccion(
+            id = idTransaccion,
+            carteraId = 7,
+            tipo = tipo,
+            monto = monto,
+            descripcion = descripcion,
+            categoriaId = categoriaId,
+            categoria = null,
+            autor = null,
+            fecha = fecha,
+            metodoPago = null
+        )
+    )
+
+    override suspend fun eliminar(idTransaccion: Int): Result<Unit> = Result.success(Unit)
 }
