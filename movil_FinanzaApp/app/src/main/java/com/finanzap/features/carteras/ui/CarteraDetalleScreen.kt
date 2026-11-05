@@ -1,5 +1,6 @@
 package com.finanzap.features.carteras.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +18,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,9 +39,13 @@ import com.finanzap.core.ui.BotonPrincipal
 import com.finanzap.core.ui.Dimensiones
 import com.finanzap.core.ui.EstadoError
 import com.finanzap.core.ui.PantallaFormulario
+import com.finanzap.core.ui.generarQr
+import com.finanzap.core.util.formatearFechaCorta
 import com.finanzap.core.util.formatearMoneda
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.RolEnCartera
 
 @Composable
 fun CarteraDetalleScreen(
@@ -51,6 +59,13 @@ fun CarteraDetalleScreen(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
+    }
+
+    val cartera = state.cartera
+    LaunchedEffect(cartera?.id, cartera?.rol) {
+        if (cartera?.rol == RolEnCartera.PROPIETARIO) {
+            viewModel.cargarInvitacion(cartera.id)
+        }
     }
     CarteraDetalleContenido(
         state = state,
@@ -95,7 +110,10 @@ fun CarteraDetalleContenido(
             state.cartera != null -> DetalleCartera(
                 cartera = state.cartera,
                 onRegistrarGasto = onRegistrarGasto,
-                onVerTransacciones = onVerTransacciones
+                onVerTransacciones = onVerTransacciones,
+                invitacion = state.invitacion,
+                cargandoInvitacion = state.cargandoInvitacion,
+                errorInvitacion = state.errorInvitacion
             )
         }
     }
@@ -105,7 +123,10 @@ fun CarteraDetalleContenido(
 private fun DetalleCartera(
     cartera: Cartera,
     onRegistrarGasto: (Int, String) -> Unit,
-    onVerTransacciones: (Int, String) -> Unit
+    onVerTransacciones: (Int, String) -> Unit,
+    invitacion: Invitacion?,
+    cargandoInvitacion: Boolean,
+    errorInvitacion: String?
 ) {
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -252,6 +273,15 @@ private fun DetalleCartera(
         }
     }
 
+    if (cartera.rol == RolEnCartera.PROPIETARIO) {
+        Spacer(modifier = Modifier.height(24.dp))
+        InvitacionQrCard(
+            invitacion = invitacion,
+            cargando = cargandoInvitacion,
+            error = errorInvitacion
+        )
+    }
+
     Spacer(modifier = Modifier.height(24.dp))
 
     BotonPrincipal(
@@ -267,6 +297,84 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+}
+
+@Composable
+private fun InvitacionQrCard(
+    invitacion: Invitacion?,
+    cargando: Boolean,
+    error: String?
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.detalle_invitacion),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            when {
+                cargando -> CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+
+                error != null -> Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                invitacion == null -> Text(
+                    text = stringResource(R.string.detalle_invitacion_sin_activa),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                else -> {
+                    val qr = remember(invitacion.qrContenido) {
+                        generarQr(invitacion.qrContenido)
+                    }
+                    if (qr != null) {
+                        Image(
+                            bitmap = qr,
+                            contentDescription = stringResource(R.string.detalle_invitacion_qr_descripcion),
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(180.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Text(
+                        text = invitacion.codigo,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (invitacion.fechaExpiracion != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(
+                                R.string.detalle_invitacion_vence,
+                                formatearFechaCorta(invitacion.fechaExpiracion.take(10))
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -26,6 +26,7 @@ import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
+import com.finanzap.features.carteras.ui.UnirseCarteraScreen
 import com.finanzap.features.carteras.ui.NuevaCarteraScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
 import com.finanzap.features.transacciones.ui.TransaccionesScreen
@@ -133,6 +134,9 @@ fun FinanzAppNavHost(
                         onAbrirCartera = { cartera ->
                             navController.navigate(Rutas.carteraDetalle(cartera.id))
                         },
+                        onUnirseCartera = {
+                            navController.navigate(Rutas.UnirseCartera)
+                        },
                         onRegistrarGasto = { cartera ->
                             navController.navigate(
                                 Rutas.nuevaTransaccion(cartera.id, cartera.nombre)
@@ -172,6 +176,12 @@ fun FinanzAppNavHost(
                     TransaccionesScreen(
                         carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
                         carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.UnirseCartera) {
+                    UnirseCarteraScreen(
                         onVolver = { navController.popBackStack() }
                     )
                 }
@@ -246,6 +256,7 @@ private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Carteras,
     Rutas.NuevaCartera,
     Rutas.CarteraDetalle,
+    Rutas.UnirseCartera,
     Rutas.Transacciones,
     Rutas.NuevaTransaccion -> SeccionMenu.CARTERAS
 

@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,6 +75,7 @@ fun CarterasScreen(
     onNuevaCartera: () -> Unit,
     onAbrirCartera: (Cartera) -> Unit,
     onRegistrarGasto: (Cartera) -> Unit,
+    onUnirseCartera: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -89,6 +91,7 @@ fun CarterasScreen(
             onNuevaCartera = onNuevaCartera,
             onAbrirCartera = onAbrirCartera,
             onRegistrarGasto = onRegistrarGasto,
+            onUnirseCartera = onUnirseCartera,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
             onBusquedaChange = viewModel::onBusquedaChange,
@@ -101,6 +104,7 @@ data class CarterasAcciones(
     val onNuevaCartera: () -> Unit,
     val onAbrirCartera: (Cartera) -> Unit,
     val onRegistrarGasto: (Cartera) -> Unit,
+    val onUnirseCartera: () -> Unit,
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
     val onBusquedaChange: (String) -> Unit,
@@ -115,6 +119,7 @@ fun CarterasContenido(
     val onNuevaCartera = acciones.onNuevaCartera
     val onAbrirCartera = acciones.onAbrirCartera
     val onRegistrarGasto = acciones.onRegistrarGasto
+    val onUnirseCartera = acciones.onUnirseCartera
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
     val onBusquedaChange = acciones.onBusquedaChange
@@ -134,7 +139,8 @@ fun CarterasContenido(
                 Encabezado(
                     compartidas = state.segmento == Segmento.COMPARTIDAS,
                     totalCompartidas = state.totalCompartidas,
-                    onNuevaCartera = onNuevaCartera
+                    onNuevaCartera = onNuevaCartera,
+                    onUnirseCartera = onUnirseCartera
                 )
             }
 
@@ -185,7 +191,9 @@ fun CarterasContenido(
                         EstadoVacio(
                             icono = Icons.AutoMirrored.Filled.List,
                             titulo = stringResource(R.string.carteras_vacio_compartidas_titulo),
-                            mensaje = stringResource(R.string.carteras_vacio_compartidas_mensaje)
+                            mensaje = stringResource(R.string.carteras_vacio_compartidas_mensaje),
+                            textoBoton = stringResource(R.string.carteras_unirse),
+                            onBoton = onUnirseCartera
                         )
                     } else {
                         EstadoVacio(
@@ -222,7 +230,8 @@ fun CarterasContenido(
 private fun Encabezado(
     compartidas: Boolean,
     totalCompartidas: Int,
-    onNuevaCartera: () -> Unit
+    onNuevaCartera: () -> Unit,
+    onUnirseCartera: () -> Unit
 ) {
     val abrirMenu = LocalAbrirMenu.current
     Column {
@@ -244,6 +253,12 @@ private fun Encabezado(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = onUnirseCartera) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_qr),
+                    contentDescription = stringResource(R.string.carteras_unirse)
+                )
+            }
             FilledIconButton(onClick = onNuevaCartera) {
                 Icon(
                     imageVector = Icons.Default.Add,

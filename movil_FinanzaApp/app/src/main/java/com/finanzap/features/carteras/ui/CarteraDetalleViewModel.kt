@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.Invitacion
 import com.finanzap.features.carteras.data.CarterasRepository
+import com.finanzap.features.carteras.data.InvitacionesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +17,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class CarteraDetalleViewModel @Inject constructor(
-    private val carterasRepository: CarterasRepository
+    private val carterasRepository: CarterasRepository,
+    private val invitacionesRepository: InvitacionesRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CarteraDetalleUiState())
@@ -40,10 +43,38 @@ class CarteraDetalleViewModel @Inject constructor(
                 }
         }
     }
+
+    fun cargarInvitacion(idCartera: Int) {
+        if (_state.value.cargandoInvitacion) return
+
+        _state.update { it.copy(cargandoInvitacion = true, errorInvitacion = null) }
+        viewModelScope.launch {
+            invitacionesRepository.consultar(idCartera)
+                .onSuccess { invitacion ->
+                    _state.update {
+                        it.copy(cargandoInvitacion = false, invitacion = invitacion)
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            cargandoInvitacion = false,
+                            errorInvitacion = mensajeErrorApi(
+                                error,
+                                "No se pudo cargar la invitación."
+                            )
+                        )
+                    }
+                }
+        }
+    }
 }
 
 data class CarteraDetalleUiState(
     val cargando: Boolean = false,
     val error: String? = null,
-    val cartera: Cartera? = null
+    val cartera: Cartera? = null,
+    val cargandoInvitacion: Boolean = false,
+    val errorInvitacion: String? = null,
+    val invitacion: Invitacion? = null
 )

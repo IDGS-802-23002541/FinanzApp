@@ -12,6 +12,9 @@ import com.finanzap.features.auth.data.AuthRepositoryImpl
 import com.finanzap.features.carteras.data.CarterasApi
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.data.CarterasRepositoryImpl
+import com.finanzap.features.carteras.data.InvitacionesApi
+import com.finanzap.features.carteras.data.InvitacionesRepository
+import com.finanzap.features.carteras.data.InvitacionesRepositoryImpl
 import com.finanzap.features.transacciones.data.CategoriasApi
 import com.finanzap.features.transacciones.data.CategoriasRepository
 import com.finanzap.features.transacciones.data.CategoriasRepositoryImpl
@@ -43,6 +46,12 @@ abstract class Modulos {
     @Binds
     @Singleton
     abstract fun bindCarterasRepository(impl: CarterasRepositoryImpl): CarterasRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInvitacionesRepository(
+        impl: InvitacionesRepositoryImpl
+    ): InvitacionesRepository
 
     @Binds
     @Singleton
@@ -104,6 +113,11 @@ abstract class Modulos {
         @Singleton
         fun provideCarterasApi(retrofit: Retrofit): CarterasApi =
             retrofit.create(CarterasApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideInvitacionesApi(retrofit: Retrofit): InvitacionesApi =
+            retrofit.create(InvitacionesApi::class.java)
 
         @Provides
         @Singleton

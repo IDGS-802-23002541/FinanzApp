@@ -8,6 +8,7 @@ object Rutas {
     const val Carteras = "carteras"
     const val NuevaCartera = "carteras/nueva"
     const val CarteraDetalle = "carteras/detalle/{carteraId}"
+    const val UnirseCartera = "carteras/unirse"
     const val Transacciones = "carteras/detalle/{carteraId}/transacciones?nombre={nombre}"
     const val NuevaTransaccion = "transacciones/nueva/{carteraId}?nombre={nombre}"
     const val MiCuenta = "cuenta"
