@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.ResumenCartera
+import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +32,15 @@ class CarteraDetalleViewModel @Inject constructor(
         _state.update { it.copy(cargando = true, error = null) }
         viewModelScope.launch {
             carterasRepository.detalle(idCartera)
-                .onSuccess { cartera ->
-                    _state.update { it.copy(cargando = false, cartera = cartera) }
+                .onSuccess { detalle ->
+                    _state.update {
+                        it.copy(
+                            cargando = false,
+                            cartera = detalle.cartera,
+                            resumen = detalle.resumen,
+                            series = detalle.series
+                        )
+                    }
                 }
                 .onFailure { error ->
                     _state.update {
@@ -74,6 +83,8 @@ data class CarteraDetalleUiState(
     val cargando: Boolean = false,
     val error: String? = null,
     val cartera: Cartera? = null,
+    val resumen: ResumenCartera? = null,
+    val series: SeriesCartera? = null,
     val cargandoInvitacion: Boolean = false,
     val errorInvitacion: String? = null,
     val invitacion: Invitacion? = null

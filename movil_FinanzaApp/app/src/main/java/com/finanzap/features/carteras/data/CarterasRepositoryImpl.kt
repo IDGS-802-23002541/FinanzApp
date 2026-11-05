@@ -1,6 +1,7 @@
 package com.finanzap.features.carteras.data
 
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.CarteraDetalle
 import com.finanzap.features.carteras.TipoCartera
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -16,9 +17,9 @@ class CarterasRepositoryImpl @Inject constructor(
     override suspend fun carteras(): Result<List<Cartera>> =
         carterasConFiltros()
 
-    override suspend fun detalle(idCartera: Int): Result<Cartera> =
+    override suspend fun detalle(idCartera: Int): Result<CarteraDetalle> =
         try {
-            Result.success(carterasApi.detalle(idCartera).data.aCartera())
+            Result.success(carterasApi.detalle(idCartera).data.aCarteraDetalle())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

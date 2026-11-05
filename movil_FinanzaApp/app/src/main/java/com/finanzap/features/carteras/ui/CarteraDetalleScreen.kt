@@ -1,15 +1,19 @@
 package com.finanzap.features.carteras.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -29,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -45,6 +50,10 @@ import com.finanzap.core.util.formatearMoneda
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.ResumenCartera
+import com.finanzap.features.carteras.SerieCategoria
+import com.finanzap.features.carteras.SeriePeriodo
+import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.RolEnCartera
 
 @Composable
@@ -111,6 +120,8 @@ fun CarteraDetalleContenido(
                 cartera = state.cartera,
                 onRegistrarGasto = onRegistrarGasto,
                 onVerTransacciones = onVerTransacciones,
+                resumen = state.resumen,
+                series = state.series,
                 invitacion = state.invitacion,
                 cargandoInvitacion = state.cargandoInvitacion,
                 errorInvitacion = state.errorInvitacion
@@ -124,10 +135,22 @@ private fun DetalleCartera(
     cartera: Cartera,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String) -> Unit,
+    resumen: ResumenCartera?,
+    series: SeriesCartera?,
     invitacion: Invitacion?,
     cargandoInvitacion: Boolean,
     errorInvitacion: String?
 ) {
+    val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
+    val totalIngresos = resumen?.totalIngresos ?: 0.0
+    val totalGastos = resumen?.totalGastos ?: 0.0
+    val saldo = resumen?.saldo ?: 0.0
+    val avance = if (presupuesto > 0.0) {
+        ((totalGastos / presupuesto) * 100).toInt().coerceIn(0, 100)
+    } else {
+        0
+    }
+
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
@@ -180,19 +203,21 @@ private fun DetalleCartera(
     ) {
         Row(modifier = Modifier.padding(vertical = 14.dp, horizontal = 10.dp)) {
             Metrica(
-                etiqueta = stringResource(R.string.carteras_mi_pagado),
-                valor = formatearMoneda(cartera.miPagado),
+                etiqueta = stringResource(R.string.transacciones_ingresos),
+                valor = formatearMoneda(totalIngresos),
+                colorValor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
             Metrica(
-                etiqueta = stringResource(R.string.carteras_mi_cuota),
-                valor = formatearMoneda(cartera.miCuota),
+                etiqueta = stringResource(R.string.transacciones_gastos),
+                valor = formatearMoneda(totalGastos),
+                colorValor = MaterialTheme.colorScheme.error,
                 modifier = Modifier.weight(1f)
             )
             Metrica(
-                etiqueta = stringResource(R.string.carteras_mi_saldo),
-                valor = formatearMoneda(cartera.miSaldo),
-                colorValor = if (cartera.miSaldo < 0) {
+                etiqueta = stringResource(R.string.transacciones_balance),
+                valor = formatearMoneda(saldo),
+                colorValor = if (saldo < 0) {
                     MaterialTheme.colorScheme.secondary
                 } else {
                     MaterialTheme.colorScheme.primary
@@ -212,7 +237,7 @@ private fun DetalleCartera(
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = formatearMoneda(cartera.presupuestoInicial),
+            text = formatearMoneda(presupuesto),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -229,7 +254,7 @@ private fun DetalleCartera(
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "${cartera.avancePresupuesto}%",
+            text = "$avance%",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -237,11 +262,11 @@ private fun DetalleCartera(
 
     Spacer(modifier = Modifier.height(6.dp))
     LinearProgressIndicator(
-        progress = { cartera.avancePresupuesto / 100f },
+        progress = { avance / 100f },
         modifier = Modifier
             .fillMaxWidth()
             .height(8.dp),
-        color = if (cartera.miSaldo < 0) {
+        color = if (saldo < 0) {
             MaterialTheme.colorScheme.secondary
         } else {
             MaterialTheme.colorScheme.primary
@@ -252,26 +277,11 @@ private fun DetalleCartera(
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimensiones.RadioCampo),
-        color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.detalle_graficas),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = stringResource(R.string.detalle_graficas_pendiente),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    GraficaPeriodos(series?.ingresosVsEgresos.orEmpty())
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    GraficaCategorias(series?.gastosPorCategoria.orEmpty())
 
     if (cartera.rol == RolEnCartera.PROPIETARIO) {
         Spacer(modifier = Modifier.height(24.dp))
@@ -297,6 +307,179 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+}
+
+@Composable
+private fun GraficaPeriodos(periodos: List<SeriePeriodo>) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.detalle_ingresos_vs_egresos),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (periodos.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.detalle_sin_datos),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                val maximo = maxOf(periodos.maxOf { maxOf(it.ingresos, it.gastos) }, 1.0)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    periodos.forEach { periodo ->
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height((120 * (periodo.ingresos / maximo)).dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                        )
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height((120 * (periodo.gastos / maximo)).dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.error,
+                                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                        )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = periodo.nombre,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Leyenda(
+                        color = MaterialTheme.colorScheme.primary,
+                        texto = stringResource(R.string.transacciones_ingresos)
+                    )
+                    Leyenda(
+                        color = MaterialTheme.colorScheme.error,
+                        texto = stringResource(R.string.transacciones_gastos)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GraficaCategorias(categorias: List<SerieCategoria>) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.detalle_gastos_categoria),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (categorias.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.detalle_sin_datos),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                val maximo = maxOf(categorias.maxOf { it.total }, 1.0)
+                categorias.sortedByDescending { it.total }.forEach { categoria ->
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = categoria.nombre,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = formatearMoneda(categoria.total),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(percent = 50)
+                                )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth((categoria.total / maximo).toFloat())
+                                    .fillMaxHeight()
+                                    .background(
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        shape = RoundedCornerShape(percent = 50)
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Leyenda(color: Color, texto: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color = color, shape = CircleShape)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = texto,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
