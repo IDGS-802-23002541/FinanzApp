@@ -161,8 +161,71 @@ def listar(estado="ACTIVA", tipo="", rol="", busqueda=""):
 
 
 def obtener(id_cartera):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+    membresia, cartera = fila
     try:
-        fila = db.session.execute(
+        from app.services import cartera_detalle_service
+
+        detalle = cartera_detalle_service.resumen_y_series(cartera, None)
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo obtener la cartera."}, 503
+    data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
+    data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
+    data.update(detalle)
+    return {
+        "ok": True,
+        "data": data,
+        "mensaje": "Cartera obtenida correctamente.",
+    }, 200
+
+
+def detalle(id_cartera, periodo_id=None):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+    membresia, cartera = fila
+    try:
+        from app.services import cartera_detalle_service
+
+        try:
+            detalle = cartera_detalle_service.resumen_y_series(cartera, periodo_id)
+        except ValueError as exc:
+            return {"ok": False, "mensaje": str(exc)}, 400
+        data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
+        data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
+        data.update(detalle)
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo obtener la cartera."}, 503
+    return {
+        "ok": True,
+        "data": data,
+        "mensaje": "Cartera obtenida correctamente.",
+    }, 200
+
+
+def periodos(id_cartera):
+    if _membresia(id_cartera) is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+    try:
+        from app.services import cartera_detalle_service
+
+        data = cartera_detalle_service.listar_periodos(id_cartera)
+    except SQLAlchemyError:
+        return {"ok": False, "mensaje": "No se pudieron obtener los periodos."}, 503
+    return {
+        "ok": True,
+        "data": data,
+        "mensaje": "Periodos obtenidos correctamente.",
+    }, 200
+
+
+def _membresia(id_cartera):
+    try:
+        return db.session.execute(
             db.select(MiembroCartera, Cartera)
             .join(Cartera, Cartera.idCartera == MiembroCartera.carteraId)
             .where(
@@ -171,27 +234,22 @@ def obtener(id_cartera):
                 MiembroCartera.estado == "ACTIVO",
             )
         ).first()
-        if not fila:
-            return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
-        membresia, cartera = fila
-        admin_fila = db.session.execute(
-            db.select(Usuario)
-            .join(MiembroCartera, MiembroCartera.usuarioId == Usuario.idUsuario)
-            .where(
-                MiembroCartera.carteraId == id_cartera,
-                MiembroCartera.rol == "ADMIN",
-                MiembroCartera.estado == "ACTIVO",
-            )
-        ).first()
-        admin = admin_fila[0] if admin_fila else None
-        return {
-            "ok": True,
-            "data": serializar_cartera(cartera, membresia.rol, admin),
-            "mensaje": "Cartera obtenida correctamente.",
-        }, 200
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo obtener la cartera."}, 503
+        return None
+
+
+def _admin(id_cartera):
+    fila = db.session.execute(
+        db.select(Usuario)
+        .join(MiembroCartera, MiembroCartera.usuarioId == Usuario.idUsuario)
+        .where(
+            MiembroCartera.carteraId == id_cartera,
+            MiembroCartera.rol == "ADMIN",
+            MiembroCartera.estado == "ACTIVO",
+        )
+    ).first()
+    return fila[0] if fila else None
 
 
 __all__ = [
