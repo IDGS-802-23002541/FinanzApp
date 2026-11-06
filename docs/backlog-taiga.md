@@ -214,7 +214,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
 - **Tareas:**
   - **Backend** (Damián) — invitación: QR y registro de ingresos.
   - **Web** (Aideé) — invitación: pantalla de QR y bitácora.
-  - **BD** (Vanessa) — invitación: tabla de invitaciones y accesos.
+  - **BD** (Diego) — invitación: tabla de invitaciones y accesos (T#128). Accesos = `MIEMBROS_CARTERA.fechaUnion`, sin tabla nueva.
   - **Móvil** (Diego) — invitación: unirse a cartera por QR.
 
 ### HU-04.3 — Eliminar contribuyentes
@@ -283,7 +283,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
   - **Web** (Aideé) — transacciones: registrar ingreso/gasto.
   - **Backend** (Damián) — transacciones: crear, recalcular saldo y emitir evento.
   - **Móvil** (Diego) — transacciones: registrar ingreso/gasto.
-  - **BD** (Vanessa) — transacciones: tabla y modelo.
+  - **BD** (Diego) — transacciones: tabla y modelo. Hecho en T#146: `estado` + `metodoPago` + `comprobanteUrl`.
 
 ### HU-05.2 — Consultar transacciones
 - **Rol:** Propietario / Colaborador · **Quiero:** consultar las transacciones con filtro por periodo y paginación · **Para:** revisar mi historial sin perderme entre muchos registros. · **Prioridad:** Alta
@@ -319,7 +319,7 @@ Respaldo del backlog cargado en el tablero Kanban de **FinanzApp** (proyecto `18
 - **Tareas:**
   - **Backend** (Damián) — categorías: alta desde el selector.
   - **Web** (Aideé) — categorías: selector con búsqueda y creación al vuelo.
-  - **BD** (Vanessa) — categorías: tabla y modelo.
+  - **BD** (Diego) — categorías: tabla y modelo. Hecho en T#154: `tipoCartera` + `orden`.
   - **Móvil** (Diego) — categorías: selector con creación al vuelo.
 
 ---
