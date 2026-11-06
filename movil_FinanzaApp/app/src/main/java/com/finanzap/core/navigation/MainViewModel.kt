@@ -2,7 +2,7 @@ package com.finanzap.core.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.finanzap.core.session.EventosSesion
+import com.finanzap.core.storage.EventosSesion
 import com.finanzap.core.storage.PreferenciasTema
 import com.finanzap.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,4 +52,15 @@ class MainViewModel @Inject constructor(
         preferenciasTema.guardarTemaOscuro(oscuro)
         _state.update { it.copy(temaOscuro = oscuro) }
     }
+}
+
+data class MainUiState(
+    val cargando: Boolean = true,
+    val haySesion: Boolean = false,
+    val temaOscuro: Boolean? = null
+)
+
+/** Acciones de una sola vez que resuelve la navegación raíz. */
+sealed interface MainEvento {
+    data object IrALogin : MainEvento
 }

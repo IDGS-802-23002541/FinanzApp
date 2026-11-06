@@ -47,6 +47,21 @@ function aVistaCartera(cartera) {
   }
 }
 
+// El detalle necesita el presupuesto y el administrador; la lista no los usa.
+function aVistaDetalle(cartera) {
+  return {
+    ...aVistaCartera(cartera),
+    presupuestoInicial: cartera.presupuestoInicial ?? 0,
+    administrador: cartera.administrador ?? '',
+    inicialesAdministrador: cartera.inicialesAdministrador ?? '',
+  }
+}
+
+export async function obtenerCartera(id) {
+  const { data } = await api.get(`/carteras/${id}`)
+  return aVistaDetalle(data)
+}
+
 export async function filtrarCarteras(filtros = {}) {
   const params = new URLSearchParams()
   const { estado, tipo, rol, busqueda } = filtros

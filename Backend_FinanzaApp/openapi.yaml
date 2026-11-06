@@ -532,6 +532,687 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/invitaciones:
+    get:
+      tags:
+        - Invitaciones
+      summary: Consultar la invitación activa y los ingresos
+      description: >-
+        Devuelve la invitación activa de la cartera y los colaboradores que se
+        han unido con fecha y hora. Solo el propietario o administrador puede
+        consultarla.
+      operationId: consultarInvitacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invitación y colaboradores que ingresaron
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitacionesCartera'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener la invitación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Invitaciones
+      summary: Generar el QR de invitación
+      description: >-
+        Genera una clave única de 8 caracteres y revoca la invitación activa
+        anterior. Solo el propietario o administrador puede generarla y la
+        cartera debe estar ACTIVA. El front renderiza el QR a partir de
+        qrContenido.
+      operationId: generarInvitacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Invitación generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitacionGenerada'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo generar la invitación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /invitaciones/unirse:
+    post:
+      tags:
+        - Invitaciones
+      summary: Unirse a una cartera con la clave
+      description: >-
+        Valida la clave de 8 caracteres, su vigencia y que la cartera esté
+        ACTIVA, y da de alta al usuario como colaborador activo con la fecha
+        y hora de ingreso. Si ya es miembro activo, rechaza la petición.
+      operationId: unirseCartera
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnirseRequest'
+            example:
+              codigo: ABCD2345
+      responses:
+        '201':
+          description: El usuario se unió a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnionCartera'
+        '400':
+          description: Clave con formato inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Invitación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Invitación vencida/revocada, cartera inactiva o ya es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo unir a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}:
+    get:
+      tags:
+        - Carteras
+      summary: Detalle de una cartera
+      description: >-
+        Devuelve los datos de la cartera, sus miembros activos, el resumen de
+        saldo y totales, y las series para las gráficas (ingresos vs egresos
+        por periodo y gastos por categoría). Las transacciones eliminadas no
+        se incluyen. Si se envía periodoId, se agrega resumenPeriodo y los
+        gastos por categoría se filtran a ese periodo.
+      operationId: obtenerDetalleCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: periodoId
+          required: false
+          description: Periodo presupuestal para filtrar resumen y gastos por categoría.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalle de la cartera
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CarteraDetalle'
+                  mensaje:
+                    type: string
+                    example: Cartera obtenida correctamente.
+        '400':
+          description: Periodo inválido o ajeno a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener el detalle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/periodos:
+    get:
+      tags:
+        - Carteras
+      summary: Listar los periodos de una cartera
+      description: >-
+        Devuelve los periodos de una cartera donde el usuario es miembro
+        activo, ordenados por fecha de inicio. Se usa para poblar el filtro
+        por periodo de transacciones y reportes.
+      operationId: listarPeriodos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Periodos de la cartera
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Periodo'
+                  mensaje:
+                    type: string
+                    example: Periodos obtenidos correctamente.
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener los periodos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/transacciones:
+    get:
+      tags:
+        - Transacciones
+      summary: Listar transacciones de una cartera
+      description: >-
+        Devuelve las transacciones activas de la cartera, de la más reciente a
+        la más antigua, con paginación, filtro opcional por periodo y totales
+        del periodo filtrado. Las transacciones eliminadas lógicamente no se
+        incluyen.
+      operationId: listarTransacciones
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: pagina
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: porPagina
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: periodoId
+          required: false
+          description: Periodo presupuestal (solo carteras Hogar).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Listado paginado de transacciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionesPagina'
+        '400':
+          description: Parámetros inválidos o periodo ajeno a la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener las transacciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Transacciones
+      summary: Registrar un ingreso o gasto
+      description: >-
+        Crea una transacción ACTIVA en una cartera ACTIVA donde el usuario es
+        miembro. Recalcula los totales de la cartera y notifica a los demás
+        miembros con notificaciones de la app activas. Para INGRESO se usa
+        siempre la categoría global Aportación; para GASTO, categoriaId es
+        obligatorio.
+      operationId: crearTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionCrearRequest'
+            example:
+              tipo: GASTO
+              monto: 250.5
+              fecha: '2026-11-03'
+              categoriaId: 2
+              descripcion: Despensa
+              metodoPago: EFECTIVO
+      responses:
+        '201':
+          description: Transacción registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo registrar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/categorias:
+    get:
+      tags:
+        - Categorías
+      summary: Listar categorías disponibles de una cartera
+      description: >-
+        Devuelve las categorías activas que puede usar una cartera donde el
+        usuario es miembro activo: las personalizadas de la cartera y las
+        globales aplicables a su tipo. Con tipo=INGRESO o tipo=GASTO se
+        limita a las categorías compatibles (incluye las de tipo AMBOS).
+      operationId: listarCategorias
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: tipo
+          required: false
+          description: Filtra categorías compatibles con INGRESO o GASTO.
+          schema:
+            type: string
+            enum:
+              - INGRESO
+              - GASTO
+      responses:
+        '200':
+          description: Categorías disponibles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Categoria'
+                  mensaje:
+                    type: string
+                    example: Categorías obtenidas correctamente.
+        '400':
+          description: Tipo inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener las categorías
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Categorías
+      summary: Crear una categoría personalizada
+      description: >-
+        Crea una categoría personalizada para una cartera ACTIVA donde el
+        usuario es miembro. El nombre solo admite letras, números y espacios.
+      operationId: crearCategoria
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaCrearRequest'
+            example:
+              nombre: Servicio de internet
+              tipo: GASTO
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera no está activa o la categoría ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo crear la categoría
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /transacciones/{idTransaccion}:
+    put:
+      tags:
+        - Transacciones
+      summary: Editar una transacción
+      description: >-
+        Reemplaza los datos de una transacción ACTIVA. Solo el propietario o
+        administrador de la cartera puede editar, y la cartera debe estar
+        ACTIVA. Aplica las mismas validaciones del registro y recalcula saldo.
+      operationId: actualizarTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTransaccion
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionCrearRequest'
+            example:
+              tipo: GASTO
+              monto: 300
+              fecha: '2026-11-03'
+              categoriaId: 2
+              descripcion: Despensa corregida
+              metodoPago: TARJETA
+      responses:
+        '200':
+          description: Transacción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionCreada'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transacción no encontrada o usuario no miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Transacciones
+      summary: Eliminar lógicamente una transacción
+      description: >-
+        Cambia el estado de la transacción a ELIMINADO. Solo el propietario o
+        administrador de la cartera puede eliminarla, y la cartera debe estar
+        ACTIVA. El registro se conserva y deja de contar en saldos y listas.
+      operationId: eliminarTransaccion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTransaccion
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Transacción eliminada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransaccionEliminada'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transacción no encontrada o usuario no miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo eliminar la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -911,3 +1592,548 @@ components:
         mensaje:
           type: string
           example: Carteras obtenidas correctamente.
+    TransaccionCrearRequest:
+      type: object
+      required:
+        - monto
+      properties:
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+          default: GASTO
+        monto:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+          example: 250.5
+        fecha:
+          type: string
+          format: date
+          description: Por defecto se usa la fecha actual.
+          example: '2026-11-03'
+        categoriaId:
+          type: integer
+          description: Obligatorio para GASTO; en INGRESO se ignora y se usa Aportación.
+          example: 2
+        descripcion:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: Despensa
+        metodoPago:
+          type: string
+          enum:
+            - EFECTIVO
+            - TARJETA
+            - TRANSFERENCIA
+          nullable: true
+        comprobanteUrl:
+          type: string
+          maxLength: 500
+          nullable: true
+    Transaccion:
+      type: object
+      properties:
+        idTransaccion:
+          type: integer
+          example: 1
+        carteraId:
+          type: integer
+          example: 3
+        usuarioId:
+          type: integer
+          example: 7
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 2
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+          example: GASTO
+        monto:
+          type: number
+          example: 250.5
+        descripcion:
+          type: string
+          nullable: true
+          example: Despensa
+        metodoPago:
+          type: string
+          nullable: true
+          example: EFECTIVO
+        comprobanteUrl:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - ELIMINADO
+          example: ACTIVO
+        fecha:
+          type: string
+          format: date
+          example: '2026-11-03'
+    ResumenTransacciones:
+      type: object
+      properties:
+        totalIngresos:
+          type: number
+          example: 1000
+        totalGastos:
+          type: number
+          example: 250.5
+        saldo:
+          type: number
+          example: 749.5
+    TransaccionCreada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            transaccion:
+              $ref: '#/components/schemas/Transaccion'
+            resumen:
+              $ref: '#/components/schemas/ResumenTransacciones'
+        mensaje:
+          type: string
+          example: Transacción registrada correctamente.
+    CategoriaCrearRequest:
+      type: object
+      required:
+        - nombre
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Solo letras, números y espacios.
+          example: Servicio de internet
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+            - AMBOS
+          default: AMBOS
+    Categoria:
+      type: object
+      properties:
+        idCategoria:
+          type: integer
+          example: 12
+        carteraId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: Servicio de internet
+        tipo:
+          type: string
+          enum:
+            - INGRESO
+            - GASTO
+            - AMBOS
+          example: GASTO
+        orden:
+          type: integer
+          example: 1
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+            - INACTIVA
+          example: ACTIVA
+    CategoriaCreada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Categoria'
+        mensaje:
+          type: string
+          example: Categoría creada correctamente.
+    Periodo:
+      type: object
+      properties:
+        idPeriodo:
+          type: integer
+          example: 5
+        nombre:
+          type: string
+          example: Noviembre 2026
+        fechaInicio:
+          type: string
+          format: date
+          example: '2026-11-01'
+        fechaFin:
+          type: string
+          format: date
+          example: '2026-11-30'
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - INACTIVO
+          example: ACTIVO
+    TransaccionListado:
+      allOf:
+        - $ref: '#/components/schemas/Transaccion'
+        - type: object
+          properties:
+            categoria:
+              type: object
+              nullable: true
+              properties:
+                idCategoria:
+                  type: integer
+                  example: 2
+                nombre:
+                  type: string
+                  example: Alimentos
+            autor:
+              type: object
+              properties:
+                idUsuario:
+                  type: integer
+                  example: 7
+                nombre:
+                  type: string
+                  example: Vanesa Rea
+    PaginacionTransacciones:
+      type: object
+      properties:
+        pagina:
+          type: integer
+          example: 1
+        porPagina:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 35
+        totalPaginas:
+          type: integer
+          example: 2
+    TotalesPeriodo:
+      type: object
+      properties:
+        totalIngresos:
+          type: number
+          example: 500
+        totalGastos:
+          type: number
+          example: 250.5
+        balance:
+          type: number
+          example: 249.5
+    TransaccionesPagina:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransaccionListado'
+            paginacion:
+              $ref: '#/components/schemas/PaginacionTransacciones'
+            totales:
+              $ref: '#/components/schemas/TotalesPeriodo'
+        mensaje:
+          type: string
+          example: Transacciones obtenidas correctamente.
+    TransaccionEliminada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            idTransaccion:
+              type: integer
+              example: 1
+            estado:
+              type: string
+              enum:
+                - ACTIVO
+                - ELIMINADO
+              example: ELIMINADO
+            resumen:
+              $ref: '#/components/schemas/ResumenTransacciones'
+        mensaje:
+          type: string
+          example: Transacción eliminada correctamente.
+    Colaborador:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+          example: 7
+        nombre:
+          type: string
+          example: Vanesa Rea
+        iniciales:
+          type: string
+          example: VR
+        rol:
+          type: string
+          enum:
+            - PROPIETARIO
+            - COLABORADOR
+          example: COLABORADOR
+    ResumenCartera:
+      type: object
+      properties:
+        presupuestoInicial:
+          type: number
+          example: 1000
+        totalIngresos:
+          type: number
+          example: 500
+        totalGastos:
+          type: number
+          example: 350.5
+        saldo:
+          type: number
+          example: 1149.5
+    ResumenPeriodo:
+      type: object
+      nullable: true
+      properties:
+        periodoId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: Octubre 2026
+        fechaInicio:
+          type: string
+          format: date
+          example: '2026-10-01'
+        fechaFin:
+          type: string
+          format: date
+          example: '2026-10-31'
+        totalIngresos:
+          type: number
+          example: 500
+        totalGastos:
+          type: number
+          example: 100
+        balance:
+          type: number
+          example: 400
+    SeriePeriodo:
+      type: object
+      properties:
+        periodoId:
+          type: integer
+          nullable: true
+          example: 3
+        nombre:
+          type: string
+          example: Octubre 2026
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-10-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-10-31'
+        ingresos:
+          type: number
+          example: 500
+        gastos:
+          type: number
+          example: 100
+    SerieCategoria:
+      type: object
+      properties:
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 2
+        nombre:
+          type: string
+          example: Alimentos
+        total:
+          type: number
+          example: 350.5
+    SeriesCartera:
+      type: object
+      properties:
+        ingresosVsEgresos:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriePeriodo'
+        gastosPorCategoria:
+          type: array
+          items:
+            $ref: '#/components/schemas/SerieCategoria'
+    CarteraDetalle:
+      allOf:
+        - $ref: '#/components/schemas/Cartera'
+        - type: object
+          properties:
+            colaboradores:
+              type: array
+              items:
+                $ref: '#/components/schemas/Colaborador'
+            resumen:
+              $ref: '#/components/schemas/ResumenCartera'
+            resumenPeriodo:
+              $ref: '#/components/schemas/ResumenPeriodo'
+            series:
+              $ref: '#/components/schemas/SeriesCartera'
+    Invitacion:
+      type: object
+      properties:
+        idInvitacion:
+          type: integer
+          example: 4
+        carteraId:
+          type: integer
+          example: 3
+        codigo:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: ABCD2345
+        qrContenido:
+          type: string
+          example: finanzapp://invitacion/ABCD2345
+        fechaCreacion:
+          type: string
+          format: date-time
+        fechaExpiracion:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          enum:
+            - ACTIVA
+            - REVOCADA
+          example: ACTIVA
+        expirada:
+          type: boolean
+          example: false
+    InvitacionGenerada:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Invitacion'
+        mensaje:
+          type: string
+          example: Invitación generada correctamente.
+    IngresoInvitacion:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+          example: 9
+        nombre:
+          type: string
+          example: Aideé Casillas
+        iniciales:
+          type: string
+          example: AC
+        fechaUnion:
+          type: string
+          format: date-time
+    InvitacionesCartera:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            invitacion:
+              $ref: '#/components/schemas/Invitacion'
+            ingresos:
+              type: array
+              items:
+                $ref: '#/components/schemas/IngresoInvitacion'
+        mensaje:
+          type: string
+          example: Invitación obtenida correctamente.
+    UnirseRequest:
+      type: object
+      required:
+        - codigo
+      properties:
+        codigo:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: ABCD2345
+    UnionCartera:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            invitacionId:
+              type: integer
+              example: 4
+            cartera:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 3
+                nombre:
+                  type: string
+                  example: Casa
+                estado:
+                  type: string
+                  example: ACTIVA
+            miembro:
+              type: object
+              properties:
+                usuarioId:
+                  type: integer
+                  example: 9
+                rol:
+                  type: string
+                  enum:
+                    - PROPIETARIO
+                    - COLABORADOR
+                  example: COLABORADOR
+                estado:
+                  type: string
+                  example: ACTIVO
+                fechaUnion:
+                  type: string
+                  format: date-time
+        mensaje:
+          type: string
+          example: Te uniste a la cartera correctamente.

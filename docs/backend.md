@@ -59,7 +59,7 @@ Backend_FinanzaApp/
 | `miembros` | `GET/POST /carteras/:id/miembros`, `DELETE`, `/unirse`, `/delegar`, `/salir` | Un solo admin activo; baja/reactivación; invitación 8 caracteres. |
 | `periodos` | `GET/POST /carteras/:id/periodos` | Solo Hogar; un periodo activo. |
 | `transacciones` | `GET/POST /carteras/:id/transacciones`, `PUT/DELETE /transacciones/:id` | Editar/eliminar solo admin o dueño; bloqueo por estado; paginación; filtro por periodo. |
-| `categorias` | `GET /categorias`, `POST/PUT /carteras/:id/categorias` | Globales con `tipoCartera` opcional; personalizadas por cartera; `estado` para habilitar/deshabilitar; `orden` para el selector. |
+| `categorias` | `GET/POST /carteras/:id/categorias` | Globales aplicables y personalizadas; filtro por tipo; `estado` para habilitar/deshabilitar; `orden` para el selector. |
 | `pagos` | `GET/POST /carteras/:id/pagos`, `PUT/DELETE /pagos/:id`, `/marcar-hecho` | Estados pendiente/hecho. |
 | `reportes` | `GET /carteras/:id/reporte`, `GET /reportes/pdf` | Filtros por tipo, montos y periodo; PDF. |
 | `notificaciones` | `GET /notificaciones`, `PUT /notificaciones/:id/leida` | Movimientos, recordatorios, pagos próximos. |

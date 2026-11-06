@@ -18,7 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.core.navigation.FinanzAppNavHost
 import com.finanzap.core.navigation.MainViewModel
-import com.finanzap.core.ui.theme.FinanzAppTheme
+import com.finanzap.core.ui.FinanzAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 // Única actividad de la app: aquí vive la navegación.

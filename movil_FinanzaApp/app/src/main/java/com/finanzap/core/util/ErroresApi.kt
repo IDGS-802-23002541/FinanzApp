@@ -1,11 +1,9 @@
 package com.finanzap.core.util
 
+import com.finanzap.core.network.jsonApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import java.io.IOException
-
-private val json = Json { ignoreUnknownKeys = true }
 
 @Serializable
 private data class ErrorApi(val mensaje: String = "")
@@ -18,7 +16,7 @@ fun mensajeErrorApi(error: Throwable, porDefecto: String): String = when (error)
     is HttpException -> {
         val cuerpo = error.response()?.errorBody()?.string()
         val mensaje = cuerpo?.let {
-            runCatching { json.decodeFromString<ErrorApi>(it).mensaje }.getOrNull()
+            runCatching { jsonApi.decodeFromString<ErrorApi>(it).mensaje }.getOrNull()
         }
         mensaje?.takeIf { it.isNotBlank() } ?: porDefecto
     }

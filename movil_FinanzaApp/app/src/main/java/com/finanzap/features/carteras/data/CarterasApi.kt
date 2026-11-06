@@ -1,8 +1,5 @@
 package com.finanzap.features.carteras.data
 
-import com.finanzap.features.carteras.data.dto.CrearCarteraRequest
-import com.finanzap.features.carteras.data.dto.RespuestaCartera
-import com.finanzap.features.carteras.data.dto.RespuestaListaCarteras
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

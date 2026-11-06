@@ -7,4 +7,6 @@ object Rutas {
     const val NuevaCartera = "carteras/nueva"
     const val MiCuenta = "cuenta"
     const val CambiarContrasena = "cuenta/contrasena"
+    const val Reportes = "reportes"
+    const val Soporte = "soporte"
 }
