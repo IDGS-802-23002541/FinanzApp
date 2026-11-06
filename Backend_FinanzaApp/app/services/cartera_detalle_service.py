@@ -29,6 +29,25 @@ def colaboradores(id_cartera):
     ]
 
 
+def listar_periodos(id_cartera):
+    periodos = db.session.execute(
+        db.select(Periodo)
+        .where(Periodo.carteraId == id_cartera)
+        .order_by(Periodo.fechaInicio, Periodo.idPeriodo)
+    ).scalars().all()
+
+    return [
+        {
+            "idPeriodo": periodo.idPeriodo,
+            "nombre": periodo.nombre,
+            "fechaInicio": periodo.fechaInicio.isoformat(),
+            "fechaFin": periodo.fechaFin.isoformat(),
+            "estado": periodo.estado,
+        }
+        for periodo in periodos
+    ]
+
+
 def resumen_y_series(cartera, periodo_id=None):
     periodo = _validar_periodo(cartera, periodo_id)
     filtros = [
