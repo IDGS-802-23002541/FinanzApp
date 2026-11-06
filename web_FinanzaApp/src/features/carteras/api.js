@@ -47,13 +47,21 @@ function aVistaCartera(cartera) {
   }
 }
 
-// El detalle necesita el presupuesto y el administrador; la lista no los usa.
+// El detalle necesita resumen, series y colaboradores, la lista no los usa
 function aVistaDetalle(cartera) {
   return {
     ...aVistaCartera(cartera),
     presupuestoInicial: cartera.presupuestoInicial ?? 0,
     administrador: cartera.administrador ?? '',
     inicialesAdministrador: cartera.inicialesAdministrador ?? '',
+    colaboradores: cartera.colaboradores ?? [],
+    resumen: cartera.resumen ?? {
+      presupuestoInicial: cartera.presupuestoInicial ?? 0,
+      totalIngresos: 0,
+      totalGastos: 0,
+      saldo: cartera.presupuestoInicial ?? 0,
+    },
+    series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
   }
 }
 

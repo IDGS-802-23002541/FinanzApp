@@ -1,25 +1,34 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   Alert,
+  Avatar,
   Box,
+  Button,
+  Chip,
   CircularProgress,
-  LinearProgress,
-  Paper,
   Stack,
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
-import { formatearMonto } from '../../../utils/formato.js'
+import TarjetaResumen from '../components/TarjetaResumen.jsx'
+import GraficaBarras from '../components/GraficaBarras.jsx'
+import GraficaDona from '../components/GraficaDona.jsx'
+import {
+  IconoArchivo,
+  IconoCartera,
+  IconoCasa,
+  IconoEstrella,
+} from '../../../components/ui/Iconos.jsx'
 
 function DetalleCartera() {
   const { id } = useParams()
+  const navegar = useNavigate()
   const [cartera, setCartera] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // evita que una respuesta vieja pinte otra cartera al cambiar de ruta
     let vigente = true
 
     const cargar = async () => {
@@ -59,101 +68,149 @@ function DetalleCartera() {
     return <Alert severity="info">Cartera no disponible.</Alert>
   }
 
-  // aun no hay transacciones en el sprint, asi que el gasto real queda en cero
-  const gastado = 0
-  const presupuesto = cartera.presupuestoInicial || 0
-  const progreso = presupuesto > 0 ? (gastado / presupuesto) * 100 : 0
+  const { resumen, series, colaboradores } = cartera
+  const sinMovimientos = resumen.totalIngresos === 0 && resumen.totalGastos === 0
+
+  const gruposBarras = series.ingresosVsEgresos.slice(-6).map((fila) => ({
+    etiqueta: fila.nombre,
+    valores: { gastos: fila.gastos, ingresos: fila.ingresos },
+  }))
 
   return (
     <Stack spacing={3}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h1">{cartera.nombre}</Typography>
-        <Typography
+      <Button
+        onClick={() => navegar('/carteras')}
+        sx={{
+          alignSelf: 'flex-start',
+          minHeight: 0,
+          px: 0,
+          color: 'var(--color-texto-terciario)',
+        }}
+      >
+        ← Volver a carteras
+      </Button>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box
           sx={{
-            fontSize: '0.875rem',
-            color: 'var(--color-texto-terciario)',
-            mt: 0.5,
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-primario)',
+            color: 'var(--color-sobre-primario)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
-          {cartera.categoria} · {cartera.estatus} · {cartera.rol}
-        </Typography>
+          <IconoCasa sx={{ fontSize: 22 }} />
+        </Box>
 
-        {cartera.descripcion && (
-          <Typography sx={{ mt: 1.5 }}>{cartera.descripcion}</Typography>
-        )}
-
-        {cartera.periodo && (
-          <Typography
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography variant="h1">{cartera.nombre}</Typography>
+          <Chip
+            label={cartera.categoria}
+            size="small"
             sx={{
-              mt: 1,
-              fontSize: '0.875rem',
+              alignSelf: 'flex-start',
+              backgroundColor: 'var(--color-superficie-suave)',
               color: 'var(--color-texto-secundario)',
+              fontWeight: 700,
             }}
-          >
-            {cartera.periodo}
-          </Typography>
-        )}
+          />
+        </Box>
+      </Box>
 
-        {cartera.administrador && (
-          <Typography
-            sx={{
-              mt: 1,
-              fontSize: '0.875rem',
-              color: 'var(--color-texto-secundario)',
-            }}
-          >
-            Administrador: {cartera.administrador}
-          </Typography>
-        )}
-      </Paper>
+      {colaboradores.length > 0 && (
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          {colaboradores.map((persona) => (
+            <Chip
+              key={persona.idUsuario}
+              avatar={
+                <Avatar
+                  sx={{
+                    backgroundColor: 'var(--color-primario)',
+                    color: 'var(--color-sobre-primario)',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {persona.iniciales}
+                </Avatar>
+              }
+              label={`${persona.nombre} · ${persona.rol}`}
+              sx={{
+                backgroundColor: 'var(--color-superficie)',
+                border: '1px solid var(--color-borde)',
+                fontWeight: 600,
+              }}
+            />
+          ))}
+        </Stack>
+      )}
 
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: 2,
         }}
       >
-        <Paper sx={{ p: 2 }}>
-          <Typography
-            sx={{
-              fontSize: '0.75rem',
-              color: 'var(--color-texto-terciario)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Presupuesto
-          </Typography>
-          <Typography variant="h4" sx={{ mt: 0.5 }}>
-            {formatearMonto(presupuesto)}
-          </Typography>
-        </Paper>
-
-        <Paper sx={{ p: 2 }}>
-          <Typography
-            sx={{
-              fontSize: '0.75rem',
-              color: 'var(--color-texto-terciario)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Gastado
-          </Typography>
-          <Typography variant="h4" sx={{ mt: 0.5 }}>
-            {formatearMonto(gastado)}
-          </Typography>
-        </Paper>
+        <TarjetaResumen
+          etiqueta="Presupuesto"
+          monto={resumen.presupuestoInicial}
+          Icono={IconoCartera}
+          fondo="var(--color-superficie-suave)"
+        />
+        <TarjetaResumen
+          etiqueta="Gastado"
+          monto={resumen.totalGastos}
+          Icono={IconoArchivo}
+          fondo="var(--color-seleccion)"
+        />
+        <TarjetaResumen
+          etiqueta="Disponible"
+          monto={resumen.saldo}
+          Icono={IconoEstrella}
+          fondo="var(--color-acento)"
+        />
       </Box>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">Avance del presupuesto</Typography>
-        <LinearProgress
-          variant="determinate"
-          value={progreso}
-          sx={{ mt: 1.5, height: 10, borderRadius: 1 }}
+      {sinMovimientos && (
+        <Alert severity="info">
+          Esta cartera todavía no tiene transacciones.
+        </Alert>
+      )}
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1.6fr 1fr' },
+          gap: 2.5,
+        }}
+      >
+        <GraficaBarras
+          titulo="Últimos 6 meses"
+          grupos={gruposBarras}
+          series={[
+            {
+              clave: 'gastos',
+              nombre: 'Gastos por mes',
+              color: 'var(--color-primario)',
+            },
+            {
+              clave: 'ingresos',
+              nombre: 'Ingresos',
+              color: 'var(--color-borde-fuerte)',
+            },
+          ]}
         />
-        {/* aqui va la grafica de ingresos y gastos cuando existan transacciones */}
-      </Paper>
+        <GraficaDona
+          titulo="Gasto por categoría"
+          datos={series.gastosPorCategoria}
+        />
+      </Box>
     </Stack>
   )
 }
