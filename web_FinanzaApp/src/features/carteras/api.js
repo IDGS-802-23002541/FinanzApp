@@ -114,3 +114,20 @@ export async function crearCartera({
 
   return data
 }
+
+// trae las categorias activas de la cartera, tipo filtra ingreso o gasto 
+export async function listarCategorias(idCartera, tipo){
+  const query = tipo ? `?tipo=${encodeURIComponent(tipo)}` : ''
+  const { data } = await api.get(`/carteras/${idCartera}/categorias${query}`)
+  return data
+}
+
+// crea una categoria nueva en la cartera y regresa la que quedo guardada 
+
+export async function crearCategoria(idCartera, {nombre, tipo}){
+  const {data} = await api.post(`/carteras/${idCartera}/categorias`, {
+    nombre: nombre.trim(),
+    tipo,
+  })
+  return data
+}
