@@ -10,10 +10,10 @@ permissions:
   contents: read
 
 env:
-  AZURE_WEBAPP_NAME: mi-app-flask-react
-  AZURE_RESOURCE_GROUP: rg-mi-app
-  ACR_NAME: miregistroacr          # Solo el nombre, sin .azurecr.io
-  IMAGE_NAME: mi-app-flask-react
+  AZURE_WEBAPP_NAME: finanzapp
+  AZURE_RESOURCE_GROUP: finanzapp
+  ACR_NAME: finanzappacr          # Solo el nombre, sin .azurecr.io
+  IMAGE_NAME: finanzapp
 
 jobs:
   build-and-deploy:
