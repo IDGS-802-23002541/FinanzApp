@@ -1,0 +1,87 @@
+name: Build y deploy a Azure Web App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Necesario para login OIDC (sin secretos de contraseña)
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: finanzapp
+  AZURE_RESOURCE_GROUP: finanzapp
+  ACR_NAME: finanzappacr          # Solo el nombre, sin .azurecr.io
+  IMAGE_NAME: finanzapp
+
+jobs:
+  pruebas:
+    uses: ./.github/workflows/ci-develop.yml
+
+  build-and-deploy:
+    needs: pruebas
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Build de la imagen Docker
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          IMAGE_SHA=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=$REGISTRY/${{ env.IMAGE_NAME }}:latest
+          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" .
+
+      - name: Smoke test del contenedor
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          IMAGE=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker run -d --name app-test -p 8000:8000 \
+            -e DB_SERVER=ci -e DB_NAME=ci -e DB_USER=ci -e DB_PASSWORD=ci \
+            "$IMAGE"
+
+          for _ in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then
+              docker rm -f app-test
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "El contenedor no respondió en 30 s"
+          docker logs app-test
+          docker rm -f app-test
+          exit 1
+
+      - name: Login a Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login a Azure Container Registry
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Push de la imagen
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          docker push "$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker push "$REGISTRY/${{ env.IMAGE_NAME }}:latest"
+
+      - name: Desplegar en Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          images: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Verificar health check
+        run: |
+          URL=$(az webapp show -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AZURE_WEBAPP_NAME }} --query defaultHostName -o tsv)
+          curl --fail --retry 5 --retry-delay 10 "https://$URL/prueba"

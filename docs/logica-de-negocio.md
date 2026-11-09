@@ -82,9 +82,10 @@ La app móvil resuelve el paso 2 y 3 en una sola pantalla; la web puede separarl
 - Se pueden modificar datos personales (nombre, apellidos, teléfono...).
 - **No se puede modificar**: correo electrónico, fecha de creación ni estado de la cuenta.
 
-### 3.5 Eliminación lógica de cuenta
-- El usuario puede eliminar su cuenta: **no se borra físicamente**; pasa a `estado = eliminado` con `fechaBaja`.
-- Al quedar eliminado, no puede iniciar sesión y sus membresías se dan de baja lógica.
+### 3.5 Eliminación lógica de cuenta (opción B)
+- El usuario puede eliminar su cuenta: **no se borra físicamente**; pasa a `estado = ELIMINADO` con `fechaBaja` (migración TG-113 pendiente en BD).
+- Al quedar eliminado, no puede iniciar sesión, se anonimizan sus datos (`Cuenta eliminada`) y sus membresías se dan de baja lógica.
+- Sus carteras propias se archivan (`ARCHIVADA`), no se borran; las transacciones se conservan.
 
 ---
 
@@ -101,17 +102,18 @@ Nombre, descripción, presupuesto inicial (opcional), fechas de vigencia y tipo.
 | Estado | Descripción | Quién |
 | --- | --- | --- |
 | **Activa** | Operable: admite movimientos, miembros e invitaciones. | Todas las carteras |
-| **Inactiva** | Desactivada temporalmente. Reactivable por su administrador. | Todas las carteras |
+| **Archivada** (= inactiva) | Desactivada temporalmente. Reactivable por su administrador. | Todas las carteras |
 | **Finalizada** | Cierre definitivo, **solo lectura** (balance congelado). | **Solo Viaje y Evento** |
 
 Reglas:
 - **No existen eliminaciones físicas** de carteras. Una baja deja `fechaBaja` y conserva el histórico.
-- Pasar de **Activa → Inactiva** y **Inactiva → Activa** (reactivar) es libre para el administrador.
+- Pasar de **Activa → Archivada** y **Archivada → Activa** (reactivar) es libre para el administrador.
 - **Activa → Finalizada** solo aplica a carteras Viaje/Evento; al finalizar se guarda `fechaCierre`.
 - Una cartera **Finalizada** no admite movimientos, miembros, invitaciones ni edición.
+- Desactivar o eliminar cuenta **no pisa** carteras `FINALIZADA`.
 
 ### 4.4 Filtros y búsqueda
-- Por **estado**: Activas, Inactivas, Finalizadas.
+- Por **estado**: Activas, Archivadas (= inactivas), Finalizadas.
 - Por **pertenencia**: *Mis carteras* (soy propietario/administrador) vs. *Carteras en las que participo* (soy contribuyente).
 - Por **tipo** y búsqueda **por nombre**.
 
@@ -179,8 +181,10 @@ Monto, categoría, fecha, descripción y **fotografía/comprobante** (opcional, 
 
 ## 8. Módulo 5 (cont.) — Categorías
 
-- **Catálogo global** definido por el sistema **según el tipo de cartera** (Hogar, Viaje, Evento...).
-- **Categorías personalizadas** por cada cartera.
+- **Catálogo global** con campo `tipoCartera` opcional: `null` = aplica a todos los tipos; con valor = solo a ese tipo.
+- **Categorías personalizadas** por cartera (`carteraId` con valor; `tipoCartera` en `null`).
+- Nombres únicos: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
+- Si existe una personalizada con el mismo nombre que una global aplicable, el selector muestra la personalizada.
 - **Tipo de categoría** configurable: *Gasto*, *Ingreso* o *Ambos*.
 - **Gestión**: habilitar/deshabilitar y **ordenamiento personalizado**.
 - Un movimiento **ingreso** usa siempre la categoría reservada **"Aportación"**.

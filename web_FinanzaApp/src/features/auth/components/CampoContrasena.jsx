@@ -17,6 +17,7 @@ function CampoContrasena({
   error,
   helperText,
   autoComplete,
+  size,
 }) {
   const [visible, setVisible] = useState(false)
 
@@ -25,6 +26,7 @@ function CampoContrasena({
       label={label}
       type={visible ? 'text' : 'password'}
       autoComplete={autoComplete}
+      size={size}
       value={value}
       onChange={onChange}
       error={error}

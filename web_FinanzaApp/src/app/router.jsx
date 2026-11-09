@@ -1,7 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
 import PublicLayout from '../layouts/PublicLayout.jsx'
-import ClienteLayout from '../layouts/ClienteLayout.jsx'
-import AdminLayout from '../layouts/AdminLayout.jsx'
 import ProtectedRoute from '../routes/ProtectedRoute.jsx'
 import RoleRoute from '../routes/RoleRoute.jsx'
 import Landing from '../features/landing/pages/Landing.jsx'
@@ -18,6 +16,9 @@ import Soporte from '../features/soporte/pages/MisTickets.jsx'
 import InicioAdmin from '../features/admin/pages/Inicio.jsx'
 import Trabajadores from '../features/admin/pages/Trabajadores.jsx'
 import TicketsAdmin from '../features/admin/pages/Tickets.jsx'
+import PanelLayout from '../layouts/PanelLayout.jsx'
+import PaginaNoEncontrada from '../features/PaginaNoEncontrada.jsx'
+import { ROLES } from '../utils/constantes.js'
 
 // Todas las rutas de la aplicación en un solo lugar.
 export const router = createBrowserRouter([
@@ -31,34 +32,26 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <ProtectedRoute />,
-    children: [
-      {
-        element: <ClienteLayout />,
-        children: [
-          { path: '/carteras', element: <ListaCarteras /> },
-          { path: '/carteras/:id', element: <DetalleCartera /> },
-          { path: '/transacciones', element: <Transacciones /> },
-          { path: '/reportes', element: <Reportes /> },
-          { path: '/pagos-recurrentes', element: <PagosRecurrentes /> },
-          { path: '/ajustes', element: <Ajustes /> },
-          { path: '/soporte', element: <Soporte /> },
-        ],
-      },
-      {
-        element: <RoleRoute roles={['admin', 'trabajador']} />,
-        children: [
-          {
-            element: <AdminLayout />,
-            children: [
-              { path: '/admin', element: <InicioAdmin /> },
-              { path: '/admin/trabajadores', element: <Trabajadores /> },
-              { path: '/admin/tickets', element: <TicketsAdmin /> },
-            ],
-          },
-        ],
-      },
-    ],
+    element: <ProtectedRoute/>, children: [
+      {element: <PanelLayout />, children: [
+        {element: <RoleRoute roles={[ROLES.CLIENTE]} />, children: [
+          {path: '/carteras', element: <ListaCarteras />},
+          {path: '/carteras/:id', element: <DetalleCartera />},
+          {path: '/transacciones', element: <Transacciones />},
+          {path: '/reportes', element: <Reportes />},
+          {path: '/pagos-recurrentes', element: <PagosRecurrentes />},
+          {path: '/soporte', element: <Soporte />},
+        ]},
+        {element: <RoleRoute roles={[ROLES.ADMIN, ROLES.TRABAJADOR]}/>, children: [
+          {element: <RoleRoute roles={[ROLES.ADMIN]} />, children: [
+            {path: '/admin', element: <InicioAdmin />},
+            {path: '/admin/trabajadores', element: <Trabajadores />},
+          ]},
+          {path: '/admin/tickets', element: <TicketsAdmin />},
+        ]},
+        {path: '/ajustes', element: <Ajustes />},
+      ]}
+    ]
   },
-  { path: '*', element: <p>Página no encontrada</p> },
+  { path: '*', element: <PaginaNoEncontrada /> },
 ])

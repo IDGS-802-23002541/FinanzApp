@@ -44,6 +44,8 @@ gráfica debe usar estos tokens; **no se escriben códigos hex sueltos en los co
 | `--color-alerta` | `#C65D45` | Advertencias |
 | `--color-error` | `#A94832` | Errores, gastos y acciones destructivas |
 | `--color-info` | `#E7A28E` | Mensajes informativos |
+| `--color-seleccion` | `#F7E0D8` | Fondo del enlace activo del menú lateral |
+| `--color-seleccion-texto` | `#A94832` | Texto del enlace activo del menú lateral |
 
 Los tonos `#5B7278`, `#88979A`, `#E3D8D1`, `#D3C4BB`, `#F1EAE5` y `#A94832` son
 derivados de la paleta principal para texto, bordes y estados. No son colores de marca.
@@ -104,6 +106,8 @@ El modo oscuro es una adaptación de la misma paleta; no introduce colores de ma
 | `--color-borde-fuerte` | `#3B6B76` | Énfasis y hover |
 | `--color-exito` | `#8FD1B8` | Confirmaciones en oscuro |
 | `--color-error` | `#E08A73` | Errores en oscuro |
+| `--color-seleccion` | `#1F4A55` | Fondo del enlace activo del menú lateral |
+| `--color-seleccion-texto` | `#E7A28E` | Texto del enlace activo del menú lateral |
 
 ## 6. Equivalencia con Figma
 

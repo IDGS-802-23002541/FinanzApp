@@ -40,7 +40,7 @@ El front se construye **completo desde cero**: todos los módulos parten de «Po
 - `EstadoCartera` incluye `finalizada`.
 - `MiembroCartera` lleva `estado`/`fechaBaja` y el campo `rol`.
 - `Transaccion` lleva `idPeriodo` y `comprobanteUrl` (sin `nombreGasto` duplicado).
-- `CategoriaGasto` lleva `idCartera?`, `idCategoriaCartera?`, `tipo`, `habilitada`, `orden`.
+- `Categoria` lleva `carteraId?`, `tipoCartera?`, `tipo`, `estado`, `orden`.
 - `Usuario` lleva `estado`, `fechaBaja`.
 - Tipos nuevos: `Periodo`, `PagoRecurrente`, `TicketSoporte`, `RespuestaTicket`, `Trabajador`, `ComentarioLanding`, `Notificacion`.
 

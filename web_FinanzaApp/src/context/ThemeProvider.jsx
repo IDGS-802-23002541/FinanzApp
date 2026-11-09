@@ -4,20 +4,19 @@ import { ThemeContext } from './ThemeContext.js'
 import { crearTemaMui } from '../styles/temaMui.js'
 
 export function ThemeProvider({ children }) {
-  const [tema, setTema] = useState('claro')
+  //Toma el tema guardado en localStorage o usa 'claro' por defecto
+  const [tema, setTema] = useState(() => localStorage.getItem('tema') ?? 'claro')
   const [temaMui, setTemaMui] = useState(() => crearTemaMui())
 
-  const alternarTema = () => {
-    const siguiente = tema === 'claro' ? 'oscuro' : 'claro'
-
-    // El tema de MUI se construye después de aplicar los tokens del modo elegido.
+  const cambiarTema = (siguiente) => {
     document.documentElement.dataset.tema = siguiente
+    localStorage.setItem('tema', siguiente)
     setTema(siguiente)
     setTemaMui(crearTemaMui())
   }
 
   return (
-    <ThemeContext.Provider value={{ tema, alternarTema }}>
+    <ThemeContext.Provider value={{ tema, cambiarTema }}>
       <MuiThemeProvider theme={temaMui}>
         <CssBaseline />
         {children}

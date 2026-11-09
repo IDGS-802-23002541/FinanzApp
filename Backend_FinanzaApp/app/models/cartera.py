@@ -26,9 +26,7 @@ class Cartera(db.Model):
 
 class MiembroCartera(db.Model):
     __tablename__ = "MIEMBROS_CARTERA"
-    __table_args__ = (
-        db.Index("IX_MIEMBROS_CARTERA_usuario", "usuarioId", "estado"),
-    )
+    __table_args__ = (db.Index("IX_MIEMBROS_CARTERA_usuario", "usuarioId", "estado"),)
 
     carteraId = db.Column(
         db.Integer, db.ForeignKey("CARTERA.idCartera"), primary_key=True
@@ -36,9 +34,7 @@ class MiembroCartera(db.Model):
     usuarioId = db.Column(
         db.Integer, db.ForeignKey("USUARIO.idUsuario"), primary_key=True
     )
-    rol = db.Column(
-        db.String(15), nullable=False, server_default="CONTRIBUYENTE"
-    )
+    rol = db.Column(db.String(15), nullable=False, server_default="CONTRIBUYENTE")
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVO")
     fechaUnion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
@@ -59,30 +55,45 @@ class Categoria(db.Model):
         db.Index(
             "UX_CATEGORIAS_global_nombre",
             "nombre",
+            "tipoCartera",
             unique=True,
             mssql_where=db.text("carteraId IS NULL"),
+        ),
+        db.Index("IX_CATEGORIAS_consulta", "carteraId", "estado", "orden"),
+        db.CheckConstraint(
+            "carteraId IS NULL OR tipoCartera IS NULL",
+            name="CK_CATEGORIAS_global_o_personal",
+        ),
+        db.CheckConstraint(
+            "tipo IN ('INGRESO', 'GASTO', 'AMBOS')",
+            name="CK_CATEGORIAS_tipo",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVA', 'INACTIVA')",
+            name="CK_CATEGORIAS_estado",
         ),
     )
 
     idCategoria = db.Column(db.Integer, primary_key=True)
-    carteraId = db.Column(db.Integer, db.ForeignKey("CARTERA.idCartera"))
+    carteraId = db.Column(
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+    )
     nombre = db.Column(db.Unicode(80), nullable=False)
     tipo = db.Column(db.String(10), nullable=False, server_default="AMBOS")
+    tipoCartera = db.Column(db.String(10))
+    orden = db.Column(db.Integer, nullable=False, server_default="0")
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVA")
     esPredeterminada = db.Column(
         db.Boolean,
-        db.Computed(
-            "CASE WHEN carteraId IS NULL THEN 1 ELSE 0 END", persisted=True
-        ),
+        db.Computed("CASE WHEN carteraId IS NULL THEN 1 ELSE 0 END", persisted=True),
     )
 
 
 class Periodo(db.Model):
     __tablename__ = "PERIODO"
     __table_args__ = (
-        db.Index(
-            "IX_PERIODO_cartera_fechas", "carteraId", "fechaInicio", "fechaFin"
-        ),
+        db.Index("IX_PERIODO_cartera_fechas", "carteraId", "fechaInicio", "fechaFin"),
     )
 
     idPeriodo = db.Column(db.Integer, primary_key=True)
@@ -117,9 +128,7 @@ class Ahorro(db.Model):
     nombre = db.Column(db.Unicode(100), nullable=False)
     descripcion = db.Column(db.Unicode(500))
     meta = db.Column(db.Numeric(12, 2), nullable=False)
-    montoActual = db.Column(
-        db.Numeric(12, 2), nullable=False, server_default="0"
-    )
+    montoActual = db.Column(db.Numeric(12, 2), nullable=False, server_default="0")
     fechaObjetivo = db.Column(db.Date)
     estado = db.Column(db.String(12), nullable=False, server_default="ACTIVO")
     fechaCreacion = db.Column(
@@ -142,11 +151,26 @@ class Invitacion(db.Model):
             "fechaExpiracion",
             mssql_where=db.text("estado = 'ACTIVA'"),
         ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVA', 'REVOCADA')",
+            name="CK_INVITACION_estado",
+        ),
+        db.CheckConstraint(
+            "fechaExpiracion > fechaCreacion",
+            name="CK_INVITACION_fechas",
+        ),
+        db.CheckConstraint(
+            "(estado = 'ACTIVA' AND fechaRevocacion IS NULL) OR "
+            "(estado = 'REVOCADA' AND fechaRevocacion IS NOT NULL)",
+            name="CK_INVITACION_revocacion",
+        ),
     )
 
     idInvitacion = db.Column(db.Integer, primary_key=True)
     carteraId = db.Column(
-        db.Integer, db.ForeignKey("CARTERA.idCartera"), nullable=False
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+        nullable=False,
     )
     usuarioId = db.Column(db.Integer, nullable=False)
     codigoHash = db.Column(db.String(64), nullable=False)

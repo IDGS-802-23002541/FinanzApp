@@ -7,8 +7,9 @@ a la base de datos SQL Server mediante SQLAlchemy y registrar los modelos y ruta
 """
 
 from datetime import datetime, timezone
+from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -24,8 +25,16 @@ def create_app():
 
     from app import models
     from app.routes.auth import auth_bp
+    from app.routes.carteras import carteras_bp
+    from app.routes.categorias import categorias_bp
+    from app.routes.invitaciones import invitaciones_bp
+    from app.routes.transacciones import transacciones_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(carteras_bp)
+    app.register_blueprint(categorias_bp)
+    app.register_blueprint(invitaciones_bp)
+    app.register_blueprint(transacciones_bp)
 
     @jwt.user_lookup_loader
     def cargar_usuario(_jwt_header, jwt_data):
@@ -89,5 +98,18 @@ def create_app():
                 "mensaje": "Conexión a SQL Server correcta.",
             }
         )
+
+    wwwroot = Path(app.root_path).parent / "wwwroot"
+
+    @app.get("/", defaults={"ruta": ""})
+    @app.get("/<path:ruta>")
+    def interfaz_web(ruta):
+        if ruta and (wwwroot / ruta).is_file():
+            return send_from_directory(wwwroot, ruta)
+
+        if (wwwroot / "index.html").is_file():
+            return send_from_directory(wwwroot, "index.html")
+
+        return jsonify({"mensaje": "API de FinanzApp funcionando correctamente"})
 
     return app

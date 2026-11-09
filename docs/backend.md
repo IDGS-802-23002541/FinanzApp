@@ -19,6 +19,9 @@ Backend_FinanzaApp/
 ├── app/
 │   ├── __init__.py          # create_app() y registro de blueprints
 │   ├── extensions.py        # db (SQL Server), cloudinary, jwt
+│   ├── routes/              # endpoints delgados: request → servicio → jsonify
+│   ├── services/            # lógica de negocio (auth_service, cartera_service)
+│   ├── utils/               # seguridad, validacion, respuestas, serializers
 │   ├── blueprints/
 │   │   ├── auth/            # registro, login, recuperar contraseña
 │   │   ├── usuarios/        # perfil, baja lógica, admin de clientes
@@ -32,12 +35,19 @@ Backend_FinanzaApp/
 │   │   ├── soporte/         # tickets cliente/admin
 │   │   └── admin/           # métricas, trabajadores, comentarios
 │   ├── models/              # entidades SQLAlchemy
-│   └── utils/               # validaciones, permisos, respuestas
+│   ├── utils/               # validaciones, permisos, respuestas
+│   ├── services/            # lógica de negocio (auth_service, cartera_service)
 ├── config.py
 ├── run.py
 ├── requirements.txt
 └── .env.example
 ```
+
+## Capas
+
+- `routes/`: solo endpoints. Lee `request`, llama al servicio, devuelve `jsonify`. Sin consultas DB ni validaciones.
+- `services/`: lógica de negocio y acceso a DB. Recibe datos simples, devuelve `(payload, status)`.
+- `utils/`: `seguridad` (tokens, hash, códigos), `validacion` (correo, contraseña, fechas), `respuestas` (`ok`/`error`), `serializers` (usuario, cartera, mapas tipo/rol).
 
 ## Blueprints y responsabilidades
 
@@ -49,7 +59,7 @@ Backend_FinanzaApp/
 | `miembros` | `GET/POST /carteras/:id/miembros`, `DELETE`, `/unirse`, `/delegar`, `/salir` | Un solo admin activo; baja/reactivación; invitación 8 caracteres. |
 | `periodos` | `GET/POST /carteras/:id/periodos` | Solo Hogar; un periodo activo. |
 | `transacciones` | `GET/POST /carteras/:id/transacciones`, `PUT/DELETE /transacciones/:id` | Editar/eliminar solo admin o dueño; bloqueo por estado; paginación; filtro por periodo. |
-| `categorias` | `GET /categorias`, `POST/PUT /carteras/:id/categorias` | Global por tipo; personalizadas; habilitar/ordenar. |
+| `categorias` | `GET/POST /carteras/:id/categorias` | Globales aplicables y personalizadas; filtro por tipo; `estado` para habilitar/deshabilitar; `orden` para el selector. |
 | `pagos` | `GET/POST /carteras/:id/pagos`, `PUT/DELETE /pagos/:id`, `/marcar-hecho` | Estados pendiente/hecho. |
 | `reportes` | `GET /carteras/:id/reporte`, `GET /reportes/pdf` | Filtros por tipo, montos y periodo; PDF. |
 | `notificaciones` | `GET /notificaciones`, `PUT /notificaciones/:id/leida` | Movimientos, recordatorios, pagos próximos. |
@@ -63,7 +73,7 @@ Backend_FinanzaApp/
 2. **Editar/eliminar movimiento**: solo administrador o dueño, y cartera activa.
 3. **Finalizada** solo para Viaje/Evento y bloquea escrituras.
 4. **Sin DELETE físico** en entidades de negocio.
-5. `codigoInvitacion` de **8 caracteres**, único; regenerar invalida el anterior.
+5. Clave de invitación de **8 caracteres**, única; se guarda hasheada (`Invitacion.codigoHash`); regenerar revoca la anterior.
 6. `Periodo` solo en carteras Hogar.
 7. `correo` único e inmutable; contraseña con hash.
 8. Un trabajador **solo cierra** tickets asignados a él.

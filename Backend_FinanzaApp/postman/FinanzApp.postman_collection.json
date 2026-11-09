@@ -365,6 +365,709 @@
       },
       "response": [],
       "event": []
+    },
+    {
+      "name": "17 - Cambiar contraseña: nueva igual a la actual",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"NuevaPassword1\",\"nueva\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 400. La nueva debe ser distinta a la actual."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "18 - Cambiar contraseña: actual incorrecta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"WrongPass1\",\"nueva\":\"OtraPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 400. No cambia nada."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "19 - Cambiar contraseña válida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"NuevaPassword1\",\"nueva\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 200. Cámbiala de NuevaPassword1 a Password1. No es idempotente: corre la carpeta una vez y en orden."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "20 - Cambiar contraseña sin token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"actual\":\"Password1\",\"nueva\":\"OtraPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cambiar",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "21 - Desactivar cuenta sin token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "22 - Desactivar cuenta con contraseña incorrecta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"WrongPass1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 400. La cuenta sigue activa."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "23 - Desactivar cuenta válida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/desactivar",
+        "description": "Esperado: 200. Deja la cuenta de prueba INACTIVA y revoca sus sesiones. Correr al final."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "24 - Eliminar cuenta: registro de cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Eliminar\",\"apaterno\":\"Prueba\",\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Cuenta aparte porque la #23 deja prueba1 INACTIVA."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "25 - Eliminar cuenta: login de la cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda el accessToken de esta cuenta."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 - Eliminar cuenta sin token",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "27 - Eliminar cuenta con contraseña incorrecta",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"WrongPass1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 400. La cuenta sigue ACTIVA y sin anonimizar."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "28 - Eliminar cuenta: crear cartera para verificar archivado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombre\":\"Cartera eliminar\",\"tipo\":\"HOGAR\"}"
+        },
+        "url": "{{baseUrl}}/carteras",
+        "description": "Esperado: 201. Antes de eliminar; luego en BD debe quedar ARCHIVADA."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "29 - Eliminar cuenta válida",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/cuenta",
+        "description": "Esperado: 200. Anonimiza, marca ELIMINADO con fechaBaja, archiva cartera, revoca sesiones y quema tokens."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "30 - Eliminar cuenta: login después de eliminar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba4@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 401. Ya está ELIMINADO y el correo fue anonimizado."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "31 - Preferencias: registro de cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Tema\",\"apaterno\":\"Prueba\",\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/registro",
+        "description": "Esperado: 201. Cuenta aparte para #180 (prueba4 quedó ELIMINADA en #112)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "32 - Preferencias: login de la cuenta aparte",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. Guarda el accessToken y debe traer usuario.tema = CLARO."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok) {",
+              "  pm.collectionVariables.set('accessToken', body.data.access_token);",
+              "  pm.collectionVariables.set('refreshToken', body.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 - Preferencias: GET sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 401. Sin token."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "34 - Preferencias: GET con token (default CLARO)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = CLARO porque nunca se guardó preferencia (CA3)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "35 - Preferencias: PUT tema OSCURO",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tema\":\"OSCURO\"}"
+        },
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = OSCURO. Crea la fila de preferencia."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "36 - Preferencias: GET después de guardar OSCURO",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 200. data.tema = OSCURO (CA2)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "37 - Preferencias: PUT tema inválido",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tema\":\"AZUL\"}"
+        },
+        "url": "{{baseUrl}}/auth/preferencias",
+        "description": "Esperado: 400. Solo se acepta CLARO u OSCURO."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "38 - Preferencias: login con tema guardado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba5@dominio.com\",\"contrasenia\":\"Password1\"}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Esperado: 200. data.usuario.tema = OSCURO al iniciar sesión (CA2)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "Carteras",
+      "item": [
+        {
+          "name": "17 - Crear cartera sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Casa Borja\",\"tipo\":\"HOGAR\"}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 401. Sin token."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "18 - Crear cartera con body vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 400. El cuerpo no trae nombre ni tipo."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "19 - Crear cartera con tipo inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Casa Borja\",\"tipo\":\"CASA\"}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 400. El tipo no está en el catálogo."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "20 - Crear cartera con fechas invertidas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Viaje\",\"tipo\":\"VIAJE\",\"fechaInicio\":\"2026-11-30\",\"fechaFin\":\"2026-11-01\"}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 400. La fecha fin no puede ser anterior a la fecha inicio."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "21 - Crear cartera válida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Casa Borja\",\"tipo\":\"HOGAR\",\"descripcion\":\"Gastos del hogar\",\"presupuestoInicial\":5000,\"fechaInicio\":\"2026-11-01\",\"fechaFin\":\"2026-11-30\"}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 201. Crea la cartera y la membresía ADMIN/ACTIVO."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "22 - Listar carteras",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 200. Devuelve las carteras activas propias y donde colabora."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "23 - Listar carteras sin token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 401. Sin token."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "24 - Listar carteras por tipo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?tipo=HOGAR",
+            "description": "Esperado: 200. Solo carteras de tipo HOGAR."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "25 - Listar carteras donde colaboro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?rol=COLABORADOR",
+            "description": "Esperado: 200. Solo carteras compartidas."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "26 - Listar carteras por búsqueda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?busqueda=casa",
+            "description": "Esperado: 200. Coincidencias por nombre."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "27 - Listar carteras con estado inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras?estado=INACTIVA",
+            "description": "Esperado: 400. INACTIVA no existe; el valor de BD es ARCHIVADA."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
     }
   ]
 }

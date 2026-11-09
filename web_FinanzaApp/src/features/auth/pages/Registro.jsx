@@ -12,11 +12,9 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import CampoContrasena from '../components/CampoContrasena.jsx'
 import { registrar } from '../api.js'
+import { CONTRASENIA_VALIDA, CORREO_VALIDO } from '../../../utils/constantes.js'
 import { IconoFlechaDerecha } from '../../../components/ui/Iconos.jsx'
 
-const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-// La misma política que valida el backend: 8 caracteres, una mayúscula y un número.
-const CONTRASENIA_VALIDA = /^(?=.*[A-Z])(?=.*\d).{8,}$/
 
 function Registro() {
   const navegar = useNavigate()
