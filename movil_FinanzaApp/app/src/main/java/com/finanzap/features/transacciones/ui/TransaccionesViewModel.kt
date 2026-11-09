@@ -3,6 +3,8 @@ package com.finanzap.features.transacciones.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
+import com.finanzap.features.carteras.PeriodoCartera
+import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.transacciones.TipoTransaccion
 import com.finanzap.features.transacciones.Transaccion
 import com.finanzap.features.transacciones.data.TransaccionesRepository
@@ -19,7 +21,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class TransaccionesViewModel @Inject constructor(
-    private val transaccionesRepository: TransaccionesRepository
+    private val transaccionesRepository: TransaccionesRepository,
+    private val carterasRepository: CarterasRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TransaccionesUiState())
@@ -31,7 +34,34 @@ class TransaccionesViewModel @Inject constructor(
     fun cargar(idCartera: Int) {
         if (_state.value.cargando) return
         _state.update { it.copy(idCartera = idCartera) }
+        cargarPeriodos(idCartera)
         cargarPagina(1)
+    }
+
+    fun seleccionarPeriodo(periodoId: Int?) {
+        if (_state.value.periodoSeleccionadoId == periodoId) return
+
+        _state.update { it.copy(periodoSeleccionadoId = periodoId) }
+        cargarPagina(1)
+    }
+
+    private fun cargarPeriodos(idCartera: Int) {
+        viewModelScope.launch {
+            carterasRepository.periodos(idCartera)
+                .onSuccess { periodos ->
+                    _state.update { it.copy(periodos = periodos, errorPeriodos = null) }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            errorPeriodos = mensajeErrorApi(
+                                error,
+                                "No se pudieron cargar los periodos."
+                            )
+                        )
+                    }
+                }
+        }
     }
 
     fun siguiente() {
@@ -123,7 +153,8 @@ class TransaccionesViewModel @Inject constructor(
             transaccionesRepository.listar(
                 idCartera = actual.idCartera,
                 pagina = pagina,
-                porPagina = POR_PAGINA
+                porPagina = POR_PAGINA,
+                periodoId = actual.periodoSeleccionadoId
             )
                 .onSuccess { resultado ->
                     _state.update {
@@ -168,6 +199,9 @@ data class TransaccionesUiState(
     val totalPaginas: Int = 0,
     val total: Int = 0,
     val transacciones: List<Transaccion> = emptyList(),
+    val periodos: List<PeriodoCartera> = emptyList(),
+    val periodoSeleccionadoId: Int? = null,
+    val errorPeriodos: String? = null,
     val totalIngresos: Double = 0.0,
     val totalGastos: Double = 0.0,
     val balance: Double = 0.0

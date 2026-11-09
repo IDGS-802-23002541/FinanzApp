@@ -71,7 +71,18 @@ class RegistrarTransaccionViewModel @Inject constructor(
     }
 
     fun onTipoChange(tipo: TipoTransaccion) {
-        _state.update { it.copy(tipo = tipo, errorTipo = null, errorGeneral = null) }
+        _state.update {
+            val categoria = it.categoria?.takeIf { actual ->
+                actual.tipo == "AMBOS" || actual.tipo == tipo.name
+            }
+            it.copy(
+                tipo = tipo,
+                categoria = categoria,
+                errorTipo = null,
+                errorCategoria = null,
+                errorGeneral = null
+            )
+        }
     }
 
     fun onMontoChange(monto: String) {

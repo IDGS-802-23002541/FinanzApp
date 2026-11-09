@@ -157,8 +157,10 @@ fun FinanzAppNavHost(
                         onRegistrarGasto = { id, nombre ->
                             navController.navigate(Rutas.nuevaTransaccion(id, nombre))
                         },
-                        onVerTransacciones = { id, nombre ->
-                            navController.navigate(Rutas.transacciones(id, nombre))
+                        onVerTransacciones = { id, nombre, puedeEditar ->
+                            navController.navigate(
+                                Rutas.transacciones(id, nombre, puedeEditar)
+                            )
                         }
                     )
                 }
@@ -170,12 +172,17 @@ fun FinanzAppNavHost(
                         navArgument("nombre") {
                             type = NavType.StringType
                             defaultValue = ""
+                        },
+                        navArgument("puedeEditar") {
+                            type = NavType.BoolType
+                            defaultValue = false
                         }
                     )
                 ) { entrada ->
                     TransaccionesScreen(
                         carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
                         carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
                         onVolver = { navController.popBackStack() }
                     )
                 }

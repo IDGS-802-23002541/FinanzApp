@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.ColaboradorCartera
 import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
 import com.finanzap.features.carteras.PeriodoCartera
+import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.data.CarterasRepository
@@ -40,7 +42,8 @@ class CarteraDetalleViewModel @Inject constructor(
                             cargando = false,
                             cartera = detalle.cartera,
                             resumen = detalle.resumen,
-                            series = detalle.series
+                            series = detalle.series,
+                            colaboradores = detalle.colaboradores
                         )
                     }
                 }
@@ -76,6 +79,13 @@ class CarteraDetalleViewModel @Inject constructor(
 
         _state.update { it.copy(periodoSeleccionadoId = periodoId) }
         cargar(idCartera)
+    }
+
+    fun refrescarInvitacion(idCartera: Int) {
+        val cartera = _state.value.cartera ?: return
+        if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA") {
+            cargarInvitacion(idCartera)
+        }
     }
 
     fun cargarInvitacion(idCartera: Int) {
@@ -139,6 +149,7 @@ data class CarteraDetalleUiState(
     val cartera: Cartera? = null,
     val resumen: ResumenCartera? = null,
     val series: SeriesCartera? = null,
+    val colaboradores: List<ColaboradorCartera> = emptyList(),
     val periodos: List<PeriodoCartera> = emptyList(),
     val periodoSeleccionadoId: Int? = null,
     val errorPeriodos: String? = null,

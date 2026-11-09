@@ -75,6 +75,8 @@
     <string name="detalle_estado">Estado</string>
     <string name="detalle_presupuesto">Presupuesto inicial</string>
     <string name="detalle_graficas">Gráficas</string>
+    <string name="detalle_colaboradores">Colaboradores</string>
+    <string name="detalle_rol_colaborador">Colaborador</string>
     <string name="detalle_periodo">Periodo</string>
     <string name="detalle_periodo_todos">Todos</string>
     <string name="detalle_ingresos_vs_egresos">Ingresos vs egresos</string>

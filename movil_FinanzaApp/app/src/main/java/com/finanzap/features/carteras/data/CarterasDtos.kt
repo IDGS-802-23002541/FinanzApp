@@ -2,6 +2,7 @@ package com.finanzap.features.carteras.data
 
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.ColaboradorCartera
 import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.RolEnCartera
@@ -64,7 +65,16 @@ data class CarteraDto(
     val fechaInicio: String? = null,
     val fechaFin: String? = null,
     val resumen: ResumenCarteraDto? = null,
-    val series: SeriesCarteraDto? = null
+    val series: SeriesCarteraDto? = null,
+    val colaboradores: List<ColaboradorDto> = emptyList()
+)
+
+@Serializable
+data class ColaboradorDto(
+    val idUsuario: Int = 0,
+    val nombre: String = "",
+    val iniciales: String = "",
+    val rol: String = "COLABORADOR"
 )
 
 @Serializable
@@ -153,6 +163,14 @@ fun CarteraDto.aCarteraDetalle(): CarteraDetalle {
                     total = it.total
                 )
             }
-        )
+        ),
+        colaboradores = colaboradores.map {
+            ColaboradorCartera(
+                idUsuario = it.idUsuario,
+                nombre = it.nombre,
+                iniciales = it.iniciales,
+                rol = it.rol
+            )
+        }
     )
 }

@@ -3,7 +3,15 @@ package com.finanzap.features.carteras
 data class CarteraDetalle(
     val cartera: Cartera,
     val resumen: ResumenCartera,
-    val series: SeriesCartera
+    val series: SeriesCartera,
+    val colaboradores: List<ColaboradorCartera> = emptyList()
+)
+
+data class ColaboradorCartera(
+    val idUsuario: Int,
+    val nombre: String,
+    val iniciales: String,
+    val rol: String
 )
 
 data class ResumenCartera(

@@ -53,6 +53,7 @@ import com.finanzap.core.util.formatearFechaHoraCorta
 import com.finanzap.core.util.formatearMoneda
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.ColaboradorCartera
 import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
 import com.finanzap.features.carteras.PeriodoCartera
@@ -67,13 +68,14 @@ fun CarteraDetalleScreen(
     carteraId: Int,
     onVolver: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
-    onVerTransacciones: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String, Boolean) -> Unit,
     viewModel: CarteraDetalleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
+        viewModel.refrescarInvitacion(carteraId)
     }
 
     val cartera = state.cartera
@@ -99,7 +101,7 @@ fun CarteraDetalleContenido(
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
-    onVerTransacciones: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String, Boolean) -> Unit,
     onGenerarInvitacion: () -> Unit,
     onSeleccionarPeriodo: (Int?) -> Unit
 ) {
@@ -132,6 +134,7 @@ fun CarteraDetalleContenido(
                 onVerTransacciones = onVerTransacciones,
                 resumen = state.resumen,
                 series = state.series,
+                colaboradores = state.colaboradores,
                 invitacion = state.invitacion,
                 ingresos = state.ingresos,
                 cargandoInvitacion = state.cargandoInvitacion,
@@ -150,9 +153,10 @@ fun CarteraDetalleContenido(
 private fun DetalleCartera(
     cartera: Cartera,
     onRegistrarGasto: (Int, String) -> Unit,
-    onVerTransacciones: (Int, String) -> Unit,
+    onVerTransacciones: (Int, String, Boolean) -> Unit,
     resumen: ResumenCartera?,
     series: SeriesCartera?,
+    colaboradores: List<ColaboradorCartera>,
     invitacion: Invitacion?,
     ingresos: List<IngresoInvitacion>,
     cargandoInvitacion: Boolean,
@@ -214,6 +218,21 @@ private fun DetalleCartera(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+
+    val otrosColaboradores = colaboradores.filter { it.rol == "COLABORADOR" }
+    if (otrosColaboradores.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = stringResource(R.string.detalle_colaboradores),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        otrosColaboradores.forEach { colaborador ->
+            FilaColaborador(colaborador)
+        }
     }
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -308,7 +327,14 @@ private fun DetalleCartera(
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    GraficaPeriodos(series?.ingresosVsEgresos.orEmpty())
+    val periodosGrafica = if (periodoSeleccionadoId == null) {
+        series?.ingresosVsEgresos.orEmpty()
+    } else {
+        series?.ingresosVsEgresos.orEmpty()
+            .filter { it.periodoId == periodoSeleccionadoId }
+    }
+
+    GraficaPeriodos(periodosGrafica)
 
     Spacer(modifier = Modifier.height(12.dp))
 
@@ -327,19 +353,69 @@ private fun DetalleCartera(
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    BotonPrincipal(
-        texto = stringResource(R.string.carteras_registrar_gasto),
-        onClick = { onRegistrarGasto(cartera.id, cartera.nombre) }
-    )
+    if (cartera.estado == "ACTIVA") {
+        BotonPrincipal(
+            texto = stringResource(R.string.carteras_registrar_gasto),
+            onClick = { onRegistrarGasto(cartera.id, cartera.nombre) }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
 
     Spacer(modifier = Modifier.height(8.dp))
 
     OutlinedButton(
-        onClick = { onVerTransacciones(cartera.id, cartera.nombre) },
+        onClick = {
+            onVerTransacciones(
+                cartera.id,
+                cartera.nombre,
+                cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
+            )
+        },
         shape = RoundedCornerShape(Dimensiones.RadioCampo),
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+}
+
+@Composable
+private fun FilaColaborador(colaborador: ColaboradorCartera) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = colaborador.iniciales,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = colaborador.nombre,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = stringResource(R.string.detalle_rol_colaborador),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

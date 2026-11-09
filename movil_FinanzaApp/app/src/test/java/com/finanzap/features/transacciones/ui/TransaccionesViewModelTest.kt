@@ -1,5 +1,11 @@
 package com.finanzap.features.transacciones.ui
 
+import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
+import com.finanzap.features.carteras.RolEnCartera
+import com.finanzap.features.carteras.TipoCartera
+import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.transacciones.PaginaTransacciones
 import com.finanzap.features.transacciones.TipoTransaccion
 import com.finanzap.features.transacciones.Transaccion
@@ -23,6 +29,7 @@ import org.junit.Test
 class TransaccionesViewModelTest {
 
     private val repositorio = RepositorioFalso()
+    private val carteras = RepositorioCarterasFalso()
 
     @Before
     fun preparar() {
@@ -36,7 +43,7 @@ class TransaccionesViewModelTest {
 
     @Test
     fun `cargar trae la primera pagina y totales`() = runTest {
-        val viewModel = TransaccionesViewModel(repositorio)
+        val viewModel = TransaccionesViewModel(repositorio, carteras)
 
         viewModel.cargar(7)
 
@@ -50,7 +57,7 @@ class TransaccionesViewModelTest {
 
     @Test
     fun `siguiente y anterior cambian de pagina`() = runTest {
-        val viewModel = TransaccionesViewModel(repositorio)
+        val viewModel = TransaccionesViewModel(repositorio, carteras)
         viewModel.cargar(7)
 
         viewModel.siguiente()
@@ -64,7 +71,7 @@ class TransaccionesViewModelTest {
     @Test
     fun `fallo de red muestra error`() = runTest {
         repositorio.falla = IOException("sin red")
-        val viewModel = TransaccionesViewModel(repositorio)
+        val viewModel = TransaccionesViewModel(repositorio, carteras)
 
         viewModel.cargar(7)
 
@@ -76,7 +83,7 @@ class TransaccionesViewModelTest {
 
     @Test
     fun `actualizar emite evento`() = runTest {
-        val viewModel = TransaccionesViewModel(repositorio)
+        val viewModel = TransaccionesViewModel(repositorio, carteras)
         viewModel.cargar(7)
 
         viewModel.actualizar(
@@ -93,13 +100,52 @@ class TransaccionesViewModelTest {
 
     @Test
     fun `eliminar emite evento`() = runTest {
-        val viewModel = TransaccionesViewModel(repositorio)
+        val viewModel = TransaccionesViewModel(repositorio, carteras)
         viewModel.cargar(7)
 
         viewModel.eliminar(1)
 
         assertEquals(TransaccionesEvento.Eliminada, viewModel.eventos.first())
     }
+}
+
+private class RepositorioCarterasFalso : CarterasRepository {
+
+    override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
+
+    override suspend fun detalle(
+        idCartera: Int,
+        periodoId: Int?
+    ): Result<CarteraDetalle> = Result.failure(UnsupportedOperationException())
+
+    override suspend fun periodos(idCartera: Int): Result<List<PeriodoCartera>> =
+        Result.success(
+            listOf(
+                PeriodoCartera(
+                    id = 1,
+                    nombre = "Semana 1",
+                    fechaInicio = "2026-11-01",
+                    fechaFin = "2026-11-07",
+                    estado = "ABIERTO"
+                )
+            )
+        )
+
+    override suspend fun carterasConFiltros(
+        estado: String?,
+        tipo: String?,
+        rol: String?,
+        busqueda: String?
+    ): Result<List<Cartera>> = Result.success(emptyList())
+
+    override suspend fun crear(
+        nombre: String,
+        tipo: TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Cartera> = Result.failure(UnsupportedOperationException())
 }
 
 private class RepositorioFalso : TransaccionesRepository {

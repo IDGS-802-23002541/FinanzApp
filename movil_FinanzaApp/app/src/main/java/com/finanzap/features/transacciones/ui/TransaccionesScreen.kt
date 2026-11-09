@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -63,6 +64,7 @@ import com.finanzap.core.ui.EstadoVacio
 import com.finanzap.core.util.fechaIsoDesdeMillis
 import com.finanzap.core.util.formatearFechaCorta
 import com.finanzap.core.util.formatearMoneda
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.transacciones.TipoTransaccion
 import com.finanzap.features.transacciones.Transaccion
 
@@ -70,6 +72,7 @@ import com.finanzap.features.transacciones.Transaccion
 fun TransaccionesScreen(
     carteraId: Int,
     carteraNombre: String,
+    puedeEditar: Boolean,
     onVolver: () -> Unit,
     viewModel: TransaccionesViewModel = hiltViewModel()
 ) {
@@ -93,10 +96,12 @@ fun TransaccionesScreen(
     TransaccionesContenido(
         state = state,
         carteraNombre = carteraNombre,
+        puedeEditar = puedeEditar,
         onVolver = onVolver,
         onReintentar = viewModel::reintentar,
         onAnterior = viewModel::anterior,
         onSiguiente = viewModel::siguiente,
+        onSeleccionarPeriodo = viewModel::seleccionarPeriodo,
         onEditar = { transaccionEditar = it },
         onEliminar = { transaccionEliminar = it }
     )
@@ -171,10 +176,12 @@ fun TransaccionesScreen(
 fun TransaccionesContenido(
     state: TransaccionesUiState,
     carteraNombre: String,
+    puedeEditar: Boolean,
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
     onAnterior: () -> Unit,
     onSiguiente: () -> Unit,
+    onSeleccionarPeriodo: (Int?) -> Unit,
     onEditar: (Transaccion) -> Unit,
     onEliminar: (Transaccion) -> Unit
 ) {
@@ -203,6 +210,16 @@ fun TransaccionesContenido(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+
+            if (state.periodos.isNotEmpty()) {
+                item {
+                    SelectorPeriodoTransacciones(
+                        periodos = state.periodos,
+                        seleccionadoId = state.periodoSeleccionadoId,
+                        onSeleccionar = onSeleccionarPeriodo
                     )
                 }
             }
@@ -241,6 +258,7 @@ fun TransaccionesContenido(
                     items(items = state.transacciones, key = { it.id }) { transaccion ->
                         FilaTransaccion(
                             transaccion = transaccion,
+                            puedeEditar = puedeEditar,
                             onEditar = onEditar,
                             onEliminar = onEliminar
                         )
@@ -254,6 +272,39 @@ fun TransaccionesContenido(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectorPeriodoTransacciones(
+    periodos: List<PeriodoCartera>,
+    seleccionadoId: Int?,
+    onSeleccionar: (Int?) -> Unit
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.detalle_periodo),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = seleccionadoId == null,
+                onClick = { onSeleccionar(null) },
+                label = { Text(stringResource(R.string.detalle_periodo_todos)) }
+            )
+            periodos.forEach { periodo ->
+                FilterChip(
+                    selected = seleccionadoId == periodo.id,
+                    onClick = { onSeleccionar(periodo.id) },
+                    label = { Text(periodo.nombre) }
+                )
             }
         }
     }
@@ -296,6 +347,7 @@ private fun ResumenTotales(state: TransaccionesUiState) {
 @Composable
 private fun FilaTransaccion(
     transaccion: Transaccion,
+    puedeEditar: Boolean,
     onEditar: (Transaccion) -> Unit,
     onEliminar: (Transaccion) -> Unit
 ) {
@@ -357,18 +409,20 @@ private fun FilaTransaccion(
                         MaterialTheme.colorScheme.error
                     }
                 )
-                Row {
-                    IconButton(onClick = { onEditar(transaccion) }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.comun_editar)
-                        )
-                    }
-                    IconButton(onClick = { onEliminar(transaccion) }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.comun_eliminar)
-                        )
+                if (puedeEditar) {
+                    Row {
+                        IconButton(onClick = { onEditar(transaccion) }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.comun_editar)
+                            )
+                        }
+                        IconButton(onClick = { onEliminar(transaccion) }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.comun_eliminar)
+                            )
+                        }
                     }
                 }
             }
