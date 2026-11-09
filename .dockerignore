@@ -1,8 +1,12 @@
 .git
 .github
+movil_FinanzaApp
 **/node_modules
-frontend/dist
+web_FinanzaApp/dist
 **/__pycache__
 *.pyc
-.env
+**/.env
+**/.venv
+**/.pytest_cache
+.ruff_cache
 .vscode
