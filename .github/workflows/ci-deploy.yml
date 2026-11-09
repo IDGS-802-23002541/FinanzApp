@@ -16,13 +16,47 @@ env:
   IMAGE_NAME: finanzapp
 
 jobs:
+  pruebas:
+    uses: ./.github/workflows/ci-develop.yml
+
   build-and-deploy:
+    needs: pruebas
     runs-on: ubuntu-latest
     environment: production
 
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
+
+      - name: Build de la imagen Docker
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          IMAGE_SHA=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=$REGISTRY/${{ env.IMAGE_NAME }}:latest
+          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" .
+
+      - name: Smoke test del contenedor
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          IMAGE=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker run -d --name app-test -p 8000:8000 \
+            -e DB_SERVER=ci -e DB_NAME=ci -e DB_USER=ci -e DB_PASSWORD=ci \
+            "$IMAGE"
+
+          for intento in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then
+              docker rm -f app-test
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "El contenedor no respondió en 30 s"
+          docker logs app-test
+          docker rm -f app-test
+          exit 1
 
       - name: Login a Azure (OIDC)
         uses: azure/login@v2
@@ -34,15 +68,12 @@ jobs:
       - name: Login a Azure Container Registry
         run: az acr login --name ${{ env.ACR_NAME }}
 
-      - name: Build y push de la imagen Docker
+      - name: Push de la imagen
         env:
           REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
         run: |
-          IMAGE_SHA=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          IMAGE_LATEST=$REGISTRY/${{ env.IMAGE_NAME }}:latest
-          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" .
-          docker push "$IMAGE_SHA"
-          docker push "$IMAGE_LATEST"
+          docker push "$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker push "$REGISTRY/${{ env.IMAGE_NAME }}:latest"
 
       - name: Desplegar en Azure Web App
         uses: azure/webapps-deploy@v3
