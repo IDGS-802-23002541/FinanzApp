@@ -45,7 +45,7 @@ jobs:
             -e DB_SERVER=ci -e DB_NAME=ci -e DB_USER=ci -e DB_PASSWORD=ci \
             "$IMAGE"
 
-          for intento in $(seq 1 15); do
+          for _ in $(seq 1 15); do
             if curl -fsS http://127.0.0.1:8000/ >/dev/null; then
               docker rm -f app-test
               exit 0
