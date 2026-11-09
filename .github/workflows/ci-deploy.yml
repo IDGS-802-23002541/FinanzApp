@@ -1,0 +1,56 @@
+name: Build y deploy a Azure Web App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Necesario para login OIDC (sin secretos de contraseña)
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: mi-app-flask-react
+  AZURE_RESOURCE_GROUP: rg-mi-app
+  ACR_NAME: miregistroacr          # Solo el nombre, sin .azurecr.io
+  IMAGE_NAME: mi-app-flask-react
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Login a Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login a Azure Container Registry
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build y push de la imagen Docker
+        env:
+          REGISTRY: ${{ env.ACR_NAME }}.azurecr.io
+        run: |
+          IMAGE_SHA=$REGISTRY/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=$REGISTRY/${{ env.IMAGE_NAME }}:latest
+          docker build -t "$IMAGE_SHA" -t "$IMAGE_LATEST" .
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
+
+      - name: Desplegar en Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          images: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Verificar health check
+        run: |
+          URL=$(az webapp show -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AZURE_WEBAPP_NAME }} --query defaultHostName -o tsv)
+          curl --fail --retry 5 --retry-delay 10 "https://$URL/api/health"
