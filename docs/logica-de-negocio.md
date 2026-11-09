@@ -181,8 +181,10 @@ Monto, categoría, fecha, descripción y **fotografía/comprobante** (opcional, 
 
 ## 8. Módulo 5 (cont.) — Categorías
 
-- **Catálogo global** definido por el sistema **según el tipo de cartera** (Hogar, Viaje, Evento...).
-- **Categorías personalizadas** por cada cartera.
+- **Catálogo global** con campo `tipoCartera` opcional: `null` = aplica a todos los tipos; con valor = solo a ese tipo.
+- **Categorías personalizadas** por cartera (`carteraId` con valor; `tipoCartera` en `null`).
+- Nombres únicos: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
+- Si existe una personalizada con el mismo nombre que una global aplicable, el selector muestra la personalizada.
 - **Tipo de categoría** configurable: *Gasto*, *Ingreso* o *Ambos*.
 - **Gestión**: habilitar/deshabilitar y **ordenamiento personalizado**.
 - Un movimiento **ingreso** usa siempre la categoría reservada **"Aportación"**.

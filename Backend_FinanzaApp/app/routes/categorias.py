@@ -6,6 +6,16 @@ from app.services import categoria_service
 categorias_bp = Blueprint("categorias", __name__)
 
 
+@categorias_bp.get("/carteras/<int:idCartera>/categorias")
+@jwt_required()
+def listar(idCartera):
+    payload, status = categoria_service.listar(
+        idCartera,
+        tipo=request.args.get("tipo"),
+    )
+    return jsonify(payload), status
+
+
 @categorias_bp.post("/carteras/<int:idCartera>/categorias")
 @jwt_required()
 def crear(idCartera):
