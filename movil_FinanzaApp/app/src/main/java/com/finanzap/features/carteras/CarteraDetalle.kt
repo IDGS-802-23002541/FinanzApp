@@ -13,6 +13,14 @@ data class ResumenCartera(
     val saldo: Double = 0.0
 )
 
+data class PeriodoCartera(
+    val id: Int,
+    val nombre: String,
+    val fechaInicio: String?,
+    val fechaFin: String?,
+    val estado: String
+)
+
 data class SeriesCartera(
     val ingresosVsEgresos: List<SeriePeriodo> = emptyList(),
     val gastosPorCategoria: List<SerieCategoria> = emptyList()

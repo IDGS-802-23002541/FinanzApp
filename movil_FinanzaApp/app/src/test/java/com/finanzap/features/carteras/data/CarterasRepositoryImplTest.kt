@@ -4,6 +4,8 @@ import com.finanzap.features.carteras.data.CarteraDto
 import com.finanzap.features.carteras.data.CrearCarteraRequest
 import com.finanzap.features.carteras.data.RespuestaCartera
 import com.finanzap.features.carteras.data.RespuestaListaCarteras
+import com.finanzap.features.carteras.data.RespuestaPeriodos
+import com.finanzap.features.carteras.data.PeriodoDto
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -25,6 +27,16 @@ class CarterasRepositoryImplTest {
     }
 
     @Test
+    fun `periodos mapea el dto al dominio`() = runTest {
+        val repo = CarterasRepositoryImpl(ApiFalsa())
+
+        val resultado = repo.periodos(1)
+
+        assertTrue(resultado.isSuccess)
+        assertEquals("Semana 1", resultado.getOrThrow().first().nombre)
+    }
+
+    @Test
     fun `fallo de red se propaga`() = runTest {
         val api = ApiFalsa(falla = RuntimeException("sin red"))
         val repo = CarterasRepositoryImpl(api)
@@ -41,10 +53,19 @@ class CarterasRepositoryImplTest {
         override suspend fun crear(peticion: CrearCarteraRequest): RespuestaCartera =
             throw UnsupportedOperationException()
 
-        override suspend fun detalle(idCartera: Int): RespuestaCartera {
+        override suspend fun detalle(idCartera: Int, periodoId: Int?): RespuestaCartera {
             falla?.let { throw it }
             return RespuestaCartera(
                 data = CarteraDto(id = idCartera, nombre = "Casa", tipo = "HOGAR")
+            )
+        }
+
+        override suspend fun periodos(idCartera: Int): RespuestaPeriodos {
+            falla?.let { throw it }
+            return RespuestaPeriodos(
+                data = listOf(
+                    PeriodoDto(idPeriodo = 1, nombre = "Semana 1")
+                )
             )
         }
 

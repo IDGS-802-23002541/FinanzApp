@@ -6,6 +6,7 @@ import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.data.CarterasRepository
@@ -30,9 +31,9 @@ class CarteraDetalleViewModel @Inject constructor(
     fun cargar(idCartera: Int) {
         if (_state.value.cargando) return
 
-        _state.update { it.copy(cargando = true, error = null) }
+        _state.update { it.copy(cargando = true, error = null, errorPeriodos = null) }
         viewModelScope.launch {
-            carterasRepository.detalle(idCartera)
+            carterasRepository.detalle(idCartera, _state.value.periodoSeleccionadoId)
                 .onSuccess { detalle ->
                     _state.update {
                         it.copy(
@@ -52,6 +53,29 @@ class CarteraDetalleViewModel @Inject constructor(
                     }
                 }
         }
+        viewModelScope.launch {
+            carterasRepository.periodos(idCartera)
+                .onSuccess { periodos ->
+                    _state.update { it.copy(periodos = periodos) }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            errorPeriodos = mensajeErrorApi(
+                                error,
+                                "No se pudieron cargar los periodos."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    fun seleccionarPeriodo(idCartera: Int, periodoId: Int?) {
+        if (_state.value.cargando || _state.value.periodoSeleccionadoId == periodoId) return
+
+        _state.update { it.copy(periodoSeleccionadoId = periodoId) }
+        cargar(idCartera)
     }
 
     fun cargarInvitacion(idCartera: Int) {
@@ -115,6 +139,9 @@ data class CarteraDetalleUiState(
     val cartera: Cartera? = null,
     val resumen: ResumenCartera? = null,
     val series: SeriesCartera? = null,
+    val periodos: List<PeriodoCartera> = emptyList(),
+    val periodoSeleccionadoId: Int? = null,
+    val errorPeriodos: String? = null,
     val cargandoInvitacion: Boolean = false,
     val errorInvitacion: String? = null,
     val invitacion: Invitacion? = null,

@@ -20,5 +20,11 @@ interface CarterasApi {
     ): RespuestaListaCarteras
 
     @GET("carteras/{idCartera}")
-    suspend fun detalle(@Path("idCartera") idCartera: Int): RespuestaCartera
+    suspend fun detalle(
+        @Path("idCartera") idCartera: Int,
+        @Query("periodoId") periodoId: Int? = null
+    ): RespuestaCartera
+
+    @GET("carteras/{idCartera}/periodos")
+    suspend fun periodos(@Path("idCartera") idCartera: Int): RespuestaPeriodos
 }

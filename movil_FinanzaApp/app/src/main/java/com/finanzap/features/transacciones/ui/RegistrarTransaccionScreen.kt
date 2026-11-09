@@ -175,12 +175,17 @@ fun RegistrarTransaccionContenido(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        val categoriasDisponibles = state.categorias.filter { categoria ->
+            val tipo = state.tipo
+            tipo == null || categoria.tipo == "AMBOS" || categoria.tipo == tipo.name
+        }
+
         SelectorCategoria(
-            categorias = state.categorias,
+            categorias = categoriasDisponibles,
             seleccionada = state.categoria,
             onSeleccionar = onCategoriaChange,
             onCrear = onCrearCategoria,
-            creando = state.creandoCategoria,
+            creando = state.creandoCategoria || state.cargandoCategorias,
             error = state.errorCategoria ?: state.errorCategorias
         )
 

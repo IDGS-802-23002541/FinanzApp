@@ -2,6 +2,7 @@ package com.finanzap.features.carteras.data
 
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.SerieCategoria
@@ -29,6 +30,20 @@ data class RespuestaCartera(
 @Serializable
 data class RespuestaListaCarteras(
     val data: List<CarteraDto> = emptyList()
+)
+
+@Serializable
+data class RespuestaPeriodos(
+    val data: List<PeriodoDto> = emptyList()
+)
+
+@Serializable
+data class PeriodoDto(
+    val idPeriodo: Int,
+    val nombre: String = "",
+    val fechaInicio: String? = null,
+    val fechaFin: String? = null,
+    val estado: String = "ABIERTO"
 )
 
 @Serializable
@@ -81,6 +96,14 @@ data class SerieCategoriaDto(
     val categoriaId: Int? = null,
     val nombre: String = "",
     val total: Double = 0.0
+)
+
+fun PeriodoDto.aPeriodo(): PeriodoCartera = PeriodoCartera(
+    id = idPeriodo,
+    nombre = nombre,
+    fechaInicio = fechaInicio,
+    fechaFin = fechaFin,
+    estado = estado
 )
 
 fun CarteraDto.aCartera(): Cartera = Cartera(

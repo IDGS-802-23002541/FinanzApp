@@ -75,6 +75,8 @@
     <string name="detalle_estado">Estado</string>
     <string name="detalle_presupuesto">Presupuesto inicial</string>
     <string name="detalle_graficas">Gráficas</string>
+    <string name="detalle_periodo">Periodo</string>
+    <string name="detalle_periodo_todos">Todos</string>
     <string name="detalle_ingresos_vs_egresos">Ingresos vs egresos</string>
     <string name="detalle_gastos_categoria">Gastos por categoría</string>
     <string name="detalle_sin_datos">Sin datos para mostrar.</string>

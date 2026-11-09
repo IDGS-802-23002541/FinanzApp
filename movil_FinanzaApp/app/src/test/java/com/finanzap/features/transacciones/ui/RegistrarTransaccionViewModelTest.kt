@@ -66,6 +66,18 @@ class RegistrarTransaccionViewModelTest {
     }
 
     @Test
+    fun `iniciar carga las categorias existentes`() = runTest {
+        categorias.categoriasIniciales = listOf(
+            Categoria(5, null, "Aportación", "INGRESO", 1, "ACTIVA")
+        )
+
+        val viewModel = viewModel()
+
+        assertEquals(1, viewModel.state.value.categorias.size)
+        assertEquals("Aportación", viewModel.state.value.categorias.first().nombre)
+    }
+
+    @Test
     fun `crear categoria la agrega y selecciona`() = runTest {
         val viewModel = viewModel()
 
@@ -166,6 +178,11 @@ private class RepositorioTransaccionesFalso : TransaccionesRepository {
 }
 
 private class RepositorioCategoriasFalso : CategoriasRepository {
+
+    var categoriasIniciales: List<Categoria> = emptyList()
+
+    override suspend fun listar(idCartera: Int, tipo: String?): Result<List<Categoria>> =
+        Result.success(categoriasIniciales)
 
     override suspend fun crear(idCartera: Int, nombre: String): Result<Categoria> =
         Result.success(

@@ -33,7 +33,41 @@ class RegistrarTransaccionViewModel @Inject constructor(
 
     fun iniciar(idCartera: Int) {
         if (_state.value.idCartera == idCartera) return
-        _state.update { it.copy(idCartera = idCartera) }
+        _state.update {
+            it.copy(
+                idCartera = idCartera,
+                categoria = null,
+                errorCategoria = null,
+                errorCategorias = null
+            )
+        }
+        cargarCategorias()
+    }
+
+    private fun cargarCategorias() {
+        val idCartera = _state.value.idCartera
+        if (idCartera == 0 || _state.value.cargandoCategorias) return
+
+        _state.update { it.copy(cargandoCategorias = true, errorCategorias = null) }
+        viewModelScope.launch {
+            categoriasRepository.listar(idCartera)
+                .onSuccess { categorias ->
+                    _state.update {
+                        it.copy(cargandoCategorias = false, categorias = categorias)
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            cargandoCategorias = false,
+                            errorCategorias = mensajeErrorApi(
+                                error,
+                                "No se pudieron cargar las categorías."
+                            )
+                        )
+                    }
+                }
+        }
     }
 
     fun onTipoChange(tipo: TipoTransaccion) {
@@ -168,6 +202,7 @@ data class RegistrarTransaccionUiState(
     val categoria: Categoria? = null,
     val categorias: List<Categoria> = emptyList(),
     val descripcion: String = "",
+    val cargandoCategorias: Boolean = false,
     val creandoCategoria: Boolean = false,
     val guardando: Boolean = false,
     val errorTipo: String? = null,

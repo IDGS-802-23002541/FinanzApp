@@ -15,6 +15,11 @@ data class RespuestaCategoria(
 )
 
 @Serializable
+data class RespuestaCategorias(
+    val data: List<CategoriaDto> = emptyList()
+)
+
+@Serializable
 data class CategoriaDto(
     val idCategoria: Int,
     val carteraId: Int? = null,

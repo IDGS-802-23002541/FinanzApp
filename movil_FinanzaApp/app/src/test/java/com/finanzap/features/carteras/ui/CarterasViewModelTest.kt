@@ -3,6 +3,7 @@ package com.finanzap.features.carteras.ui
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.SeriesCartera
@@ -114,7 +115,10 @@ private class RepositorioCarterasFalso : CarterasRepository {
         busqueda: String?
     ): Result<List<Cartera>> = carteras()
 
-    override suspend fun detalle(idCartera: Int): Result<CarteraDetalle> {
+    override suspend fun detalle(
+        idCartera: Int,
+        periodoId: Int?
+    ): Result<CarteraDetalle> {
         val error = falla
         if (error != null) return Result.failure(error)
         return Result.success(
@@ -130,6 +134,9 @@ private class RepositorioCarterasFalso : CarterasRepository {
             )
         )
     }
+
+    override suspend fun periodos(idCartera: Int): Result<List<PeriodoCartera>> =
+        Result.success(emptyList())
 
     override suspend fun crear(
         nombre: String,

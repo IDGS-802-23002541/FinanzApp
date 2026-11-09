@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -52,6 +55,7 @@ import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SerieCategoria
 import com.finanzap.features.carteras.SeriePeriodo
@@ -84,7 +88,8 @@ fun CarteraDetalleScreen(
         onReintentar = { viewModel.cargar(carteraId) },
         onRegistrarGasto = onRegistrarGasto,
         onVerTransacciones = onVerTransacciones,
-        onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) }
+        onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) },
+        onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) }
     )
 }
 
@@ -95,7 +100,8 @@ fun CarteraDetalleContenido(
     onReintentar: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String) -> Unit,
-    onGenerarInvitacion: () -> Unit
+    onGenerarInvitacion: () -> Unit,
+    onSeleccionarPeriodo: (Int?) -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -130,7 +136,11 @@ fun CarteraDetalleContenido(
                 ingresos = state.ingresos,
                 cargandoInvitacion = state.cargandoInvitacion,
                 errorInvitacion = state.errorInvitacion,
-                onGenerarInvitacion = onGenerarInvitacion
+                onGenerarInvitacion = onGenerarInvitacion,
+                periodos = state.periodos,
+                periodoSeleccionadoId = state.periodoSeleccionadoId,
+                errorPeriodos = state.errorPeriodos,
+                onSeleccionarPeriodo = onSeleccionarPeriodo
             )
         }
     }
@@ -147,7 +157,11 @@ private fun DetalleCartera(
     ingresos: List<IngresoInvitacion>,
     cargandoInvitacion: Boolean,
     errorInvitacion: String?,
-    onGenerarInvitacion: () -> Unit
+    onGenerarInvitacion: () -> Unit,
+    periodos: List<PeriodoCartera>,
+    periodoSeleccionadoId: Int?,
+    errorPeriodos: String?,
+    onSeleccionarPeriodo: (Int?) -> Unit
 ) {
     val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
     val totalIngresos = resumen?.totalIngresos ?: 0.0
@@ -285,6 +299,15 @@ private fun DetalleCartera(
 
     Spacer(modifier = Modifier.height(20.dp))
 
+    SelectorPeriodo(
+        periodos = periodos,
+        seleccionadoId = periodoSeleccionadoId,
+        error = errorPeriodos,
+        onSeleccionar = onSeleccionarPeriodo
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
     GraficaPeriodos(series?.ingresosVsEgresos.orEmpty())
 
     Spacer(modifier = Modifier.height(12.dp))
@@ -317,6 +340,50 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+}
+
+@Composable
+private fun SelectorPeriodo(
+    periodos: List<PeriodoCartera>,
+    seleccionadoId: Int?,
+    error: String?,
+    onSeleccionar: (Int?) -> Unit
+) {
+    if (periodos.isEmpty()) {
+        if (error != null) {
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.detalle_periodo),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    selected = seleccionadoId == null,
+                    onClick = { onSeleccionar(null) },
+                    label = { Text(stringResource(R.string.detalle_periodo_todos)) }
+                )
+            }
+            items(periodos, key = { it.id }) { periodo ->
+                FilterChip(
+                    selected = seleccionadoId == periodo.id,
+                    onClick = { onSeleccionar(periodo.id) },
+                    label = { Text(periodo.nombre) }
+                )
+            }
+        }
     }
 }
 

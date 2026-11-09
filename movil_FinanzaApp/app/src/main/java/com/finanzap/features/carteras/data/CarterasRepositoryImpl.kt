@@ -2,6 +2,7 @@ package com.finanzap.features.carteras.data
 
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.TipoCartera
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -17,9 +18,21 @@ class CarterasRepositoryImpl @Inject constructor(
     override suspend fun carteras(): Result<List<Cartera>> =
         carterasConFiltros()
 
-    override suspend fun detalle(idCartera: Int): Result<CarteraDetalle> =
+    override suspend fun detalle(
+        idCartera: Int,
+        periodoId: Int?
+    ): Result<CarteraDetalle> =
         try {
-            Result.success(carterasApi.detalle(idCartera).data.aCarteraDetalle())
+            Result.success(carterasApi.detalle(idCartera, periodoId).data.aCarteraDetalle())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun periodos(idCartera: Int): Result<List<PeriodoCartera>> =
+        try {
+            Result.success(carterasApi.periodos(idCartera).data.map { it.aPeriodo() })
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
