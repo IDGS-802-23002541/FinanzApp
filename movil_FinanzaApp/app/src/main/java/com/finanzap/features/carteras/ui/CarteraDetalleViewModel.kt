@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SeriesCartera
@@ -59,6 +60,35 @@ class CarteraDetalleViewModel @Inject constructor(
         _state.update { it.copy(cargandoInvitacion = true, errorInvitacion = null) }
         viewModelScope.launch {
             invitacionesRepository.consultar(idCartera)
+                .onSuccess { datos ->
+                    _state.update {
+                        it.copy(
+                            cargandoInvitacion = false,
+                            invitacion = datos.invitacion,
+                            ingresos = datos.ingresos
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            cargandoInvitacion = false,
+                            errorInvitacion = mensajeErrorApi(
+                                error,
+                                "No se pudo cargar la invitación."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    fun generarInvitacion(idCartera: Int) {
+        if (_state.value.cargandoInvitacion) return
+
+        _state.update { it.copy(cargandoInvitacion = true, errorInvitacion = null) }
+        viewModelScope.launch {
+            invitacionesRepository.generar(idCartera)
                 .onSuccess { invitacion ->
                     _state.update {
                         it.copy(cargandoInvitacion = false, invitacion = invitacion)
@@ -70,7 +100,7 @@ class CarteraDetalleViewModel @Inject constructor(
                             cargandoInvitacion = false,
                             errorInvitacion = mensajeErrorApi(
                                 error,
-                                "No se pudo cargar la invitación."
+                                "No se pudo generar la invitación."
                             )
                         )
                     }
@@ -87,5 +117,6 @@ data class CarteraDetalleUiState(
     val series: SeriesCartera? = null,
     val cargandoInvitacion: Boolean = false,
     val errorInvitacion: String? = null,
-    val invitacion: Invitacion? = null
+    val invitacion: Invitacion? = null,
+    val ingresos: List<IngresoInvitacion> = emptyList()
 )

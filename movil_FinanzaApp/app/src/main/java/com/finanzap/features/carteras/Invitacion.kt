@@ -7,3 +7,14 @@ data class Invitacion(
     val estado: String,
     val expirada: Boolean
 )
+
+data class IngresoInvitacion(
+    val nombre: String,
+    val iniciales: String,
+    val fechaUnion: String?
+)
+
+data class InvitacionesCartera(
+    val invitacion: Invitacion? = null,
+    val ingresos: List<IngresoInvitacion> = emptyList()
+)

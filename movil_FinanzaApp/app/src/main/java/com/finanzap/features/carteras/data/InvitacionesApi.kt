@@ -10,6 +10,9 @@ interface InvitacionesApi {
     @GET("carteras/{idCartera}/invitaciones")
     suspend fun consultar(@Path("idCartera") idCartera: Int): RespuestaInvitaciones
 
+    @POST("carteras/{idCartera}/invitaciones")
+    suspend fun generar(@Path("idCartera") idCartera: Int): RespuestaInvitacionGenerada
+
     @POST("invitaciones/unirse")
     suspend fun unirse(@Body peticion: UnirseRequest): RespuestaUnion
 }

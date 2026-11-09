@@ -46,9 +46,11 @@ import com.finanzap.core.ui.EstadoError
 import com.finanzap.core.ui.PantallaFormulario
 import com.finanzap.core.ui.generarQr
 import com.finanzap.core.util.formatearFechaCorta
+import com.finanzap.core.util.formatearFechaHoraCorta
 import com.finanzap.core.util.formatearMoneda
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
 import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SerieCategoria
@@ -71,8 +73,8 @@ fun CarteraDetalleScreen(
     }
 
     val cartera = state.cartera
-    LaunchedEffect(cartera?.id, cartera?.rol) {
-        if (cartera?.rol == RolEnCartera.PROPIETARIO) {
+    LaunchedEffect(cartera?.id, cartera?.rol, cartera?.estado) {
+        if (cartera?.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA") {
             viewModel.cargarInvitacion(cartera.id)
         }
     }
@@ -81,7 +83,8 @@ fun CarteraDetalleScreen(
         onVolver = onVolver,
         onReintentar = { viewModel.cargar(carteraId) },
         onRegistrarGasto = onRegistrarGasto,
-        onVerTransacciones = onVerTransacciones
+        onVerTransacciones = onVerTransacciones,
+        onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) }
     )
 }
 
@@ -91,7 +94,8 @@ fun CarteraDetalleContenido(
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
-    onVerTransacciones: (Int, String) -> Unit
+    onVerTransacciones: (Int, String) -> Unit,
+    onGenerarInvitacion: () -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -123,8 +127,10 @@ fun CarteraDetalleContenido(
                 resumen = state.resumen,
                 series = state.series,
                 invitacion = state.invitacion,
+                ingresos = state.ingresos,
                 cargandoInvitacion = state.cargandoInvitacion,
-                errorInvitacion = state.errorInvitacion
+                errorInvitacion = state.errorInvitacion,
+                onGenerarInvitacion = onGenerarInvitacion
             )
         }
     }
@@ -138,8 +144,10 @@ private fun DetalleCartera(
     resumen: ResumenCartera?,
     series: SeriesCartera?,
     invitacion: Invitacion?,
+    ingresos: List<IngresoInvitacion>,
     cargandoInvitacion: Boolean,
-    errorInvitacion: String?
+    errorInvitacion: String?,
+    onGenerarInvitacion: () -> Unit
 ) {
     val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
     val totalIngresos = resumen?.totalIngresos ?: 0.0
@@ -283,12 +291,14 @@ private fun DetalleCartera(
 
     GraficaCategorias(series?.gastosPorCategoria.orEmpty())
 
-    if (cartera.rol == RolEnCartera.PROPIETARIO) {
+    if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA") {
         Spacer(modifier = Modifier.height(24.dp))
         InvitacionQrCard(
             invitacion = invitacion,
+            ingresos = ingresos,
             cargando = cargandoInvitacion,
-            error = errorInvitacion
+            error = errorInvitacion,
+            onGenerar = onGenerarInvitacion
         )
     }
 
@@ -486,8 +496,10 @@ private fun Leyenda(color: Color, texto: String) {
 @Composable
 private fun InvitacionQrCard(
     invitacion: Invitacion?,
+    ingresos: List<IngresoInvitacion>,
     cargando: Boolean,
-    error: String?
+    error: String?,
+    onGenerar: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -506,54 +518,111 @@ private fun InvitacionQrCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            when {
-                cargando -> CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
-
-                error != null -> Text(
-                    text = error,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-
-                invitacion == null -> Text(
+            if (invitacion == null) {
+                Text(
                     text = stringResource(R.string.detalle_invitacion_sin_activa),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
-
-                else -> {
-                    val qr = remember(invitacion.qrContenido) {
-                        generarQr(invitacion.qrContenido)
-                    }
-                    if (qr != null) {
-                        Image(
-                            bitmap = qr,
-                            contentDescription = stringResource(R.string.detalle_invitacion_qr_descripcion),
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(180.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    Text(
-                        text = invitacion.codigo,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                Spacer(modifier = Modifier.height(12.dp))
+            } else {
+                val qr = remember(invitacion.qrContenido) {
+                    generarQr(invitacion.qrContenido)
+                }
+                if (qr != null) {
+                    Image(
+                        bitmap = qr,
+                        contentDescription = stringResource(R.string.detalle_invitacion_qr_descripcion),
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(180.dp)
                     )
-                    if (invitacion.fechaExpiracion != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Text(
+                    text = invitacion.codigo,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (invitacion.fechaExpiracion != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.detalle_invitacion_vence,
+                            formatearFechaCorta(invitacion.fechaExpiracion.take(10))
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            BotonPrincipal(
+                texto = stringResource(
+                    if (invitacion == null) {
+                        R.string.detalle_invitacion_generar
+                    } else {
+                        R.string.detalle_invitacion_regenerar
+                    }
+                ),
+                textoCargando = stringResource(R.string.detalle_invitacion_generando),
+                cargando = cargando,
+                onClick = onGenerar
+            )
+
+            if (error != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = stringResource(R.string.detalle_invitacion_ingresos),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (ingresos.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.detalle_invitacion_sin_ingresos),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                ingresos.forEach { ingreso ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = stringResource(
-                                R.string.detalle_invitacion_vence,
-                                formatearFechaCorta(invitacion.fechaExpiracion.take(10))
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = ingreso.nombre,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        if (ingreso.fechaUnion != null) {
+                            Text(
+                                text = formatearFechaHoraCorta(ingreso.fechaUnion),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

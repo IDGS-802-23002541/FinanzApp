@@ -1,11 +1,17 @@
 package com.finanzap.features.carteras.data
 
+import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class RespuestaInvitaciones(
     val data: DatosInvitaciones = DatosInvitaciones()
+)
+
+@Serializable
+data class RespuestaInvitacionGenerada(
+    val data: InvitacionDto = InvitacionDto()
 )
 
 @Serializable
@@ -71,4 +77,10 @@ fun InvitacionDto.aInvitacion(): Invitacion = Invitacion(
     fechaExpiracion = fechaExpiracion,
     estado = estado,
     expirada = expirada
+)
+
+fun IngresoInvitacionDto.aIngreso(): IngresoInvitacion = IngresoInvitacion(
+    nombre = nombre,
+    iniciales = iniciales,
+    fechaUnion = fechaUnion
 )

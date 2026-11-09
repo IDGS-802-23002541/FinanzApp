@@ -80,7 +80,12 @@
     <string name="detalle_sin_datos">Sin datos para mostrar.</string>
     <string name="detalle_error">No se pudo cargar la cartera.</string>
     <string name="detalle_invitacion">Invitación QR</string>
-    <string name="detalle_invitacion_sin_activa">Sin invitación activa. Genérala desde la web.</string>
+    <string name="detalle_invitacion_sin_activa">Aún no hay una invitación activa.</string>
+    <string name="detalle_invitacion_generar">Generar QR</string>
+    <string name="detalle_invitacion_regenerar">Regenerar QR</string>
+    <string name="detalle_invitacion_generando">Generando…</string>
+    <string name="detalle_invitacion_ingresos">Miembros que se unieron</string>
+    <string name="detalle_invitacion_sin_ingresos">Aún nadie se ha unido con este QR.</string>
     <string name="detalle_invitacion_vence">Vence: %1$s</string>
     <string name="detalle_invitacion_qr_descripcion">Código QR de invitación</string>
     <string name="carteras_unirse">Unirse con QR o código</string>

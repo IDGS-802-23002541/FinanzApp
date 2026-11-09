@@ -1,6 +1,7 @@
 package com.finanzap.features.carteras.ui
 
 import com.finanzap.features.carteras.Invitacion
+import com.finanzap.features.carteras.InvitacionesCartera
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,8 +63,11 @@ private class RepositorioFalso : InvitacionesRepository {
 
     var codigoUsado: String? = null
 
-    override suspend fun consultar(idCartera: Int): Result<Invitacion?> =
-        Result.success(null)
+    override suspend fun consultar(idCartera: Int): Result<InvitacionesCartera> =
+        Result.success(InvitacionesCartera())
+
+    override suspend fun generar(idCartera: Int): Result<Invitacion> =
+        Result.failure(UnsupportedOperationException())
 
     override suspend fun unirse(codigo: String): Result<Unit> {
         codigoUsado = codigo
