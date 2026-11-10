@@ -58,7 +58,7 @@ const crearAlVuelo = async (nombre) => {
     setCreando(true)
     setError('')
     try{
-    const nueva = await crearCategoria({idCartera, nombre, tipo})
+    const nueva = await crearCategoria(idCartera,{nombre, tipo})
     const categorias = await listarCategorias(idCartera, tipo)
     setOpciones(categorias)
     onChange(nueva.idCategoria)
