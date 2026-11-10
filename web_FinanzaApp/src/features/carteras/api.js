@@ -131,3 +131,17 @@ export async function crearCategoria(idCartera, {nombre, tipo}){
   })
   return data
 }
+
+// registra un ingreso o gasto, el gasto exige categoriaId 
+export async function crearTransaccion(idCartera, {tipo, monto, fecha,categoriaId, metodoPago,descripcion}){
+  const {data} = await api.post(`/carteras/${idCartera}/transacciones`, {
+    tipo,
+    monto: Number(monto),
+    fecha,
+    // el ingreso usa la catgoria aportaciones del backend, solo el gasto manda id 
+    ...(tipo === 'GASTO' ? {categoriaId: Number(categoriaId)} : {}),
+    metodoPago: metodoPago || undefined,
+    descripcion: descripcion?.trim() || undefined,
+  })
+  return data
+}
