@@ -2,7 +2,11 @@ package com.finanzap.features.carteras.ui
 
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
+import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.RolEnCartera
+import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.TipoCartera
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +114,29 @@ private class RepositorioCarterasFalso : CarterasRepository {
         rol: String?,
         busqueda: String?
     ): Result<List<Cartera>> = carteras()
+
+    override suspend fun detalle(
+        idCartera: Int,
+        periodoId: Int?
+    ): Result<CarteraDetalle> {
+        val error = falla
+        if (error != null) return Result.failure(error)
+        return Result.success(
+            CarteraDetalle(
+                cartera = Cartera(
+                    id = idCartera,
+                    nombre = "Casa",
+                    tipo = TipoCartera.HOGAR,
+                    rol = RolEnCartera.PROPIETARIO
+                ),
+                resumen = ResumenCartera(),
+                series = SeriesCartera()
+            )
+        )
+    }
+
+    override suspend fun periodos(idCartera: Int): Result<List<PeriodoCartera>> =
+        Result.success(emptyList())
 
     override suspend fun crear(
         nombre: String,

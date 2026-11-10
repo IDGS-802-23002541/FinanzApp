@@ -10,6 +10,12 @@
     <string name="comun_ocultar_contrasena">Ocultar contraseña</string>
     <string name="comun_volver">Volver</string>
     <string name="comun_guardando">Guardando…</string>
+    <string name="comun_crear">Crear</string>
+    <string name="comun_editar">Editar</string>
+    <string name="comun_eliminar">Eliminar</string>
+    <string name="comun_guardar">Guardar</string>
+    <string name="comun_anterior">Anterior</string>
+    <string name="comun_siguiente">Siguiente</string>
     <string name="comun_pendiente_titulo">Próximamente</string>
     <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
     <string name="menu_abrir">Abrir menú</string>
@@ -65,6 +71,35 @@
 
     <!-- Carteras -->
     <string name="carteras_titulo">Carteras</string>
+    <string name="detalle_titulo">Detalle de cartera</string>
+    <string name="detalle_estado">Estado</string>
+    <string name="detalle_presupuesto">Presupuesto inicial</string>
+    <string name="detalle_graficas">Gráficas</string>
+    <string name="detalle_colaboradores">Colaboradores</string>
+    <string name="detalle_rol_colaborador">Colaborador</string>
+    <string name="detalle_periodo">Periodo</string>
+    <string name="detalle_periodo_todos">Todos</string>
+    <string name="detalle_ingresos_vs_egresos">Ingresos vs egresos</string>
+    <string name="detalle_gastos_categoria">Gastos por categoría</string>
+    <string name="detalle_sin_datos">Sin datos para mostrar.</string>
+    <string name="detalle_error">No se pudo cargar la cartera.</string>
+    <string name="detalle_invitacion">Invitación QR</string>
+    <string name="detalle_invitacion_sin_activa">Aún no hay una invitación activa.</string>
+    <string name="detalle_invitacion_generar">Generar QR</string>
+    <string name="detalle_invitacion_regenerar">Regenerar QR</string>
+    <string name="detalle_invitacion_generando">Generando…</string>
+    <string name="detalle_invitacion_ingresos">Miembros que se unieron</string>
+    <string name="detalle_invitacion_sin_ingresos">Aún nadie se ha unido con este QR.</string>
+    <string name="detalle_invitacion_vence">Vence: %1$s</string>
+    <string name="detalle_invitacion_qr_descripcion">Código QR de invitación</string>
+    <string name="carteras_unirse">Unirse con QR o código</string>
+    <string name="unirse_titulo">Unirse a cartera</string>
+    <string name="unirse_descripcion">Escanea el QR o ingresa el código de 8 caracteres.</string>
+    <string name="unirse_codigo">Código de invitación</string>
+    <string name="unirse_escanear">Escanear QR</string>
+    <string name="unirse_accion">Unirme</string>
+    <string name="unirse_error_codigo">Ingresa un código válido de 8 caracteres.</string>
+    <string name="unirse_error_escaner">No se pudo leer el QR. Intenta de nuevo.</string>
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
     <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
     <string name="carteras_cerrar_sesion">Cerrar sesión</string>
@@ -92,9 +127,38 @@
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
 
+    <!-- Transacciones -->
+    <string name="transaccion_titulo">Nueva transacción</string>
+    <string name="transacciones_titulo">Transacciones</string>
+    <string name="transacciones_vacio_titulo">Sin transacciones</string>
+    <string name="transacciones_vacio_mensaje">Cuando registres un ingreso o gasto aparecerá aquí.</string>
+    <string name="transacciones_ingresos">Ingresos</string>
+    <string name="transacciones_gastos">Gastos</string>
+    <string name="transacciones_balance">Balance</string>
+    <string name="transacciones_pagina">Página %1$d de %2$d</string>
+    <string name="transacciones_ver">Ver transacciones</string>
+    <string name="transacciones_editar_titulo">Editar transacción</string>
+    <string name="transacciones_eliminar_titulo">Eliminar transacción</string>
+    <string name="transacciones_eliminar_mensaje">¿Eliminar esta transacción? Dejará de contar en el saldo.</string>
+    <string name="transacciones_categoria_actual">Categoría: %1$s</string>
+    <string name="transacciones_sin_categoria">Sin categoría</string>
+    <string name="transaccion_tipo">Tipo</string>
+    <string name="transaccion_ingreso">Ingreso</string>
+    <string name="transaccion_gasto">Gasto</string>
+    <string name="transaccion_monto">Monto</string>
+    <string name="transaccion_categoria">Categoría</string>
+    <string name="transaccion_fecha">Fecha</string>
+    <string name="transaccion_descripcion">Descripción (opcional)</string>
+    <string name="transaccion_guardar">Guardar transacción</string>
+    <string name="transaccion_pendiente_titulo">Vista previa</string>
+    <string name="transaccion_pendiente_mensaje">La lógica de guardado se implementará con el equipo.</string>
+    <string name="categoria_buscar">Buscar o crear categoría</string>
+    <string name="categoria_crear">Crear «%1$s»</string>
+    <string name="categoria_confirmar_titulo">Crear categoría</string>
+    <string name="categoria_confirmar_mensaje">¿Agregar «%1$s» a tus categorías?</string>
+
     <!-- Nueva cartera -->
-    <string name="nueva_cartera_titulo">Nueva cartera</string>
-    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
+    <string name="nueva_cartera_titulo">Nueva cartera</string>    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
     <string name="nueva_cartera_tipo">Tipo de cartera</string>
     <string name="nueva_cartera_descripcion">Descripción (opcional)</string>
     <string name="nueva_cartera_presupuesto">Presupuesto inicial (opcional)</string>

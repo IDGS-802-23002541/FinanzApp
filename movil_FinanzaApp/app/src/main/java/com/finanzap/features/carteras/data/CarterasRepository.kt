@@ -1,6 +1,8 @@
 package com.finanzap.features.carteras.data
 
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.CarteraDetalle
+import com.finanzap.features.carteras.PeriodoCartera
 import com.finanzap.features.carteras.TipoCartera
 
 /**
@@ -10,6 +12,10 @@ import com.finanzap.features.carteras.TipoCartera
 interface CarterasRepository {
 
     suspend fun carteras(): Result<List<Cartera>>
+
+    suspend fun detalle(idCartera: Int, periodoId: Int? = null): Result<CarteraDetalle>
+
+    suspend fun periodos(idCartera: Int): Result<List<PeriodoCartera>>
 
     suspend fun carterasConFiltros(
         estado: String? = null,

@@ -9,10 +9,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.finanzap.R
 import com.finanzap.core.ui.LocalAbrirMenu
 import com.finanzap.core.ui.MenuLateral
@@ -22,8 +24,12 @@ import com.finanzap.features.auth.ui.CambiarContrasenaScreen
 import com.finanzap.features.auth.ui.LoginScreen
 import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
+import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
+import com.finanzap.features.carteras.ui.UnirseCarteraScreen
 import com.finanzap.features.carteras.ui.NuevaCarteraScreen
+import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
+import com.finanzap.features.transacciones.ui.TransaccionesScreen
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -124,7 +130,66 @@ fun FinanzAppNavHost(
 
                 composable(Rutas.Carteras) {
                     CarterasScreen(
-                        onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) }
+                        onNuevaCartera = { navController.navigate(Rutas.NuevaCartera) },
+                        onAbrirCartera = { cartera ->
+                            navController.navigate(Rutas.carteraDetalle(cartera.id))
+                        },
+                        onUnirseCartera = {
+                            navController.navigate(Rutas.UnirseCartera)
+                        },
+                        onRegistrarGasto = { cartera ->
+                            navController.navigate(
+                                Rutas.nuevaTransaccion(cartera.id, cartera.nombre)
+                            )
+                        }
+                    )
+                }
+
+                composable(
+                    route = Rutas.CarteraDetalle,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType }
+                    )
+                ) { entrada ->
+                    CarteraDetalleScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        onVolver = { navController.popBackStack() },
+                        onRegistrarGasto = { id, nombre ->
+                            navController.navigate(Rutas.nuevaTransaccion(id, nombre))
+                        },
+                        onVerTransacciones = { id, nombre, puedeEditar ->
+                            navController.navigate(
+                                Rutas.transacciones(id, nombre, puedeEditar)
+                            )
+                        }
+                    )
+                }
+
+                composable(
+                    route = Rutas.Transacciones,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType },
+                        navArgument("nombre") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                        navArgument("puedeEditar") {
+                            type = NavType.BoolType
+                            defaultValue = false
+                        }
+                    )
+                ) { entrada ->
+                    TransaccionesScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.UnirseCartera) {
+                    UnirseCarteraScreen(
+                        onVolver = { navController.popBackStack() }
                     )
                 }
 
@@ -155,6 +220,23 @@ fun FinanzAppNavHost(
                     )
                 }
 
+                composable(
+                    route = Rutas.NuevaTransaccion,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType },
+                        navArgument("nombre") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }
+                    )
+                ) { entrada ->
+                    RegistrarTransaccionScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
                 composable(Rutas.Reportes) {
                     PantallaPendiente(
                         titulo = stringResource(R.string.reportes_titulo),
@@ -179,7 +261,11 @@ fun FinanzAppNavHost(
 
 private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Carteras,
-    Rutas.NuevaCartera -> SeccionMenu.CARTERAS
+    Rutas.NuevaCartera,
+    Rutas.CarteraDetalle,
+    Rutas.UnirseCartera,
+    Rutas.Transacciones,
+    Rutas.NuevaTransaccion -> SeccionMenu.CARTERAS
 
     Rutas.Reportes -> SeccionMenu.REPORTES
     Rutas.Soporte -> SeccionMenu.SOPORTE
