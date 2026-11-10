@@ -19,9 +19,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // 10.0.2.2 apunta al localhost del equipo desde el emulador.
-        // Cambiar por la URL de producción cuando exista.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000/\"")
+        // URL del backend desplegado en Azure.
+        buildConfigField("String", "API_BASE_URL", "\"https://finanzapp.vellumdigitall.online/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

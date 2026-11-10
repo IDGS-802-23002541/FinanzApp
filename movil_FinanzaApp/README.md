@@ -84,7 +84,7 @@ Todas las pantallas siguen la misma forma, para que una feature nueva se lea igu
 
 1. Abrir la carpeta `movil_FinanzaApp/` en Android Studio (el proyecto base ya está en el repo).
 2. Sincronizar Gradle y ejecutar en un emulador o dispositivo.
-3. Configurar la URL de la API (`10.0.2.2` apunta al localhost de la máquina en el emulador).
+3. La app apunta por defecto a `https://finanzapp.vellumdigitall.online/`. Para usar el backend local, cambia `API_BASE_URL` en `app/build.gradle.kts` a `http://10.0.2.2:5000/`.
 
 ## Reglas
 
