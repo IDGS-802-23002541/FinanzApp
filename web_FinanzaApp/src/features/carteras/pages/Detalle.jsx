@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
+import { listarTransacciones } from '../../transacciones/api.js'
 import TarjetaResumen from '../components/TarjetaResumen.jsx'
 import GraficaBarras from '../components/GraficaBarras.jsx'
 import GraficaDona from '../components/GraficaDona.jsx'
@@ -20,6 +21,8 @@ import {
   IconoCasa,
   IconoEstrella,
 } from '../../../components/ui/Iconos.jsx'
+import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
+import UltimasTransacciones from '../components/UltimasTransacciones.jsx'
 
 function DetalleCartera() {
   const { id } = useParams()
@@ -27,6 +30,10 @@ function DetalleCartera() {
   const [cartera, setCartera] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [ultimas, setUltimas] = useState([])
+  const [errorUltimas, setErrorUltimas] = useState('')
+  const [modalAbierto, setModalAbierto] = useState(false)
+  const [recarga, setRecarga] = useState(0)
 
   useEffect(() => {
     let vigente = true
@@ -34,10 +41,22 @@ function DetalleCartera() {
     const cargar = async () => {
       setCargando(true)
       setError('')
+      setErrorUltimas('')
+      setUltimas([])
 
       try {
-        const datos = await obtenerCartera(id)
-        if (vigente) setCartera(datos)
+        const [datos, movimientos] = await Promise.all([
+          obtenerCartera(id),
+          // Si fallan las transacciones, la cartera igual se muestra.
+          listarTransacciones(id, { porPagina: 5 }).catch((err) => {
+            if (vigente) setErrorUltimas(err.message)
+            return null
+          }),
+        ])
+        if (vigente) {
+          setCartera(datos)
+          setUltimas(movimientos?.items ?? [])
+        }
       } catch (err) {
         if (vigente) setError(err.message)
       } finally {
@@ -50,7 +69,7 @@ function DetalleCartera() {
     return () => {
       vigente = false
     }
-  }, [id])
+  }, [id, recarga])
 
   if (cargando) {
     return (
@@ -69,6 +88,7 @@ function DetalleCartera() {
   }
 
   const { resumen, series, colaboradores } = cartera
+  const esHogar = cartera.categoria === 'Hogar'
   const sinMovimientos = resumen.totalIngresos === 0 && resumen.totalGastos === 0
 
   const gruposBarras = series.ingresosVsEgresos.slice(-6).map((fila) => ({
@@ -120,6 +140,15 @@ function DetalleCartera() {
             }}
           />
         </Box>
+
+        <Button
+          variant="contained"
+          onClick={() => setModalAbierto(true)}
+          disabled={cartera.estatus !== 'Activa'}
+          sx={{ ml: 'auto' }}
+        >
+          Registrar transacción
+        </Button>
       </Box>
 
       {colaboradores.length > 0 && (
@@ -157,12 +186,21 @@ function DetalleCartera() {
           gap: 2,
         }}
       >
-        <TarjetaResumen
-          etiqueta="Presupuesto"
-          monto={resumen.presupuestoInicial}
-          Icono={IconoCartera}
-          fondo="var(--color-superficie-suave)"
-        />
+        {esHogar ? (
+          <TarjetaResumen
+            etiqueta="Ingresos"
+            monto={resumen.totalIngresos}
+            Icono={IconoCartera}
+            fondo="var(--color-superficie-suave)"
+          />
+        ) : (
+          <TarjetaResumen
+            etiqueta="Presupuesto"
+            monto={resumen.presupuestoInicial}
+            Icono={IconoCartera}
+            fondo="var(--color-superficie-suave)"
+          />
+        )}
         <TarjetaResumen
           etiqueta="Gastado"
           monto={resumen.totalGastos}
@@ -211,6 +249,19 @@ function DetalleCartera() {
           datos={series.gastosPorCategoria}
         />
       </Box>
+
+      <UltimasTransacciones items={ultimas} error={errorUltimas} />
+
+      {modalAbierto && (
+        <DialogoNuevaTransaccion
+          idCartera={id}
+          onCerrar={() => setModalAbierto(false)}
+          onCreada={() => {
+            setModalAbierto(false)
+            setRecarga((n) => n + 1)
+          }}
+        />
+      )}
     </Stack>
   )
 }
