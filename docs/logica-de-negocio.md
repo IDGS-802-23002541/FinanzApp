@@ -19,7 +19,7 @@ correcciones acordadas respecto al prototipo actual.
 
 | Término | Significado |
 | --- | --- |
-| **Cartera** | Espacio financiero colaborativo (Hogar, Viaje, Evento u Otro) con movimientos, miembros y presupuesto. |
+| **Cartera** | Espacio financiero colaborativo (Hogar, Viaje, Evento u Otro) con movimientos, miembros y, según el tipo, presupuesto y/o periodos. |
 | **Movimiento / Transacción** | Ingreso o gasto registrado en una cartera, con monto, categoría, fecha, descripción y comprobante opcional. |
 | **Contribuyente** | Usuario que participa en una cartera aportando o registrando movimientos. |
 | **Periodo** | División temporal de una cartera **Hogar** (frecuencia quincenal, mensual, etc.) con fecha de inicio y fin. |
@@ -95,7 +95,7 @@ La app móvil resuelve el paso 2 y 3 en una sola pantalla; la web puede separarl
 Catálogo global del sistema: **Hogar**, **Viaje**, **Evento**, **Otro**.
 
 ### 4.2 Atributos
-Nombre, descripción, presupuesto inicial (opcional), fechas de vigencia y tipo.
+Nombre, descripción, presupuesto inicial (solo Viaje/Evento/Otro), fechas de vigencia y tipo.
 
 ### 4.3 Estados y ciclo de vida (cambio clave)
 
@@ -117,17 +117,18 @@ Reglas:
 - Por **pertenencia**: *Mis carteras* (soy propietario/administrador) vs. *Carteras en las que participo* (soy contribuyente).
 - Por **tipo** y búsqueda **por nombre**.
 
-### 4.5 Periodos (exclusivo Cartera Hogar) — cambio clave
-- Configuración de **frecuencia de ingreso/presupuesto** (ej. quincenal, mensual).
+### 4.5 Periodos (exclusivo Cartera Hogar)
+- Un **periodo** es la ventana de tiempo en la que entra dinero de forma constante. La **frecuencia** (semanal, quincenal, mensual) define cómo se repiten esos periodos. **Un periodo no es un presupuesto.**
 - La cartera se divide en **periodos** con `fechaInicio` y `fechaFin`; **se marca cuál está activo**.
 - Los movimientos, transacciones y ahorros se **asocian a un periodo específico**.
-- Solo las carteras **Hogar** tienen periodos; Viaje/Evento usan fecha de vigencia.
+- Solo las carteras **Hogar** tienen periodos; Viaje/Evento usan fecha de vigencia y presupuesto.
+- **Presupuesto ≠ periodo:** el presupuesto es un monto definido antes de iniciar algo (viaje/evento) para limitar el gasto. Hogar no usa presupuesto; se mantiene en 0.
 
 ---
 
 ## 5. Módulo 4 — Detalle de cartera
 
-- Resumen: presupuesto, gastado, disponible, avance y gráficas (Ingreso vs. Egreso, gastos por categoría).
+- Resumen según tipo: **Hogar** muestra ingresos, gastado y disponible (sin presupuesto); **Viaje/Evento/Otro** muestran presupuesto, gastado y disponible. Además, avance y gráficas (Ingreso vs. Egreso, gastos por categoría).
 - **Contribuyentes:** lista con roles, aporte comprometido, movimientos y saldo.
 - **Invitación QR** (ver §6).
 - **Cierre de cartera / balance:** saldos por integrante y **liquidación sugerida**.
@@ -175,7 +176,7 @@ Monto, categoría, fecha, descripción y **fotografía/comprobante** (opcional, 
 
 ### 7.4 Visualización
 - **Paginación** de transacciones.
-- **Filtrado dinámico por periodo presupuestal** (carteras Hogar), además de tipo, categoría y texto.
+- **Filtrado dinámico por periodo de ingreso** (carteras Hogar), además de tipo, categoría y texto.
 
 ---
 

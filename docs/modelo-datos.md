@@ -37,23 +37,19 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | icono | string | |
 | color | string | |
 
-### 1.3 `Cartera`
+### 1.3 `Cartera` (tabla `CARTERA`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idCartera | int PK | |
-| nombreCartera | string | |
-| descripcion | string | |
-| idCategoriaCartera | int FK | Tipo de cartera |
-| idPropietario | int FK | Dueño/administrador original |
-| presupuestoInicial | decimal? | Opcional |
-| **estado** | enum | `ACTIVA` \| `ARCHIVADA` (= inactiva) \| `FINALIZADA`. **Finalizada solo Viaje/Evento** |
-| fechaCreacion | datetime | |
-| fechaInicio | date? | Vigencia |
-| fechaFin | date? | Vigencia |
-| fechaCierre | datetime? | Al finalizar |
-| **fechaBaja** | datetime? | **Nuevo** (baja lógica) |
-| codigoInvitacion | string | **8 caracteres** |
-| color | string | |
+| nombre | string(100) | NOT NULL |
+| descripcion | string(500)? | |
+| presupuestoInicial | decimal(12,2) | NOT NULL, default 0; no aplica a Hogar |
+| tipo | string(10) | NOT NULL, default `OTRA`; `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRO` |
+| fechaCreacion | datetime | NOT NULL, default `sysutcdatetime()` |
+| fechaInicio | date? | Vigencia (Viaje/Evento/Otro) |
+| fechaFin | date? | Vigencia (Viaje/Evento/Otro) |
+| estado | string(12) | NOT NULL, default `ACTIVA`; `ACTIVA` \| `ARCHIVADA` \| `FINALIZADA` |
+| versionFila | rowversion | NOT NULL, control de concurrencia |
 
 ### 1.4 `MiembroCartera`
 | Campo | Tipo | Notas |
