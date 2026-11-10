@@ -5,8 +5,17 @@ import { limpiarSesion } from '../services/apiClient.js'
 
 function leerUsuarioGuardado() {
   try {
+    const token = localStorage.getItem('token')
+    const refreshToken = localStorage.getItem('refreshToken')
     const guardado = localStorage.getItem('usuario')
-    return guardado ? JSON.parse(guardado) : null
+
+    // Sin ambos tokens no se puede renovar; se evita un 401 al recargar.
+    if (!token || !refreshToken || !guardado) {
+      limpiarSesion()
+      return null
+    }
+
+    return JSON.parse(guardado)
   } catch {
     // Si el dato guardado está corrupto se descarta la sesión.
     limpiarSesion()
