@@ -703,7 +703,8 @@ paths:
         saldo y totales, y las series para las gráficas (ingresos vs egresos
         por periodo y gastos por categoría). Las transacciones eliminadas no
         se incluyen. Si se envía periodoId, se agrega resumenPeriodo y los
-        gastos por categoría se filtran a ese periodo.
+        gastos por categoría se filtran a ese periodo. Si la cartera está
+        FINALIZADA, se agrega balance total, por categoría y por participante.
       operationId: obtenerDetalleCartera
       security:
         - bearerAuth: []
@@ -2516,6 +2517,8 @@ components:
               $ref: '#/components/schemas/ResumenPeriodo'
             series:
               $ref: '#/components/schemas/SeriesCartera'
+            balance:
+              $ref: '#/components/schemas/BalanceCierre'
     Invitacion:
       type: object
       properties:

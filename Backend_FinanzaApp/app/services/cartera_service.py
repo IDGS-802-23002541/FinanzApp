@@ -454,6 +454,19 @@ def listar(estado="ACTIVA", tipo="", rol="", busqueda=""):
     }, 200
 
 
+def _con_balance(data, cartera, id_cartera):
+    # Al recargar una cartera finalizada se necesita el balance completo.
+    if cartera.estado != "FINALIZADA":
+        return data
+
+    from app.services import cartera_detalle_service
+
+    balance = cartera_detalle_service.balance(id_cartera)
+    balance["presupuestoInicial"] = float(cartera.presupuestoInicial or 0)
+    data["balance"] = balance
+    return data
+
+
 def obtener(id_cartera):
     fila = _membresia(id_cartera)
     if fila is None:
@@ -463,12 +476,13 @@ def obtener(id_cartera):
         from app.services import cartera_detalle_service
 
         detalle = cartera_detalle_service.resumen_y_series(cartera, None)
+        data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
+        data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
+        data.update(detalle)
+        data = _con_balance(data, cartera, id_cartera)
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo obtener la cartera."}, 503
-    data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
-    data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
-    data.update(detalle)
     return {
         "ok": True,
         "data": data,
@@ -491,6 +505,7 @@ def detalle(id_cartera, periodo_id=None):
         data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
         data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
         data.update(detalle)
+        data = _con_balance(data, cartera, id_cartera)
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo obtener la cartera."}, 503
