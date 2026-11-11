@@ -23,10 +23,7 @@ function InvitacionQR() {
   const esPropietario = cartera.rol === 'Propietario'
 
   useEffect(() => {
-    if (!esPropietario) {
-      setCargando(false)
-      return undefined
-    }
+    if (!esPropietario) return undefined
 
     let vigente = true
     const cargar = async () => {
