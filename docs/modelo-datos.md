@@ -134,18 +134,37 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 > constraints e índices de `CARTERA` y `MIEMBROS_CARTERA`. Las FK se mantienen
 > sin `CASCADE` porque la baja de carteras es lógica.
 
-### 2.2 `PagoRecurrente`
+### 2.2 `PagoRecurrente` (tabla real: `PAGOS_RECURRENTES`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idPagoRecurrente | int PK | |
-| idCartera | int FK | |
-| idCategoria | int FK | Ver §1.6 | |
-| descripcion | string | |
-| monto | decimal | |
-| periodicidad | enum | `semanal` \| `quincenal` \| `mensual` \| `anual` |
-| proximoVencimiento | date | |
-| estado | enum | `pendiente` \| `hecho` |
-| fechaHecho | datetime? | |
+| carteraId | int FK | Debe ser miembro activo |
+| usuarioId | int FK | Autor del pago |
+| categoriaId | int FK? | |
+| nombre | string | |
+| descripcion | string? | |
+| monto | decimal | Mayor a 0 (`CK_PAGOS_RECURRENTES_monto`) |
+| frecuencia | enum | `DIARIO` \| `SEMANAL` \| `MENSUAL` \| `ANUAL` |
+| fechaInicio | date | |
+| fechaFin | date? | `null` o posterior a `fechaInicio` |
+| proximaEjecucion | date | Próximo vencimiento |
+| estado | enum | `ACTIVO` \| `PAUSADO` \| `CANCELADO` |
+| fechaCreacion | datetime | Inmutable |
+
+### 2.2.1 `PagoRecEjecucion` (tabla real: `PAGOS_REC_EJECUCIONES`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idEjecucion | int PK | |
+| pagoRecurrenteId | int FK | |
+| transaccionId | int FK? | Gasto generado al marcar 'Hecho' |
+| fechaProgramada | date | Única por pago (`UQ_PAGOS_REC_EJECUCIONES_fecha`) |
+| fechaEjecucion | datetime? | |
+| monto | decimal | Mayor a 0 |
+| estado | enum | `PENDIENTE` \| `EJECUTADO` \| `FALLIDO` \| `OMITIDO` |
+| mensajeError | string? | |
+
+> Migración `SQL/migracion_t169_pagos.sql`; las FK no usan `CASCADE` porque las
+> bajas son lógicas.
 
 ### 2.3 `TicketSoporte`
 | Campo | Tipo | Notas |
