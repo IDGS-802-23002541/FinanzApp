@@ -13,6 +13,8 @@ tags:
     description: Creación y consulta de carteras
   - name: Reportes
     description: Vista previa y exportación de reportes
+  - name: Comentarios
+    description: Alta de comentarios desde la landing y buzón para el staff
 paths:
   /auth/registro:
     post:
@@ -1867,6 +1869,108 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /comentarios:
+    post:
+      tags:
+        - Comentarios
+      summary: Enviar un comentario desde la landing
+      description: >-
+        Endpoint público (sin sesión). Valida nombre, correo y mensaje, y aplica
+        un límite anti-spam de 3 comentarios por IP cada 10 minutos.
+      operationId: crearComentario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComentarioRequest'
+            example:
+              nombre: Aideé Casillas
+              correo: aidee@ejemplo.com
+              comentario: Me gustó la app, ¿tienen versión de escritorio?
+      responses:
+        '201':
+          description: Comentario registrado con estado PENDIENTE
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Comentario'
+                  mensaje:
+                    type: string
+                    example: Comentario creado correctamente.
+        '400':
+          description: >-
+            Datos inválidos: campos faltantes o vacíos, longitudes excedidas
+            (nombre 120, correo 254, comentario 2000) o correo mal formado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Límite de comentarios por IP excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo guardar el comentario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Comentarios
+      summary: Ver el buzón de comentarios de la landing
+      description: >-
+        Devuelve todos los comentarios enviados desde la landing, del más
+        reciente al más antiguo. Solo para staff (ADMIN o TRABAJADOR). No
+        expone la IP de origen.
+      operationId: listarComentarios
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Buzón de comentarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comentario'
+                  mensaje:
+                    type: string
+                    example: Comentarios obtenidos correctamente.
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es ADMIN ni TRABAJADOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener los comentarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -2953,3 +3057,50 @@ components:
         mensaje:
           type: string
           example: Te uniste a la cartera correctamente.
+    ComentarioRequest:
+      type: object
+      required:
+        - nombre
+        - correo
+        - comentario
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+          example: Aideé Casillas
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: aidee@ejemplo.com
+        comentario:
+          type: string
+          maxLength: 2000
+          example: Me gustó la app, ¿tienen versión de escritorio?
+    Comentario:
+      type: object
+      properties:
+        idComentario:
+          type: integer
+          example: 12
+        nombre:
+          type: string
+          example: Aideé Casillas
+        correo:
+          type: string
+          example: aidee@ejemplo.com
+        comentario:
+          type: string
+          example: Me gustó la app, ¿tienen versión de escritorio?
+        estado:
+          type: string
+          enum:
+            - PENDIENTE
+            - ATENDIDO
+            - ARCHIVADO
+          example: PENDIENTE
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-11-11T18:30:00'
+
