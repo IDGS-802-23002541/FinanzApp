@@ -13,6 +13,7 @@ construye **desde cero**.
 - **Lenguaje: JavaScript** (no TypeScript): componentes y módulos en `.jsx`/`.js`.
 - Estado global con **zustand** (stores por dominio).
 - Enrutado con **react-router-dom**.
+- QR de invitaciones con **react-qr-code** (aprobada en Sprint 3, tarea #252).
 - Gráficas con los componentes propios (`components/charts.jsx`).
 - Consumo de la API del [backend](./backend.md); sesión por **JWT**.
 
