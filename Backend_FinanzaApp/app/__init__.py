@@ -30,6 +30,7 @@ def create_app():
     from app.routes.invitaciones import invitaciones_bp
     from app.routes.transacciones import transacciones_bp
     from app.routes.comentarios import comentarios_bp
+    from app.routes.reportes import reportes_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(carteras_bp)
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(invitaciones_bp)
     app.register_blueprint(transacciones_bp)
     app.register_blueprint(comentarios_bp)
+    app.register_blueprint(reportes_bp)
 
     @jwt.user_lookup_loader
     def cargar_usuario(_jwt_header, jwt_data):

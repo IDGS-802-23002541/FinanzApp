@@ -13,6 +13,8 @@ tags:
     description: Creación y consulta de carteras
   - name: Comentarios
     description: Alta de comentarios desde la landing y buzón para el staff
+  - name: Reportes
+    description: Vista previa y exportación de reportes
 paths:
   /auth/registro:
     post:
@@ -1313,6 +1315,302 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: No se pudieron obtener los comentarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reportes:
+    get:
+      tags:
+        - Reportes
+      summary: Vista previa del reporte con filtros
+      description: >-
+        Devuelve los indicadores y las series que alimentan la vista previa del
+        reporte. Solo considera carteras donde el usuario es propietario y que
+        no estén archivadas, y transacciones no eliminadas. Los filtros se
+        pueden combinar: cartera, tipo de cartera, periodo, rango de fechas y
+        cantidad de categorías en la gráfica.
+      operationId: vistaPreviaReporte
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: carteraId
+          required: false
+          description: Limita el reporte a una cartera del propietario.
+          schema:
+            type: integer
+        - in: query
+          name: tipo
+          required: false
+          description: Filtra por tipo de cartera.
+          schema:
+            type: string
+            enum:
+              - HOGAR
+              - VIAJE
+              - EVENTO
+              - OTRO
+        - in: query
+          name: periodoId
+          required: false
+          description: Periodo de la cartera indicada en carteraId.
+          schema:
+            type: integer
+        - in: query
+          name: fechaInicio
+          required: false
+          description: Fecha inicial en formato YYYY-MM-DD.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: fechaFin
+          required: false
+          description: Fecha final en formato YYYY-MM-DD (incluida).
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: cantidad
+          required: false
+          description: Número de categorías en la gráfica (1 a 50, por defecto 5).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 5
+      responses:
+        '200':
+          description: Vista previa del reporte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      hayDatos:
+                        type: boolean
+                        example: true
+                      filtros:
+                        type: object
+                        properties:
+                          carteraId:
+                            type: integer
+                            nullable: true
+                          tipo:
+                            type: string
+                            nullable: true
+                            example: HOGAR
+                          periodoId:
+                            type: integer
+                            nullable: true
+                          fechaInicio:
+                            type: string
+                            nullable: true
+                            example: '2026-11-01'
+                          fechaFin:
+                            type: string
+                            nullable: true
+                            example: '2026-11-30'
+                          cantidad:
+                            type: integer
+                            example: 5
+                      carteras:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 4
+                            nombre:
+                              type: string
+                              example: Casa Aidee
+                            tipo:
+                              type: string
+                              example: HOGAR
+                      indicadores:
+                        type: object
+                        properties:
+                          totalIngresos:
+                            type: number
+                            example: 1500.0
+                          totalGastos:
+                            type: number
+                            example: 250.0
+                          ahorro:
+                            type: number
+                            example: 1250.0
+                          totalAportes:
+                            type: number
+                            example: 1500.0
+                          movimientos:
+                            type: integer
+                            example: 2
+                      graficas:
+                        type: object
+                        properties:
+                          gastosPorCategoria:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                categoria:
+                                  type: string
+                                  example: Garnachas
+                                monto:
+                                  type: number
+                                  example: 250.0
+                                porcentaje:
+                                  type: number
+                                  example: 100.0
+                          ingresosVsEgresos:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                periodo:
+                                  type: string
+                                  example: '2026-11'
+                                ingresos:
+                                  type: number
+                                  example: 1500.0
+                                gastos:
+                                  type: number
+                                  example: 250.0
+                  mensaje:
+                    type: string
+                    example: Vista previa del reporte generada correctamente.
+        '400':
+          description: >-
+            Filtros inválidos: tipo desconocido, cantidad fuera de rango, fechas
+            mal formadas, rango invertido o periodo sin cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: La cartera no existe o el usuario no es su propietario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo generar la vista previa del reporte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reportes/exportar:
+    get:
+      tags:
+        - Reportes
+      summary: Generar y descargar el reporte
+      description: >-
+        Genera el archivo del reporte con los mismos filtros de la vista previa.
+        Devuelve un archivo CSV (UTF-8 con BOM para Excel) cuyo encabezado
+        incluye cartera(s), periodo, fecha de generación y totales. Solo
+        considera carteras donde el usuario es propietario, no archivadas, y
+        transacciones no eliminadas.
+      operationId: exportarReporte
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: formato
+          required: false
+          description: Formato del archivo. Por ahora solo CSV.
+          schema:
+            type: string
+            enum:
+              - CSV
+            default: CSV
+        - in: query
+          name: carteraId
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: tipo
+          required: false
+          schema:
+            type: string
+            enum:
+              - HOGAR
+              - VIAJE
+              - EVENTO
+              - OTRO
+        - in: query
+          name: periodoId
+          required: false
+          description: Requiere carteraId.
+          schema:
+            type: integer
+        - in: query
+          name: fechaInicio
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: fechaFin
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Archivo CSV del reporte
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Nombre del archivo, p. ej. reporte_20261111.csv
+              schema:
+                type: string
+        '400':
+          description: >-
+            Formato no disponible o filtros inválidos (tipo, fechas, periodo
+            sin cartera)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: La cartera no existe o el usuario no es su propietario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Sin datos para los filtros seleccionados; no se genera archivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo generar el reporte
           content:
             application/json:
               schema:
