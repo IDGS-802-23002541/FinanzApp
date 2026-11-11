@@ -16,13 +16,18 @@ def eliminar(id_cartera, id_usuario):
     if membresia.rol != "ADMIN":
         return {
             "ok": False,
-            "mensaje": "Solo el propietario o administrador puede eliminar colaboradores.",
+            "mensaje": (
+                "Solo el propietario o administrador puede eliminar "
+                "colaboradores."
+            ),
         }, 403
 
     if cartera.estado != "ACTIVA":
         return {
             "ok": False,
-            "mensaje": "Solo se pueden eliminar colaboradores de una cartera activa.",
+            "mensaje": (
+                "Solo se pueden eliminar colaboradores de una cartera activa."
+            ),
         }, 409
 
     if id_usuario == current_user.idUsuario:
@@ -46,7 +51,10 @@ def eliminar(id_cartera, id_usuario):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo eliminar al colaborador."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo eliminar al colaborador.",
+        }, 503
 
     return {
         "ok": True,
@@ -68,7 +76,10 @@ def salir(id_cartera):
     if membresia.rol == "ADMIN":
         return {
             "ok": False,
-            "mensaje": "El propietario no puede salir de la cartera; debe delegar o cerrarla.",
+            "mensaje": (
+                "El propietario no puede salir de la cartera; debe delegar "
+                "o cerrarla."
+            ),
         }, 409
 
     if cartera.estado != "ACTIVA":

@@ -75,21 +75,36 @@ def registrar(datos):
         if not valor
     ]
     if faltantes:
-        return {"ok": False, "mensaje": f"Faltan campos: {', '.join(faltantes)}."}, 400
-    if len(nombre) > 80 or len(apaterno) > 80 or (amaterno and len(amaterno) > 80):
+        return {
+            "ok": False,
+            "mensaje": f"Faltan campos: {', '.join(faltantes)}.",
+        }, 400
+    if (
+        len(nombre) > 80
+        or len(apaterno) > 80
+        or (amaterno and len(amaterno) > 80)
+    ):
         return {
             "ok": False,
             "mensaje": "El nombre o los apellidos superan 80 caracteres.",
         }, 400
     if len(correo) > 254:
-        return {"ok": False, "mensaje": "El correo supera 254 caracteres."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El correo supera 254 caracteres.",
+        }, 400
     if not validacion.correo_valido(correo):
-        return {"ok": False, "mensaje": "El correo no tiene un formato válido."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
     requisitos = validacion.requisitos_contrasenia(contrasenia)
     if requisitos:
         return {
             "ok": False,
-            "mensaje": "La contraseña debe incluir: " + ", ".join(requisitos) + ".",
+            "mensaje": (
+                "La contraseña debe incluir: " + ", ".join(requisitos) + "."
+            ),
         }, 400
 
     existe = db.session.execute(
@@ -123,11 +138,16 @@ def registrar(datos):
 def login(correo, contrasenia, ip, user_agent):
     correo = (correo or "").strip().lower()
     if not correo or not contrasenia:
-        return {"ok": False, "mensaje": "Correo y contraseña son obligatorios."}, 400
+        return {
+            "ok": False,
+            "mensaje": "Correo y contraseña son obligatorios.",
+        }, 400
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
-    if usuario is None or not check_password_hash(usuario.contrasenia, contrasenia):
+    if usuario is None or not check_password_hash(
+        usuario.contrasenia, contrasenia
+    ):
         return {"ok": False, "mensaje": MENSAJE_CREDENCIALES}, 401
     if usuario.estado != "ACTIVO":
         return {"ok": False, "mensaje": MENSAJE_CREDENCIALES}, 401
@@ -142,7 +162,10 @@ def login(correo, contrasenia, ip, user_agent):
 def solicitar_recuperacion(correo):
     correo = (correo or "").strip().lower()
     if not validacion.correo_valido(correo):
-        return {"ok": False, "mensaje": "l correo no tiene un formato valido"}, 400
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
@@ -163,12 +186,20 @@ def solicitar_recuperacion(correo):
                 usuarioId=usuario.idUsuario,
                 hashToken=seguridad.hash_codigo(codigo),
                 fechaExpiracion=ahora
-                + timedelta(minutes=current_app.config["RECUPERACION_MINUTOS"]),
+                + timedelta(
+                    minutes=current_app.config["RECUPERACION_MINUTOS"]
+                ),
             )
         )
         db.session.commit()
-    datos_respuesta = {"codigo": codigo} if codigo and current_app.debug else None
-    return {"ok": True, "data": datos_respuesta, "mensaje": MENSAJE_RECUPERACION}, 200
+    datos_respuesta = (
+        {"codigo": codigo} if codigo and current_app.debug else None
+    )
+    return {
+        "ok": True,
+        "data": datos_respuesta,
+        "mensaje": MENSAJE_RECUPERACION,
+    }, 200
 
 
 def restablecer(correo, codigo, contrasenia):
@@ -183,20 +214,31 @@ def restablecer(correo, codigo, contrasenia):
         if not valor
     ]
     if faltantes:
-        return {"ok": False, "mensaje": f"Faltan campos: {','.join(faltantes)}."}, 400
+        return {
+            "ok": False,
+            "mensaje": f"Faltan campos: {','.join(faltantes)}.",
+        }, 400
     if not validacion.correo_valido(correo):
-        return {"ok": False, "mensaje": "El correo no tiene un formato válido."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
     requisitos = validacion.requisitos_contrasenia(contrasenia)
     if requisitos:
         return {
             "ok": False,
-            "mensaje": "La contraseña debe incluir: " + ", ".join(requisitos) + ".",
+            "mensaje": (
+                "La contraseña debe incluir: " + ", ".join(requisitos) + "."
+            ),
         }, 400
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
     if usuario is None or usuario.estado != "ACTIVO":
-        return {"ok": False, "mensaje": "El código no es válido o ya expiró."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El código no es válido o ya expiró.",
+        }, 400
     ahora = seguridad.ahora_utc()
     token = db.session.execute(
         db.select(TokenRecuperacion).where(
@@ -207,7 +249,10 @@ def restablecer(correo, codigo, contrasenia):
         )
     ).scalar_one_or_none()
     if token is None:
-        return {"ok": False, "mensaje": "El código no es válido o ya expiró."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El código no es válido o ya expiró.",
+        }, 400
     usuario.contrasenia = generate_password_hash(contrasenia)
     usuario.fechaActualizacion = ahora
     token.fechaUso = ahora
@@ -229,9 +274,15 @@ def restablecer(correo, codigo, contrasenia):
 
 def cambiar_contrasenia(actual, nueva):
     if not isinstance(actual, str) or not actual:
-        return {"ok": False, "mensaje": "La contraseña actual es obligatoria."}, 400
+        return {
+            "ok": False,
+            "mensaje": "La contraseña actual es obligatoria.",
+        }, 400
     if not isinstance(nueva, str) or not nueva:
-        return {"ok": False, "mensaje": "La contraseña nueva es obligatoria."}, 400
+        return {
+            "ok": False,
+            "mensaje": "La contraseña nueva es obligatoria.",
+        }, 400
     requisitos = validacion.requisitos_contrasenia(nueva)
     if requisitos:
         return {
@@ -246,7 +297,10 @@ def cambiar_contrasenia(actual, nueva):
             "mensaje": "La nueva contraseña debe ser distinta a la actual.",
         }, 400
     if not check_password_hash(current_user.contrasenia, actual):
-        return {"ok": False, "mensaje": "La contraseña actual no es válida."}, 400
+        return {
+            "ok": False,
+            "mensaje": "La contraseña actual no es válida.",
+        }, 400
     ahora = seguridad.ahora_utc()
     current_user.contrasenia = generate_password_hash(nueva)
     current_user.fechaActualizacion = ahora
@@ -333,7 +387,9 @@ def eliminar(contrasenia):
     current_user.apaterno = "Eliminado"
     current_user.amaterno = None
     current_user.correo = f"elim+{current_user.idUsuario}@local.invalid"
-    current_user.contrasenia = generate_password_hash(seguridad.nuevo_refresh())
+    current_user.contrasenia = generate_password_hash(
+        seguridad.nuevo_refresh()
+    )
     current_user.estado = "ELIMINADO"
     current_user.fechaBaja = ahora
     current_user.fechaActualizacion = ahora
@@ -343,7 +399,9 @@ def eliminar(contrasenia):
         )
     )
     db.session.execute(
-        db.delete(Notificacion).where(Notificacion.usuarioId == current_user.idUsuario)
+        db.delete(Notificacion).where(
+            Notificacion.usuarioId == current_user.idUsuario
+        )
     )
     db.session.execute(
         db.update(TokenRecuperacion)
@@ -362,15 +420,23 @@ def eliminar(contrasenia):
         .values(fechaRevocacion=ahora)
     )
     db.session.commit()
-    return {"ok": True, "data": None, "mensaje": "Cuenta eliminada correctamente."}, 200
+    return {
+        "ok": True,
+        "data": None,
+        "mensaje": "Cuenta eliminada correctamente.",
+    }, 200
 
 
 def refresh(token_refresh):
     if not isinstance(token_refresh, str) or not token_refresh:
-        return {"ok": False, "mensaje": "El refresh token es obligatorio."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El refresh token es obligatorio.",
+        }, 400
     sesion = db.session.execute(
         db.select(SesionUsuario).where(
-            SesionUsuario.hashRefreshToken == seguridad.hash_token(token_refresh)
+            SesionUsuario.hashRefreshToken
+            == seguridad.hash_token(token_refresh)
         )
     ).scalar_one_or_none()
     if (
@@ -400,19 +466,30 @@ def logout():
     if sesion is not None and sesion.fechaRevocacion is None:
         sesion.fechaRevocacion = seguridad.ahora_utc()
         db.session.commit()
-    return {"ok": True, "data": None, "mensaje": "Sesión cerrada correctamente."}, 200
+    return {
+        "ok": True,
+        "data": None,
+        "mensaje": "Sesión cerrada correctamente.",
+    }, 200
 
 
 def obtener_preferencia():
     pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
     tema = pref.tema if pref is not None else "CLARO"
-    return {"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia obtenida."}, 200
+    return {
+        "ok": True,
+        "data": {"tema": tema},
+        "mensaje": "Preferencia obtenida.",
+    }, 200
 
 
 def guardar_preferencia(tema):
     tema = (tema or "").strip().upper()
     if tema not in ("CLARO", "OSCURO"):
-        return {"ok": False, "mensaje": "El tema debe ser CLARO u OSCURO."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El tema debe ser CLARO u OSCURO.",
+        }, 400
     ahora = seguridad.ahora_utc()
     pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
     if pref is None:
@@ -427,4 +504,8 @@ def guardar_preferencia(tema):
         pref.tema = tema
         pref.fechaActualizacion = ahora
     db.session.commit()
-    return {"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia guardada."}, 200
+    return {
+        "ok": True,
+        "data": {"tema": tema},
+        "mensaje": "Preferencia guardada.",
+    }, 200

@@ -21,9 +21,15 @@ def colaboradores(id_cartera):
     return [
         {
             "idUsuario": usuario.idUsuario,
-            "nombre": f"{usuario.nombreUsuario} {usuario.apaterno or ''}".strip(),
+            "nombre": (
+                f"{usuario.nombreUsuario} {usuario.apaterno or ''}".strip()
+            ),
             "iniciales": _iniciales(usuario),
-            "rol": "PROPIETARIO" if membresia.rol == "ADMIN" else "COLABORADOR",
+            "rol": (
+                "PROPIETARIO"
+                if membresia.rol == "ADMIN"
+                else "COLABORADOR"
+            ),
         }
         for membresia, usuario in filas
     ]
@@ -117,7 +123,9 @@ def resumen_y_series(cartera, periodo_id=None):
         "presupuestoInicial": float(cartera.presupuestoInicial or 0),
         "totalIngresos": float(ingresos),
         "totalGastos": float(gastos),
-        "saldo": float(Decimal(cartera.presupuestoInicial or 0) + ingresos - gastos),
+        "saldo": float(
+            Decimal(cartera.presupuestoInicial or 0) + ingresos - gastos
+        ),
     }
 
     resumen_periodo = None
@@ -237,7 +245,9 @@ def _serie_ingresos_egresos(cartera):
     agrupado = {}
     for anio, mes, tipo, total in filas:
         clave = (anio, mes)
-        agrupado.setdefault(clave, {"INGRESO": Decimal("0"), "GASTO": Decimal("0")})
+        agrupado.setdefault(
+            clave, {"INGRESO": Decimal("0"), "GASTO": Decimal("0")}
+        )
         agrupado[clave][tipo] = Decimal(total)
 
     return [
@@ -280,4 +290,7 @@ def _gastos_por_categoria(filtros):
 
 
 def _iniciales(usuario):
-    return f"{(usuario.nombreUsuario or ' ')[0]}{(usuario.apaterno or ' ')[0]}".upper()
+    return (
+        f"{(usuario.nombreUsuario or ' ')[0]}"
+        f"{(usuario.apaterno or ' ')[0]}"
+    ).upper()
