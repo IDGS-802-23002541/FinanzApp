@@ -195,12 +195,30 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 ### 2.7 `Notificacion`
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| idNotificacion | int PK | |
-| idUsuario | int FK | Destinatario |
-| tipo | enum | `movimiento` \| `recordatorio` \| `pago_recurrente` |
-| mensaje | string | |
-| leida | bool | |
-| fecha | datetime | |
+| idNotificacion | bigint PK | |
+| usuarioId | int FK | Destinatario |
+| titulo | string | No vacío |
+| mensaje | string | No vacío |
+| tipo | enum? | `MOVIMIENTO` \| `CIERRE` \| `RECORDATORIO` \| `PAGO` |
+| fechaCreacion | datetime | Inmutable |
+| fechaLectura | datetime? | `null` = no leída |
+
+> Migración `SQL/migracion_t184_notificaciones.sql`.
+
+### 2.8 `PreferenciaUsuario`
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| usuarioId | int PK/FK | |
+| tema | enum | `CLARO` \| `OSCURO` \| `SISTEMA` |
+| notificacionesCorreo | bool | |
+| notificacionesApp | bool | Interruptor general |
+| notificacionesMovimientos | bool | Avisos de movimientos en cartera |
+| notificacionesSistema | bool | Recordatorios del sistema |
+| notificacionesPagos | bool | Recordatorios de pagos recurrentes |
+| moneda | string | `MXN` por defecto |
+| fechaActualizacion | datetime | |
+
+> Los tres interruptores nuevos se agregan en `migracion_t184_notificaciones.sql`.
 
 ---
 

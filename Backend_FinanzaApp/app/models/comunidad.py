@@ -9,11 +9,21 @@ class Notificacion(db.Model):
         db.Index(
             "IX_NOTIFICACION_usuario_fecha", "usuarioId", "fechaCreacion"
         ),
+        db.CheckConstraint(
+            "LEN(LTRIM(RTRIM(titulo))) > 0",
+            name="CK_NOTIFICACION_titulo",
+        ),
+        db.CheckConstraint(
+            "LEN(LTRIM(RTRIM(mensaje))) > 0",
+            name="CK_NOTIFICACION_mensaje",
+        ),
     )
 
     idNotificacion = db.Column(db.BigInteger, primary_key=True)
     usuarioId = db.Column(
-        db.Integer, db.ForeignKey("USUARIO.idUsuario"), nullable=False
+        db.Integer,
+        db.ForeignKey("USUARIO.idUsuario", ondelete="NO ACTION"),
+        nullable=False,
     )
     titulo = db.Column(db.Unicode(150), nullable=False)
     mensaje = db.Column(db.Unicode(1000), nullable=False)
