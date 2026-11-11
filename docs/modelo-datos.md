@@ -166,27 +166,43 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 > Migración `SQL/migracion_t169_pagos.sql`; las FK no usan `CASCADE` porque las
 > bajas son lógicas.
 
-### 2.3 `TicketSoporte`
+### 2.3 `Ticket` (tabla real: `TICKET`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idTicket | int PK | |
-| idUsuario | int FK | Cliente que reporta |
-| asunto | string | |
-| descripcion | text | Editable mientras esté pendiente |
-| categoria | string? | Clasificación hecha por soporte |
-| **estado** | enum | `pendiente` \| `respondido` \| `cerrado` \| `cancelado` |
-| idTrabajador | int FK? | Asignado |
+| usuarioId | int FK | Cliente que reporta |
+| asunto | string | No vacío |
+| descripcion | text | Editable mientras esté abierto |
+| categoria | enum | `GENERAL` \| `CUENTA` \| `CARTERA` \| `PAGOS` \| `ERROR` \| `OTRO` |
+| prioridad | enum | `BAJA` \| `MEDIA` \| `ALTA` \| `URGENTE` |
+| estado | enum | `ABIERTO` \| `EN_PROCESO` \| `ESPERA` \| `RESUELTO` \| `CERRADO` |
 | fechaCreacion | datetime | |
-| fechaCierre | datetime? | |
+| fechaActualizacion | datetime? | |
+| fechaCierre | datetime? | Posterior a la creación |
 
-### 2.4 `RespuestaTicket`
+### 2.4 `RespuestaTicket` (tabla real: `RESPUESTA_TICKET`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idRespuesta | int PK | |
-| idTicket | int FK | |
-| idTrabajador | int FK | Autor |
-| mensaje | text | |
-| fecha | datetime | |
+| ticketId | int FK | |
+| usuarioId | int FK | Autor |
+| mensaje | text | No vacío |
+| fechaCreacion | datetime | |
+| esInterna | bool | Nota interna del equipo |
+
+### 2.4.1 `AsignacionTicket` (tabla real: `ASIGNACION_TICKET`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idAsignacion | int PK | |
+| ticketId | int FK | |
+| trabajadorId | int FK | Responsable asignado |
+| fechaInicio | datetime | |
+| fechaFin | datetime? | |
+| esActual | bool | Un solo registro actual por ticket (índice único filtrado) |
+| observaciones | string? | |
+
+> Migración `SQL/migracion_t211_soporte.sql`; las FK no usan `CASCADE` porque
+> las bajas de tickets son lógicas.
 
 ### 2.5 `Trabajador` (equipo interno)
 | Campo | Tipo | Notas |
