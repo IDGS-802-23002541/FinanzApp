@@ -938,6 +938,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/finalizar:
+    post:
+      tags:
+        - Carteras
+      summary: Finalizar una cartera de viaje o evento
+      description: >-
+        Cambia el estado a FINALIZADA (solo carteras ACTIVA de tipo VIAJE o
+        EVENTO), guarda la fecha de cierre, calcula el balance total, por
+        categoría y por participante, y avisa a los colaboradores con
+        notificaciones activas. Después la cartera queda en solo lectura.
+      operationId: finalizarCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cartera finalizada con su balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarteraCierre'
+        '400':
+          description: La cartera no es de tipo viaje o evento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera no está activa o ya está finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo finalizar la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras/{idCartera}/periodos:
     get:
       tags:
@@ -1747,6 +1809,11 @@ components:
           format: date
           nullable: true
           example: '2026-11-30'
+        fechaCierre:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-11T00:00:00'
     CarteraCreada:
       type: object
       properties:
@@ -1817,6 +1884,64 @@ components:
         mensaje:
           type: string
           example: Cartera actualizada correctamente.
+    CarteraCierre:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            cartera:
+              $ref: '#/components/schemas/Cartera'
+            balance:
+              $ref: '#/components/schemas/BalanceCierre'
+        mensaje:
+          type: string
+          example: Cartera finalizada correctamente.
+    BalanceCierre:
+      type: object
+      properties:
+        presupuestoInicial:
+          type: number
+          example: 5000
+        totalIngresos:
+          type: number
+          example: 3000
+        totalGastos:
+          type: number
+          example: 1200
+        balance:
+          type: number
+          example: 1800
+        porCategoria:
+          type: array
+          items:
+            type: object
+            properties:
+              categoriaId:
+                type: integer
+                nullable: true
+              nombre:
+                type: string
+              total:
+                type: number
+        porParticipante:
+          type: array
+          items:
+            type: object
+            properties:
+              usuarioId:
+                type: integer
+              nombre:
+                type: string
+              totalIngresos:
+                type: number
+              totalGastos:
+                type: number
+              balance:
+                type: number
     TransaccionCrearRequest:
       type: object
       required:

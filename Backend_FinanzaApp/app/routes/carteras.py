@@ -65,3 +65,10 @@ def inactivar(idCartera):
 def reactivar(idCartera):
     payload, status = cartera_service.reactivar(idCartera)
     return jsonify(payload), status
+
+
+@carteras_bp.post("/<int:idCartera>/finalizar")
+@jwt_required()
+def finalizar(idCartera):
+    payload, status = cartera_service.finalizar(idCartera)
+    return jsonify(payload), status

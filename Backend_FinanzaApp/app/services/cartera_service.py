@@ -5,7 +5,14 @@ from flask_jwt_extended import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.models import Cartera, Invitacion, MiembroCartera, Usuario
+from app.models import (
+    Cartera,
+    Invitacion,
+    MiembroCartera,
+    Notificacion,
+    PreferenciaUsuario,
+    Usuario,
+)
 from app.utils import validacion
 from app.utils.serializers import (
     MAPA_TIPO_BD,
@@ -218,6 +225,79 @@ def reactivar(id_cartera):
         "data": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
         "mensaje": "Cartera reactivada correctamente.",
     }, 200
+
+
+def finalizar(id_cartera):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+
+    membresia, cartera = fila
+    if membresia.rol != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo el propietario o administrador puede cerrar la cartera.",
+        }, 403
+
+    if cartera.tipo not in ("VIAJE", "EVENTO"):
+        return {
+            "ok": False,
+            "mensaje": "Solo las carteras de tipo viaje o evento pueden finalizarse.",
+        }, 400
+
+    if cartera.estado == "FINALIZADA":
+        return {"ok": False, "mensaje": "La cartera ya está finalizada."}, 409
+
+    if cartera.estado != "ACTIVA":
+        return {
+            "ok": False,
+            "mensaje": "Solo una cartera activa puede finalizarse.",
+        }, 409
+
+    from app.services import cartera_detalle_service
+
+    try:
+        balance = cartera_detalle_service.balance(id_cartera)
+        cartera.estado = "FINALIZADA"
+        cartera.fechaCierre = _ahora()
+        _notificar_cierre(cartera)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo finalizar la cartera."}, 503
+
+    balance["presupuestoInicial"] = float(cartera.presupuestoInicial or 0)
+    return {
+        "ok": True,
+        "data": {
+            "cartera": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
+            "balance": balance,
+        },
+        "mensaje": "Cartera finalizada correctamente.",
+    }, 200
+
+
+def _notificar_cierre(cartera):
+    miembros = db.session.execute(
+        db.select(MiembroCartera.usuarioId).where(
+            MiembroCartera.carteraId == cartera.idCartera,
+            MiembroCartera.estado == "ACTIVO",
+            MiembroCartera.usuarioId != current_user.idUsuario,
+        )
+    ).scalars().all()
+
+    for usuario_id in miembros:
+        preferencia = db.session.get(PreferenciaUsuario, usuario_id)
+        if preferencia is not None and not preferencia.notificacionesApp:
+            continue
+        db.session.add(
+            Notificacion(
+                usuarioId=usuario_id,
+                titulo=f"Cartera finalizada: {cartera.nombre}",
+                mensaje="La cartera se cerró y su balance ya está disponible.",
+                tipo="CIERRE",
+            )
+        )
 
 
 def _validar_edicion(datos, cartera):
