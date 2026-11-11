@@ -18,10 +18,14 @@
 
 
 -- ----------------------------------------------------------
--- 1) Scripts de estructura (DDL)
+-- 1) Estructura (DDL)
 -- ----------------------------------------------------------
--- Aquí van los CREATE TABLE, índices y catálogos del modelo de datos.
+-- Fuente de verdad: Backend_FinanzaApp/app/models/*.py (SQLAlchemy).
+-- Este archivo NO contiene CREATE TABLE: el esquema se crea y evoluciona
+-- desde los modelos. Los cambios aplicados a la base compartida quedan
+-- registrados como migraciones en Backend_FinanzaApp/SQL/migracion_*.sql.
 -- Detalle del modelo: docs/modelo-datos.md
+
 
 
 -- ----------------------------------------------------------

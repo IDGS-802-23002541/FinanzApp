@@ -18,3 +18,9 @@ def test_prueba_sin_bd_responde_json():
     respuesta = cliente.get("/prueba")
     assert respuesta.status_code in (200, 503)
     assert respuesta.is_json
+
+
+def test_ruta_del_spa_responde_200():
+    app = create_app()
+    respuesta = app.test_client().get("/login")
+    assert respuesta.status_code == 200

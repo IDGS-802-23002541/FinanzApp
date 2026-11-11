@@ -28,14 +28,8 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Cambio: se **elimina `rol`** global; el rol dentro de cartera pasa a `MiembroCartera`.
 
-### 1.2 `CategoriaCartera` (tipo de cartera)
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| idCategoriaCartera | int PK | |
-| nombreCategoriaCartera | enum | `Hogar` \| `Viaje` \| `Evento` \| `Otro` |
-| descripcion | string | |
-| icono | string | |
-| color | string | |
+### 1.2 `Tipo de cartera` — no es tabla propia
+> Se usa `Cartera.tipo` (`HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA`) y `CATEGORIAS.tipoCartera` para el catálogo global por tipo.
 
 ### 1.3 `Cartera` (tabla `CARTERA`)
 | Campo | Tipo | Notas |
@@ -51,6 +45,10 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | estado | string(12) | NOT NULL, default `ACTIVA`; `ACTIVA` \| `ARCHIVADA` \| `FINALIZADA` |
 | versionFila | rowversion | NOT NULL, control de concurrencia |
 
+> `FINALIZADA` solo aplica a carteras de tipo Viaje/Evento (HU-04.6).
+
+> La invitación vive en `Invitacion` (ver §1.7): el QR muestra una clave de 8 caracteres que se almacena hasheada en `codigoHash`.
+
 ### 1.4 `MiembroCartera`
 | Campo | Tipo | Notas |
 | --- | --- | --- |
@@ -65,36 +63,56 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 
 > Regla: **un solo `administrador` activo** por cartera.
 
-### 1.5 `Transaccion`
+### 1.5 `Transaccion` (tabla real: `TRANSACCIONES`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idTransaccion | int PK | |
-| idCartera | int FK | |
-| idUsuario | int FK | Responsable |
-| idCategoriaGasto | int FK | Ver §1.6 |
-| **idPeriodo** | int FK? | **Nuevo**: periodo del movimiento (carteras Hogar) |
-| tipo | enum | `ingreso` \| `gasto` |
-| monto | decimal | |
-| fecha | date | |
-| metodoPago | enum | `efectivo` \| `tarjeta` \| `transferencia` |
-| nota | string | Descripción |
-| **comprobanteUrl** | string? | **Nuevo**: imagen en Cloudinary |
-| **estado** | enum | `activo` \| `eliminado`. **Nuevo** (baja lógica) |
+| carteraId | int FK | |
+| usuarioId | int FK | Responsable (debe ser miembro activo de la cartera) |
+| categoriaId | int FK? | Ver §1.6 |
+| **periodoId** | int FK? | Periodo del movimiento (carteras Hogar) |
+| tipo | enum | `INGRESO` \| `GASTO` |
+| monto | decimal | Mayor a 0 (`CK_TRANSACCIONES_monto`) |
+| fechaTransaccion | datetime | Fecha del movimiento |
+| descripcion | string? | Descripción |
+| metodoPago | enum? | `EFECTIVO` \| `TARJETA` \| `TRANSFERENCIA` |
+| **comprobanteUrl** | string? | Imagen en Cloudinary |
+| **estado** | enum | `ACTIVO` \| `ELIMINADO` (baja lógica) |
+| fechaCreacion | datetime | Inmutable |
+| fechaActualizacion | datetime? | |
 
 > Cambio: se elimina `nombreGasto` duplicado; el nombre se obtiene de la categoría.
 
-### 1.6 `CategoriaGasto`
+### 1.6 `Categoria` (tabla real: `CATEGORIAS`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| idCategoriaGasto | int PK | |
-| nombreGasto | string | |
-| icono | string | |
-| color | string | |
-| **idCartera** | int FK? | `null` = categoría global; con valor = personalizada. **Nuevo** |
-| **idCategoriaCartera** | int FK? | Para globales: a qué **tipo de cartera** aplica. **Nuevo** |
-| **tipo** | enum | `gasto` \| `ingreso` \| `ambos`. **Nuevo** |
-| **habilitada** | bool | Habilitar/deshabilitar. **Nuevo** |
-| **orden** | int | Ordenamiento personalizado. **Nuevo** |
+| idCategoria | int PK | |
+| nombre | string | |
+| **carteraId** | int FK? | `null` = categoría global; con valor = personalizada de esa cartera |
+| **tipoCartera** | enum? | `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA`; `null` = aplica a todos los tipos. Solo en globales |
+| **tipo** | enum | `GASTO` \| `INGRESO` \| `AMBOS` |
+| **orden** | int | Orden del selector (default 0) |
+| **estado** | enum | `ACTIVA` \| `INACTIVA` (baja lógica; equivale a habilitar/deshabilitar) |
+| esPredeterminada | bool calculado | `1` cuando `carteraId IS NULL` |
+
+> Unicidad: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
+> Sin `icono` ni `color` por ahora: la HU-05.4 solo pide crear por nombre y mostrar en el selector.
+> Si una pantalla futura los pide, se agregan con migración.
+
+### 1.7 `Invitacion` (tabla real: `INVITACION`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idInvitacion | int PK | |
+| carteraId | int FK | Debe ser miembro activo quien invita |
+| usuarioId | int FK | Creador de la invitación |
+| codigoHash | string | Hash de la clave de 8 caracteres que muestra el QR |
+| fechaCreacion | datetime | Inmutable |
+| fechaExpiracion | datetime | Posterior a la creación |
+| estado | enum | `ACTIVA` \| `REVOCADA` |
+| fechaRevocacion | datetime? | Solo cuando está revocada |
+
+> Regenerar el QR revoca la invitación anterior (`REVOCADA` + fecha) y crea una nueva.
+> Los ingresos quedan registrados en `MiembroCartera.fechaUnion` (bitácora de accesos).
 
 ---
 
@@ -115,7 +133,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | --- | --- | --- |
 | idPagoRecurrente | int PK | |
 | idCartera | int FK | |
-| idCategoriaGasto | int FK | |
+| idCategoria | int FK | Ver §1.6 | |
 | descripcion | string | |
 | monto | decimal | |
 | periodicidad | enum | `semanal` \| `quincenal` \| `mensual` \| `anual` |
@@ -186,8 +204,9 @@ Cartera 1 ─── N MiembroCartera
 Cartera 1 ─── N Transaccion
 Cartera 1 ─── N Periodo            (solo Hogar)
 Cartera 1 ─── N PagoRecurrente
-CategoriaCartera 1 ─── N Cartera
-CategoriaGasto 1 ─── N Transaccion
+Cartera 1 ─── N Categoria          (personalizadas; globales con carteraId null)
+Cartera 1 ─── N Invitacion
+Categoria 1 ─── N Transaccion
 Periodo 1 ─── N Transaccion        (carteras Hogar)
 Usuario 1 ─── N TicketSoporte      (como cliente)
 Trabajador 1 ─── N TicketSoporte   (asignado)
@@ -197,9 +216,9 @@ TicketSoporte 1 ─── N RespuestaTicket
 ## 4. Reglas de integridad
 
 1. **Mínimo un administrador activo** por cartera (validado en app y en BD).
-2. `Periodo.idCartera` solo admite carteras con `idCategoriaCartera = Hogar`.
+2. `Periodo.idCartera` solo admite carteras con `tipo = HOGAR`.
 3. `estado = finalizada` solo permitido en carteras `Viaje` o `Evento`.
-4. `codigoInvitacion` es único y de **8 caracteres**.
+4. La clave de invitación es única y de **8 caracteres**; se almacena hasheada en `Invitacion.codigoHash`. Regenerar revoca la anterior.
 5. Toda baja es lógica: nunca `DELETE` físico de entidades de negocio.
 6. `comprobanteUrl` apunta a **Cloudinary**; nunca se almacenan binarios en la BD.
 7. `correo` es único e inmutable por cuenta.
