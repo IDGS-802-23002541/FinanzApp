@@ -201,6 +201,7 @@ Monto, categoría, fecha, descripción y **fotografía/comprobante** (opcional, 
 
 ## 10. Módulo 7 — Pagos recurrentes
 
+- **Solo aplica a carteras de tipo Hogar** (servicios recurrentes: agua, luz, cable, etc.).
 - Registro y gestión de **compromisos financieros periódicos**.
 - Acciones: **agregar**, **editar** datos fijos, **eliminar** y **marcar como "Hecho"**.
 - Consulta del **estado** de los pagos (pendiente / hecho / próximo a vencer).
