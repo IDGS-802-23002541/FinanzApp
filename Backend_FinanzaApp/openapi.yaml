@@ -1000,6 +1000,115 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/miembros/{idUsuario}:
+    delete:
+      tags:
+        - Miembros
+      summary: Eliminar un colaborador de la cartera
+      description: >-
+        Da de baja lógica al colaborador (estado BAJA) sin borrar sus
+        transacciones. Solo el propietario o administrador puede hacerlo y no
+        puede eliminarse a sí mismo. La cartera debe estar ACTIVA.
+      operationId: eliminarColaborador
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: idUsuario
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Colaborador dado de baja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MiembroBaja'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera o colaborador no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Autoeliminación, cartera no activa o administrador único
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo eliminar al colaborador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/salir:
+    post:
+      tags:
+        - Miembros
+      summary: Salir de una cartera compartida
+      description: >-
+        Da de baja lógica al colaborador que la invoca, conservando sus
+        transacciones. El propietario no puede salir. La cartera debe estar
+        ACTIVA.
+      operationId: salirCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: El usuario salió de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalidaCartera'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro activo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El propietario no puede salir o la cartera no está activa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo salir de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras/{idCartera}/periodos:
     get:
       tags:
@@ -1942,6 +2051,57 @@ components:
                 type: number
               balance:
                 type: number
+    MiembroBaja:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            idUsuario:
+              type: integer
+              example: 5
+            estado:
+              type: string
+              enum:
+                - BAJA
+              example: BAJA
+            fechaBaja:
+              type: string
+              format: date-time
+              example: '2026-11-11T18:00:00'
+        mensaje:
+          type: string
+          example: Colaborador eliminado correctamente.
+    SalidaCartera:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            carteraId:
+              type: integer
+              example: 1
+            usuarioId:
+              type: integer
+              example: 5
+            estado:
+              type: string
+              enum:
+                - BAJA
+              example: BAJA
+            fechaBaja:
+              type: string
+              format: date-time
+              example: '2026-11-11T18:00:00'
+        mensaje:
+          type: string
+          example: Saliste de la cartera correctamente.
     TransaccionCrearRequest:
       type: object
       required:
