@@ -1,17 +1,10 @@
 // Tarjeta con los ultimos movimientos de la cartera (HU-05.1 / resumen).
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material'
-import { formatearMonto } from '../../../utils/formato.js'
+import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import {
   IconoArchivo,
   IconoEstrella,
 } from '../../../components/ui/Iconos.jsx'
-
-// Fecha ISO (YYYY-MM-DD) a dd/MM/aaaa sin que UTC mueva el dia.
-function formatearFechaCorta(iso) {
-  if (!iso) return ''
-  const [anio, mes, dia] = iso.split('-')
-  return `${dia}/${mes}/${anio}`
-}
 
 function UltimasTransacciones({ items = [], error = '' }) {
   return (
@@ -47,7 +40,7 @@ function UltimasTransacciones({ items = [], error = '' }) {
             const titulo =
               item.descripcion || item.categoria?.nombre || 'Sin descripción'
             const autor = item.autor?.nombre ?? 'Sin autor'
-            const fecha = formatearFechaCorta(item.fecha)
+            const fecha = formatearFecha(item.fecha)
 
             return (
               <Box

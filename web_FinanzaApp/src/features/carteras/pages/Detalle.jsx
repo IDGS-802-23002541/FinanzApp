@@ -1,71 +1,61 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Chip,
   CircularProgress,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
-import { listarTransacciones } from '../../transacciones/api.js'
-import TarjetaResumen from '../components/TarjetaResumen.jsx'
-import GraficaBarras from '../components/GraficaBarras.jsx'
-import GraficaDona from '../components/GraficaDona.jsx'
-import {
-  IconoArchivo,
-  IconoCartera,
-  IconoCasa,
-  IconoEstrella,
-} from '../../../components/ui/Iconos.jsx'
+import { IconoCasa } from '../../../components/ui/Iconos.jsx'
 import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
-import UltimasTransacciones from '../components/UltimasTransacciones.jsx'
+
+const SECCIONES = [
+  { valor: 'resumen', etiqueta: 'Resumen' },
+  { valor: 'transacciones', etiqueta: 'Transacciones' },
+  { valor: 'contribuyentes', etiqueta: 'Contribuyentes' },
+  { valor: 'pagos', etiqueta: 'Pagos recurrentes' },
+  { valor: 'invitacion', etiqueta: 'Invitación QR' },
+  { valor: 'cierre', etiqueta: 'Cierre y balance' },
+]
 
 function DetalleCartera() {
   const { id } = useParams()
   const navegar = useNavigate()
+  const location = useLocation()
   const [cartera, setCartera] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [ultimas, setUltimas] = useState([])
-  const [errorUltimas, setErrorUltimas] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [recarga, setRecarga] = useState(0)
+  const primeraCarga = useRef(true)
 
   useEffect(() => {
     let vigente = true
 
     const cargar = async () => {
-      setCargando(true)
+      if (primeraCarga.current) setCargando(true)
       setError('')
-      setErrorUltimas('')
-      setUltimas([])
 
       try {
-        const [datos, movimientos] = await Promise.all([
-          obtenerCartera(id),
-          // Si fallan las transacciones, la cartera igual se muestra.
-          listarTransacciones(id, { porPagina: 5 }).catch((err) => {
-            if (vigente) setErrorUltimas(err.message)
-            return null
-          }),
-        ])
-        if (vigente) {
-          setCartera(datos)
-          setUltimas(movimientos?.items ?? [])
-        }
+        const datos = await obtenerCartera(id)
+        if (vigente) setCartera(datos)
       } catch (err) {
         if (vigente) setError(err.message)
       } finally {
-        if (vigente) setCargando(false)
+        if (vigente) {
+          setCargando(false)
+          primeraCarga.current = false
+        }
       }
     }
 
     cargar()
-
     return () => {
       vigente = false
     }
@@ -87,14 +77,11 @@ function DetalleCartera() {
     return <Alert severity="info">Cartera no disponible.</Alert>
   }
 
-  const { resumen, series, colaboradores } = cartera
-  const esHogar = cartera.categoria === 'Hogar'
-  const sinMovimientos = resumen.totalIngresos === 0 && resumen.totalGastos === 0
-
-  const gruposBarras = series.ingresosVsEgresos.slice(-6).map((fila) => ({
-    etiqueta: fila.nombre,
-    valores: { gastos: fila.gastos, ingresos: fila.ingresos },
-  }))
+  const segmento = location.pathname.split('/').pop()
+  const seccion = SECCIONES.some((s) => s.valor === segmento)
+    ? segmento
+    : 'resumen'
+  const recargar = () => setRecarga((n) => n + 1)
 
   return (
     <Stack spacing={3}>
@@ -110,7 +97,14 @@ function DetalleCartera() {
         ← Volver a carteras
       </Button>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          flexWrap: 'wrap',
+        }}
+      >
         <Box
           sx={{
             width: 48,
@@ -151,114 +145,27 @@ function DetalleCartera() {
         </Button>
       </Box>
 
-      {colaboradores.length > 0 && (
-        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {colaboradores.map((persona) => (
-            <Chip
-              key={persona.idUsuario}
-              avatar={
-                <Avatar
-                  sx={{
-                    backgroundColor: 'var(--color-primario)',
-                    color: 'var(--color-sobre-primario)',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {persona.iniciales}
-                </Avatar>
-              }
-              label={`${persona.nombre} · ${persona.rol}`}
-              sx={{
-                backgroundColor: 'var(--color-superficie)',
-                border: '1px solid var(--color-borde)',
-                fontWeight: 600,
-              }}
-            />
-          ))}
-        </Stack>
-      )}
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 2,
-        }}
+      <Tabs
+        value={seccion}
+        onChange={(_evento, valor) => navegar(`/carteras/${id}/${valor}`)}
+        variant="scrollable"
+        allowScrollButtonsMobile
+        sx={{ borderBottom: '1px solid var(--color-borde)' }}
       >
-        {esHogar ? (
-          <TarjetaResumen
-            etiqueta="Ingresos"
-            monto={resumen.totalIngresos}
-            Icono={IconoCartera}
-            fondo="var(--color-superficie-suave)"
-          />
-        ) : (
-          <TarjetaResumen
-            etiqueta="Presupuesto"
-            monto={resumen.presupuestoInicial}
-            Icono={IconoCartera}
-            fondo="var(--color-superficie-suave)"
-          />
-        )}
-        <TarjetaResumen
-          etiqueta="Gastado"
-          monto={resumen.totalGastos}
-          Icono={IconoArchivo}
-          fondo="var(--color-seleccion)"
-        />
-        <TarjetaResumen
-          etiqueta="Disponible"
-          monto={resumen.saldo}
-          Icono={IconoEstrella}
-          fondo="var(--color-acento)"
-        />
-      </Box>
+        {SECCIONES.map((item) => (
+          <Tab key={item.valor} value={item.valor} label={item.etiqueta} />
+        ))}
+      </Tabs>
 
-      {sinMovimientos && (
-        <Alert severity="info">
-          Esta cartera todavía no tiene transacciones.
-        </Alert>
-      )}
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1.6fr 1fr' },
-          gap: 2.5,
-        }}
-      >
-        <GraficaBarras
-          titulo="Últimos 6 meses"
-          grupos={gruposBarras}
-          series={[
-            {
-              clave: 'gastos',
-              nombre: 'Gastos por mes',
-              color: 'var(--color-primario)',
-            },
-            {
-              clave: 'ingresos',
-              nombre: 'Ingresos',
-              color: 'var(--color-borde-fuerte)',
-            },
-          ]}
-        />
-        <GraficaDona
-          titulo="Gasto por categoría"
-          datos={series.gastosPorCategoria}
-        />
-      </Box>
-
-      <UltimasTransacciones items={ultimas} error={errorUltimas} />
+      <Outlet context={{ cartera, id, recarga, recargar }} />
 
       {modalAbierto && (
         <DialogoNuevaTransaccion
           idCartera={id}
           onCerrar={() => setModalAbierto(false)}
-          onCreada={() => {
+          onGuardada={() => {
             setModalAbierto(false)
-            setRecarga((n) => n + 1)
+            recargar()
           }}
         />
       )}

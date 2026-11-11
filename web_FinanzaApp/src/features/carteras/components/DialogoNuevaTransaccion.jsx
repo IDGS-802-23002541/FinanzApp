@@ -15,6 +15,7 @@ import{
     Typography,
 } from '@mui/material'
 import { crearTransaccion } from '../api.js'
+import { actualizarTransaccion } from '../../transacciones/api.js'
 import SelectorCategorias from './SelectorCategorias.jsx'
 
 const METODOS_PAGO = [
@@ -47,15 +48,16 @@ function validar({ tipo, monto, fecha, categoriaId }) {
 }
 
 // formulario de ingreso/gasto (HU-05.1). Se monta limpio en cada apertura.
-function DialogoNuevaTransaccion({ idCartera, onCerrar, onCreada }) {
+function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion }) {
   const [formulario, setFormulario] = useState({
-    tipo: 'GASTO',
-    monto: '',
-    fecha: hoyISO(),
-    categoriaId: null,
-    metodoPago: 'EFECTIVO',
-    descripcion: '',
+    tipo: transaccion?.tipo ?? 'GASTO',
+    monto: transaccion?.monto != null ? String(transaccion.monto) : '',
+    fecha: transaccion?.fecha ?? hoyISO(),
+    categoriaId: transaccion?.categoriaId ?? null,
+    metodoPago: transaccion?.metodoPago ?? 'EFECTIVO',
+    descripcion: transaccion?.descripcion ?? '',
   })
+  const esEdicion = Boolean(transaccion)
   const [errores, setErrores] = useState({})
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -73,7 +75,7 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onCreada }) {
     setFormulario((actual) => ({
       ...actual,
       tipo: nuevo,
-      categoriaId: nuevo === 'GASTO' ? actual.categoriaId : null,
+      categoriaId: null,
     }))
   }
   const cambiarCategoria = (categoriaId) => {
@@ -92,8 +94,12 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onCreada }) {
     setEnviando(true)
     setErrorEnvio('')
     try {
-      await crearTransaccion(idCartera, formulario)
-      onCreada()
+      if (esEdicion) {
+        await actualizarTransaccion(transaccion.idTransaccion, formulario)
+      } else {
+        await crearTransaccion(idCartera, formulario)
+      }
+      onGuardada()
     } catch (err) {
       setErrorEnvio(err.message)
     } finally {
@@ -104,7 +110,9 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onCreada }) {
   return (
     <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Nuevo movimiento</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {esEdicion ? 'Editar movimiento' : 'Nuevo movimiento'}
+        </DialogTitle>
 
         <DialogContent dividers>
           <Stack spacing={2}>
@@ -215,7 +223,11 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onCreada }) {
             Cancelar
           </Button>
           <Button type="submit" variant="contained" disabled={enviando}>
-            {enviando ? 'Guardando…' : 'Guardar'}
+            {enviando
+              ? 'Guardando…'
+              : esEdicion
+                ? 'Guardar cambios'
+                : 'Guardar'}
           </Button>
         </DialogActions>
       </Box>

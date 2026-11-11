@@ -145,3 +145,21 @@ export async function crearTransaccion(idCartera, {tipo, monto, fecha,categoriaI
   })
   return data
 }
+
+// Periodos de ingreso de una cartera Hogar.
+export async function listarPeriodos(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/periodos`)
+  return data
+}
+
+// Invitacion activa y bitacora de ingresos de la cartera.
+export async function obtenerInvitacion(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/invitaciones`)
+  return data
+}
+
+// Genera una invitacion nueva (revoca la anterior).
+export async function generarInvitacion(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/invitaciones`, {})
+  return data
+}
