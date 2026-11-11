@@ -36,6 +36,7 @@ class Cartera(db.Model):
     )
     fechaInicio = db.Column(db.Date)
     fechaFin = db.Column(db.Date)
+    fechaCierre = db.Column(DATETIME2)
     estado = db.Column(db.String(12), nullable=False, server_default="ACTIVA")
     versionFila = db.Column(
         ROWVERSION, nullable=False, server_default=db.FetchedValue()
