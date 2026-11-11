@@ -123,11 +123,16 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idPeriodo | int PK | |
-| idCartera | int FK | Debe ser tipo Hogar |
-| frecuencia | enum | `semanal` \| `quincenal` \| `mensual` \| ... |
+| carteraId | int FK | Debe ser tipo Hogar |
+| nombre | string | Nombre visible del periodo |
 | fechaInicio | date | |
-| fechaFin | date | |
-| **activo** | bool | Periodo vigente actual |
+| fechaFin | date | `fechaFin >= fechaInicio` (`CK_PERIODO_fechas`) |
+| estado | enum | `ACTIVO` \| `CERRADO` |
+| fechaCreacion | datetime | Inmutable |
+
+> La migración `SQL/migracion_t232_periodo.sql` crea `PERIODO` y homologa los
+> constraints e índices de `CARTERA` y `MIEMBROS_CARTERA`. Las FK se mantienen
+> sin `CASCADE` porque la baja de carteras es lógica.
 
 ### 2.2 `PagoRecurrente`
 | Campo | Tipo | Notas |

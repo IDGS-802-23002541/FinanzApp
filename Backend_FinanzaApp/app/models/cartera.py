@@ -5,6 +5,24 @@ from app.extensions import db
 
 class Cartera(db.Model):
     __tablename__ = "CARTERA"
+    __table_args__ = (
+        db.CheckConstraint(
+            "tipo IN ('HOGAR', 'VIAJE', 'EVENTO', 'OTRA')",
+            name="CK_CARTERA_tipo",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVA', 'ARCHIVADA', 'FINALIZADA')",
+            name="CK_CARTERA_estado",
+        ),
+        db.CheckConstraint(
+            "fechaInicio IS NULL OR fechaFin IS NULL OR fechaFin >= fechaInicio",
+            name="CK_CARTERA_fechas",
+        ),
+        db.CheckConstraint(
+            "presupuestoInicial IS NULL OR presupuestoInicial >= 0",
+            name="CK_CARTERA_presupuesto",
+        ),
+    )
 
     idCartera = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.Unicode(100), nullable=False)
@@ -26,7 +44,21 @@ class Cartera(db.Model):
 
 class MiembroCartera(db.Model):
     __tablename__ = "MIEMBROS_CARTERA"
-    __table_args__ = (db.Index("IX_MIEMBROS_CARTERA_usuario", "usuarioId", "estado"),)
+    __table_args__ = (
+        db.Index("IX_MIEMBROS_CARTERA_usuario", "usuarioId", "estado"),
+        db.CheckConstraint(
+            "rol IN ('ADMIN', 'CONTRIBUYENTE')",
+            name="CK_MIEMBROS_CARTERA_rol",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVO', 'BAJA')",
+            name="CK_MIEMBROS_CARTERA_estado",
+        ),
+        db.CheckConstraint(
+            "(estado = 'ACTIVO' AND fechaBaja IS NULL) OR estado = 'BAJA'",
+            name="CK_MIEMBROS_CARTERA_baja",
+        ),
+    )
 
     carteraId = db.Column(
         db.Integer, db.ForeignKey("CARTERA.idCartera"), primary_key=True
@@ -94,11 +126,21 @@ class Periodo(db.Model):
     __tablename__ = "PERIODO"
     __table_args__ = (
         db.Index("IX_PERIODO_cartera_fechas", "carteraId", "fechaInicio", "fechaFin"),
+        db.CheckConstraint(
+            "fechaFin >= fechaInicio",
+            name="CK_PERIODO_fechas",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVO', 'CERRADO')",
+            name="CK_PERIODO_estado",
+        ),
     )
 
     idPeriodo = db.Column(db.Integer, primary_key=True)
     carteraId = db.Column(
-        db.Integer, db.ForeignKey("CARTERA.idCartera"), nullable=False
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+        nullable=False,
     )
     nombre = db.Column(db.Unicode(80), nullable=False)
     fechaInicio = db.Column(db.Date, nullable=False)
