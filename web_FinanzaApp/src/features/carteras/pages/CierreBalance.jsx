@@ -132,7 +132,8 @@ function CierreBalance() {
     )
   }
 
-  const balanceVisible = balance ?? (estaFinalizada ? balanceDesdeResumen(cartera) : null)
+  const balanceVisible =
+    balance ?? cartera.balance ?? (estaFinalizada ? balanceDesdeResumen(cartera) : null)
 
   const cerrarCartera = async () => {
     setCerrando(true)
