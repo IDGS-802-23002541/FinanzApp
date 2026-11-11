@@ -61,3 +61,15 @@ def serializar_cartera(cartera, rol_bd, admin):
         "fechaInicio": cartera.fechaInicio.isoformat() if cartera.fechaInicio else None,
         "fechaFin": cartera.fechaFin.isoformat() if cartera.fechaFin else None,
     }
+
+def serializar_comentario(comentario):
+    return {
+        "idComentario": comentario.idComentario,
+        "nombre": comentario.nombre,
+        "correo": comentario.correo,
+        "comentario": comentario.comentario,
+        "estado": comentario.estado,
+        "fechaCreacion": comentario.fechaCreacion.isoformat()
+        if comentario.fechaCreacion else None,
+        # "ip": NO se expone
+    }
