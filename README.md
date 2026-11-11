@@ -25,6 +25,14 @@ FinanzApp/
     └── API REST
 ```
 
+## 📚 Documentación
+
+- [Despliegue en Azure y dominio personalizado](./docs/despliegue.md)
+- [Backend](./docs/backend.md)
+- [Web](./docs/web.md)
+- [Móvil](./docs/movil.md)
+- [Proceso de trabajo](./docs/proceso-trabajo.md)
+
 ## Tecnologías
 
 ### Aplicación Web
