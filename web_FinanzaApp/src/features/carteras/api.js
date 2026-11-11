@@ -62,6 +62,8 @@ function aVistaDetalle(cartera) {
       saldo: cartera.presupuestoInicial ?? 0,
     },
     series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
+    balance: cartera.balance ?? null,
+    fechaCierre: cartera.fechaCierre ?? null,
   }
 }
 
@@ -161,5 +163,11 @@ export async function obtenerInvitacion(idCartera) {
 // Genera una invitacion nueva (revoca la anterior).
 export async function generarInvitacion(idCartera) {
   const { data } = await api.post(`/carteras/${idCartera}/invitaciones`, {})
+  return data
+}
+
+// Cierra una cartera Viaje/Evento y devuelve la cartera con su balance.
+export async function finalizarCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/finalizar`, {})
   return data
 }

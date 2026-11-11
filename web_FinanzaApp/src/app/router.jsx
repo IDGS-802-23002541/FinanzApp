@@ -10,6 +10,7 @@ import ListaCarteras from '../features/carteras/pages/Lista.jsx'
 import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
 import InvitacionQR from '../features/carteras/pages/InvitacionQR.jsx'
+import CierreBalance from '../features/carteras/pages/CierreBalance.jsx'
 import TabPendiente from '../features/carteras/pages/TabPendiente.jsx'
 import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
 import TransaccionesCartera from '../features/transacciones/pages/TransaccionesCartera.jsx'
@@ -56,10 +57,7 @@ export const router = createBrowserRouter([
                 element: <TabPendiente titulo="Pagos recurrentes" />,
               },
               { path: 'invitacion', element: <InvitacionQR /> },
-              {
-                path: 'cierre',
-                element: <TabPendiente titulo="Cierre y balance" />,
-              },
+              { path: 'cierre', element: <CierreBalance /> },
             ],
           },
           {path: '/transacciones', element: <Transacciones />},
