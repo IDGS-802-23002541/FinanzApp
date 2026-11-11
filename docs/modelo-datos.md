@@ -183,11 +183,14 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idComentario | int PK | |
-| nombre | string | |
-| correo | string | |
-| mensaje | text | |
-| fecha | datetime | |
-| leido | bool | Para el buzón del administrador |
+| nombre | string | Obligatorio, no vacío |
+| correo | string? | |
+| comentario | text | Mensaje del visitante, no vacío |
+| fechaCreacion | datetime | Inmutable |
+| estado | enum | `PENDIENTE` \| `PUBLICADO` \| `OCULTO` |
+
+> Migración `SQL/migracion_t93_comentarios.sql`; el buzón del administrador usa
+> `estado` para ocultar o publicar comentarios sin borrarlos.
 
 ### 2.7 `Notificacion`
 | Campo | Tipo | Notas |

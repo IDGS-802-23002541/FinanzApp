@@ -30,6 +30,10 @@ class ComentarioLanding(db.Model):
         db.Index(
             "IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"
         ),
+        db.CheckConstraint(
+            "estado IN ('PENDIENTE', 'PUBLICADO', 'OCULTO')",
+            name="CK_COMENTARIO_LANDING_estado",
+        ),
     )
 
     idComentario = db.Column(db.Integer, primary_key=True)
