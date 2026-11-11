@@ -759,6 +759,185 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Carteras
+      summary: Editar una cartera
+      description: >-
+        Actualiza nombre, descripción, tipo, presupuesto inicial y fechas de una
+        cartera. Solo el propietario o administrador puede hacerlo y la cartera
+        no debe estar FINALIZADA. No elimina datos.
+      operationId: editarCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarteraEditarRequest'
+            example:
+              nombre: Casa Borja 2026
+              descripcion: Gastos del hogar
+              presupuestoInicial: 6000
+              fechaFin: '2026-12-31'
+      responses:
+        '200':
+          description: Cartera actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarteraRespuesta'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera está finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/inactivar:
+    post:
+      tags:
+        - Carteras
+      summary: Inactivar una cartera
+      description: >-
+        Cambia el estado a ARCHIVADA y revoca las invitaciones activas sin
+        borrar datos. Solo el propietario o administrador puede hacerlo.
+      operationId: inactivarCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cartera inactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarteraRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera ya está inactiva o finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo inactivar la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /carteras/{idCartera}/reactivar:
+    post:
+      tags:
+        - Carteras
+      summary: Reactivar una cartera inactiva
+      description: >-
+        Cambia el estado de ARCHIVADA a ACTIVA. Solo el propietario o
+        administrador puede hacerlo; una cartera FINALIZADA no se reactiva.
+      operationId: reactivarCartera
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idCartera
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cartera reactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarteraRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario o administrador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cartera no encontrada o el usuario no es miembro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: La cartera ya está activa o está finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo reactivar la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /carteras/{idCartera}/periodos:
     get:
       tags:
@@ -1592,6 +1771,52 @@ components:
         mensaje:
           type: string
           example: Carteras obtenidas correctamente.
+    CarteraEditarRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+          example: Casa Borja 2026
+        tipo:
+          type: string
+          enum:
+            - HOGAR
+            - VIAJE
+            - EVENTO
+            - OTRO
+            - OTRA
+          example: HOGAR
+        descripcion:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: Gastos del hogar
+        presupuestoInicial:
+          type: number
+          minimum: 0
+          example: 6000
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-11-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-12-31'
+    CarteraRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Cartera'
+        mensaje:
+          type: string
+          example: Cartera actualizada correctamente.
     TransaccionCrearRequest:
       type: object
       required:

@@ -1,10 +1,11 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from flask_jwt_extended import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.models import Cartera, MiembroCartera, Usuario
+from app.models import Cartera, Invitacion, MiembroCartera, Usuario
 from app.utils import validacion
 from app.utils.serializers import (
     MAPA_TIPO_BD,
@@ -99,6 +100,219 @@ def crear(datos):
         "data": serializar_cartera(cartera, "ADMIN", current_user),
         "mensaje": "Cartera creada correctamente.",
     }, 201
+
+
+def editar(id_cartera, datos):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+
+    membresia, cartera = fila
+    if membresia.rol != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo el propietario o administrador puede editar la cartera.",
+        }, 403
+
+    if cartera.estado == "FINALIZADA":
+        return {
+            "ok": False,
+            "mensaje": "Una cartera finalizada es de solo lectura.",
+        }, 409
+
+    cambios, error = _validar_edicion(datos, cartera)
+    if error:
+        return error
+
+    for campo, valor in cambios.items():
+        setattr(cartera, campo, valor)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo actualizar la cartera."}, 503
+
+    return {
+        "ok": True,
+        "data": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
+        "mensaje": "Cartera actualizada correctamente.",
+    }, 200
+
+
+def inactivar(id_cartera):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+
+    membresia, cartera = fila
+    if membresia.rol != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo el propietario o administrador puede inactivar la cartera.",
+        }, 403
+
+    if cartera.estado == "FINALIZADA":
+        return {
+            "ok": False,
+            "mensaje": "Una cartera finalizada no se puede inactivar.",
+        }, 409
+
+    if cartera.estado == "ARCHIVADA":
+        return {"ok": False, "mensaje": "La cartera ya está inactiva."}, 409
+
+    cartera.estado = "ARCHIVADA"
+    ahora = _ahora()
+    try:
+        activas = db.session.execute(
+            db.select(Invitacion).where(
+                Invitacion.carteraId == id_cartera,
+                Invitacion.estado == "ACTIVA",
+            )
+        ).scalars().all()
+        for invitacion in activas:
+            invitacion.estado = "REVOCADA"
+            invitacion.fechaRevocacion = ahora
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo inactivar la cartera."}, 503
+
+    return {
+        "ok": True,
+        "data": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
+        "mensaje": "Cartera inactivada correctamente.",
+    }, 200
+
+
+def reactivar(id_cartera):
+    fila = _membresia(id_cartera)
+    if fila is None:
+        return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
+
+    membresia, cartera = fila
+    if membresia.rol != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo el propietario o administrador puede reactivar la cartera.",
+        }, 403
+
+    if cartera.estado == "FINALIZADA":
+        return {
+            "ok": False,
+            "mensaje": "Una cartera finalizada no se puede reactivar.",
+        }, 409
+
+    if cartera.estado == "ACTIVA":
+        return {"ok": False, "mensaje": "La cartera ya está activa."}, 409
+
+    cartera.estado = "ACTIVA"
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo reactivar la cartera."}, 503
+
+    return {
+        "ok": True,
+        "data": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
+        "mensaje": "Cartera reactivada correctamente.",
+    }, 200
+
+
+def _validar_edicion(datos, cartera):
+    cambios = {}
+
+    if "nombre" in datos:
+        nombre = datos.get("nombre")
+        if not isinstance(nombre, str):
+            return None, ({"ok": False, "mensaje": "El nombre es obligatorio."}, 400)
+        nombre = nombre.strip()
+        if not nombre or len(nombre) > 100:
+            return None, (
+                {
+                    "ok": False,
+                    "mensaje": "El nombre debe tener entre 1 y 100 caracteres.",
+                },
+                400,
+            )
+        cambios["nombre"] = nombre
+
+    if "descripcion" in datos:
+        descripcion = datos.get("descripcion")
+        if descripcion is not None and not isinstance(descripcion, str):
+            return None, (
+                {"ok": False, "mensaje": "La descripción debe ser texto."},
+                400,
+            )
+        if isinstance(descripcion, str):
+            descripcion = descripcion.strip() or None
+        if descripcion and len(descripcion) > 500:
+            return None, (
+                {
+                    "ok": False,
+                    "mensaje": "La descripción admite hasta 500 caracteres.",
+                },
+                400,
+            )
+        cambios["descripcion"] = descripcion
+
+    if "tipo" in datos:
+        tipo = datos.get("tipo")
+        if not isinstance(tipo, str):
+            return None, ({"ok": False, "mensaje": "El tipo es obligatorio."}, 400)
+        tipo = tipo.strip().upper()
+        if tipo not in TIPOS_ENTRADA:
+            return None, ({"ok": False, "mensaje": "El tipo no es valido."}, 400)
+        cambios["tipo"] = tipo_bd(tipo)
+
+    if "presupuestoInicial" in datos:
+        bruto = datos.get("presupuestoInicial")
+        if isinstance(bruto, bool) or not isinstance(bruto, (int, float)) or bruto < 0:
+            return None, (
+                {
+                    "ok": False,
+                    "mensaje": "El presupuesto debe ser un número mayor o igual a 0.",
+                },
+                400,
+            )
+        cambios["presupuestoInicial"] = Decimal(str(bruto))
+
+    for campo in ("fechaInicio", "fechaFin"):
+        if campo in datos:
+            try:
+                cambios[campo] = validacion.fecha_iso(datos.get(campo))
+            except ValueError:
+                return None, (
+                    {
+                        "ok": False,
+                        "mensaje": "Las fechas deben tener formato YYYY-MM-DD.",
+                    },
+                    400,
+                )
+
+    if not cambios:
+        return None, (
+            {"ok": False, "mensaje": "No se enviaron campos para actualizar."},
+            400,
+        )
+
+    inicio = cambios.get("fechaInicio", cartera.fechaInicio)
+    fin = cambios.get("fechaFin", cartera.fechaFin)
+    if inicio and fin and fin < inicio:
+        return None, (
+            {
+                "ok": False,
+                "mensaje": "La fecha fin no puede ser anterior a la fecha inicio.",
+            },
+            400,
+        )
+
+    return cambios, None
+
+
+def _ahora():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def listar(estado="ACTIVA", tipo="", rol="", busqueda=""):

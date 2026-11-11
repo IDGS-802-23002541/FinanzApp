@@ -41,3 +41,27 @@ def listar_periodos(idCartera):
 def obtener(idCartera):
     payload, status = cartera_service.detalle(idCartera, request.args.get("periodoId"))
     return jsonify(payload), status
+
+
+@carteras_bp.put("/<int:idCartera>")
+@jwt_required()
+def editar(idCartera):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return error("El cuerpo debe ser un objeto JSON")
+    payload, status = cartera_service.editar(idCartera, datos)
+    return jsonify(payload), status
+
+
+@carteras_bp.post("/<int:idCartera>/inactivar")
+@jwt_required()
+def inactivar(idCartera):
+    payload, status = cartera_service.inactivar(idCartera)
+    return jsonify(payload), status
+
+
+@carteras_bp.post("/<int:idCartera>/reactivar")
+@jwt_required()
+def reactivar(idCartera):
+    payload, status = cartera_service.reactivar(idCartera)
+    return jsonify(payload), status
