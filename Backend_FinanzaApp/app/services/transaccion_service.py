@@ -42,7 +42,10 @@ def crear(id_cartera, datos):
     if cartera.estado != "ACTIVA":
         return {
             "ok": False,
-            "mensaje": "No se pueden registrar movimientos en una cartera inactiva o finalizada.",
+            "mensaje": (
+                "No se pueden registrar movimientos en una cartera "
+                "inactiva o finalizada."
+            ),
         }, 409
 
     campos, error = _validar_datos(datos, id_cartera, cartera.tipo)
@@ -63,7 +66,10 @@ def crear(id_cartera, datos):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo registrar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo registrar la transacción.",
+        }, 503
 
     return {
         "ok": True,
@@ -109,7 +115,10 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
         try:
             periodo = db.session.get(Periodo, periodo_id)
         except SQLAlchemyError:
-            return {"ok": False, "mensaje": "No se pudo validar el periodo."}, 503
+            return {
+                "ok": False,
+                "mensaje": "No se pudo validar el periodo.",
+            }, 503
         if periodo is None or periodo.carteraId != id_cartera:
             return {
                 "ok": False,
@@ -155,7 +164,10 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
             .group_by(Transaccion.tipo)
         ).all()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudieron obtener las transacciones."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudieron obtener las transacciones.",
+        }, 503
 
     por_tipo = {tipo: Decimal(monto) for tipo, monto in totales}
     ingresos = por_tipo.get("INGRESO", Decimal("0"))
@@ -209,7 +221,10 @@ def actualizar(id_transaccion, datos):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo actualizar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo actualizar la transacción.",
+        }, 503
 
     return {
         "ok": True,
@@ -235,7 +250,10 @@ def eliminar(id_transaccion):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo eliminar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo eliminar la transacción.",
+        }, 503
 
     return {
         "ok": True,
@@ -267,7 +285,13 @@ def _buscar_editable(id_transaccion):
         return (
             None,
             None,
-            ({"ok": False, "mensaje": "No se pudo validar la transacción."}, 503),
+            (
+                {
+                    "ok": False,
+                    "mensaje": "No se pudo validar la transacción.",
+                },
+                503,
+            ),
         )
 
     if not fila:
@@ -293,7 +317,10 @@ def _buscar_editable(id_transaccion):
             (
                 {
                     "ok": False,
-                    "mensaje": "No se pueden modificar movimientos en una cartera inactiva o finalizada.",
+                    "mensaje": (
+                        "No se pueden modificar movimientos en una cartera "
+                        "inactiva o finalizada."
+                    ),
                 },
                 409,
             ),
@@ -306,7 +333,10 @@ def _buscar_editable(id_transaccion):
             (
                 {
                     "ok": False,
-                    "mensaje": "Solo el propietario o administrador puede editar o eliminar transacciones.",
+                    "mensaje": (
+                        "Solo el propietario o administrador puede editar "
+                        "o eliminar transacciones."
+                    ),
                 },
                 403,
             ),
