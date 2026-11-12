@@ -41,7 +41,7 @@ class ComentarioLanding(db.Model):
             "IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"
         ),
         db.CheckConstraint(
-            "estado IN ('PENDIENTE', 'PUBLICADO', 'OCULTO')",
+            "estado IN ('PENDIENTE', 'ATENDIDO', 'ARCHIVADO')",
             name="CK_COMENTARIO_LANDING_estado",
         ),
     )

@@ -222,7 +222,7 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | correo | string? | |
 | comentario | text | Mensaje del visitante, no vacío |
 | fechaCreacion | datetime | Inmutable |
-| estado | enum | `PENDIENTE` \| `PUBLICADO` \| `OCULTO` |
+| estado | enum | `PENDIENTE` \| `ATENDIDO` \| `ARCHIVADO` |
 
 > Migración `SQL/migracion_t93_comentarios.sql`; el buzón del administrador usa
 > `estado` para ocultar o publicar comentarios sin borrarlos.
