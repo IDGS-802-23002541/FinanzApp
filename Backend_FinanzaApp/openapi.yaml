@@ -354,24 +354,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /auth/editar_cuenta:
+    put:
+      tags:
+        - Auth
+      summary: Editar los datos de mi cuenta
+      description: >-
+        Actualiza el nombre (siempre obligatorio) y, cuando vienen con
+        contenido, el apellido paterno, el materno y el correo. Los campos
+        vacíos u omitidos conservan su valor actual. El correo nuevo debe ser
+        único y estar bien formado.
+      operationId: editarCuenta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CuentaRequest'
+            example:
+              nombreUsuario: Aideé
+              apaterno: Casillas
+              amaterno: Tapia
+              correo: aidee@ejemplo.com
+      responses:
+        '200':
+          description: Cuenta actualizada; devuelve los datos vigentes del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Usuario'
+                  mensaje:
+                    type: string
+                    example: Cuenta actualizada correctamente.
+        '400':
+          description: >-
+            Datos inválidos: nombre vacío o mayor a 80 caracteres, apellidos
+            mayores a 80 o correo mal formado o mayor a 254
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token ausente, inválido, expirado o sesión revocada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El correo ya pertenece a otra cuenta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar la cuenta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /auth/preferencias:
     get:
       tags:
         - Auth
-      summary: Obtener mi preferencia de tema
-      description: Devuelve el tema guardado del usuario autenticado. Si nunca eligió uno, devuelve el tema por defecto CLARO.
+      summary: Obtener mis preferencias
+      description: >-
+        Devuelve el tema y los interruptores de notificación del usuario
+        autenticado. Si nunca guardó preferencias, devuelve los valores por
+        defecto: tema CLARO y los tres avisos activados.
       operationId: obtenerPreferencias
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Preferencia de tema
+          description: Preferencias del usuario
           content:
             application/json:
               example:
                 ok: true
                 data:
                   tema: CLARO
+                  notificacionesMovimientos: true
+                  notificacionesSistema: true
+                  notificacionesPagos: true
                 mensaje: Preferencia obtenida.
         '401':
           description: Token ausente, inválido, expirado o sesión revocada
@@ -382,8 +454,11 @@ paths:
     put:
       tags:
         - Auth
-      summary: Guardar mi preferencia de tema
-      description: Crea o actualiza el tema del usuario autenticado. Solo admite CLARO u OSCURO.
+      summary: Guardar mis preferencias
+      description: >-
+        Crea o actualiza las preferencias enviadas. Todos los campos son
+        opcionales, pero debe venir al menos uno. Los avisos aplican de
+        inmediato y se conservan entre sesiones.
       operationId: guardarPreferencias
       security:
         - bearerAuth: []
@@ -392,21 +467,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PreferenciaTemaRequest'
+              $ref: '#/components/schemas/PreferenciasRequest'
             example:
-              tema: OSCURO
+              notificacionesMovimientos: false
       responses:
         '200':
-          description: Preferencia guardada
+          description: Preferencias guardadas
           content:
             application/json:
               example:
                 ok: true
                 data:
-                  tema: OSCURO
+                  tema: CLARO
+                  notificacionesMovimientos: false
+                  notificacionesSistema: true
+                  notificacionesPagos: true
                 mensaje: Preferencia guardada.
         '400':
-          description: Cuerpo inválido o tema distinto de CLARO/OSCURO
+          description: Cuerpo inválido, tema distinto de CLARO/OSCURO, aviso no booleano o sin campos
           content:
             application/json:
               schema:
@@ -2195,10 +2273,9 @@ components:
         mensaje:
           type: string
           example: Si el correo esta registrado, recibiras un codigo de recuperacion
-    PreferenciaTemaRequest:
+    PreferenciasRequest:
       type: object
-      required:
-        - tema
+      description: Campos opcionales; debe enviarse al menos uno.
       properties:
         tema:
           type: string
@@ -2206,6 +2283,18 @@ components:
             - CLARO
             - OSCURO
           example: OSCURO
+        notificacionesMovimientos:
+          type: boolean
+          description: Avisos de movimientos en mis carteras.
+          example: true
+        notificacionesSistema:
+          type: boolean
+          description: Recordatorios del sistema.
+          example: true
+        notificacionesPagos:
+          type: boolean
+          description: Recordatorios de pagos recurrentes.
+          example: false
     Error:
       type: object
       properties:
@@ -3091,10 +3180,37 @@ components:
           type: string
           enum:
             - PENDIENTE
-            - ATENDIDO
-            - ARCHIVADO
+            - PUBLICADO
+            - OCULTO
           example: PENDIENTE
         fechaCreacion:
           type: string
           format: date-time
           example: '2026-11-11T18:30:00'
+    CuentaRequest:
+      type: object
+      required:
+        - nombreUsuario
+      properties:
+        nombreUsuario:
+          type: string
+          maxLength: 80
+          example: Aideé
+        apaterno:
+          type: string
+          maxLength: 80
+          description: Si se omite o viene vacío, conserva el valor actual.
+          example: Casillas
+        amaterno:
+          type: string
+          maxLength: 80
+          nullable: true
+          description: Si se omite o viene vacío, conserva el valor actual.
+          example: Tapia
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          description: >-
+            Si se omite o viene vacío, conserva el valor actual. Debe ser único.
+          example: aidee@ejemplo.com

@@ -2,8 +2,9 @@ from datetime import timedelta
 
 from flask import current_app
 from flask_jwt_extended import create_access_token, current_user, get_jwt
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.security import check_password_hash, generate_password_hash
+from app.utils import validacion
 
 from app.extensions import db
 from app.models import (
@@ -403,28 +404,152 @@ def logout():
     return {"ok": True, "data": None, "mensaje": "Sesión cerrada correctamente."}, 200
 
 
+CAMPOS_NOTIFICACION = (
+    "notificacionesMovimientos",
+    "notificacionesSistema",
+    "notificacionesPagos",
+)
+
+
 def obtener_preferencia():
-    pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
-    tema = pref.tema if pref is not None else "CLARO"
-    return {"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia obtenida."}, 200
+    preferencia = db.session.get(PreferenciaUsuario, current_user.idUsuario)
+    return {
+        "ok": True,
+        "data": _datos_preferencia(preferencia),
+        "mensaje": "Preferencia obtenida.",
+    }, 200
 
 
-def guardar_preferencia(tema):
-    tema = (tema or "").strip().upper()
-    if tema not in ("CLARO", "OSCURO"):
-        return {"ok": False, "mensaje": "El tema debe ser CLARO u OSCURO."}, 400
-    ahora = seguridad.ahora_utc()
-    pref = db.session.get(PreferenciaUsuario, current_user.idUsuario)
-    if pref is None:
-        db.session.add(
-            PreferenciaUsuario(
-                usuarioId=current_user.idUsuario,
-                tema=tema,
-                fechaActualizacion=ahora,
-            )
-        )
-    else:
-        pref.tema = tema
-        pref.fechaActualizacion = ahora
+def guardar_preferencia(datos):
+    cambios, error = _validar_preferencia(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    preferencia = db.session.get(PreferenciaUsuario, current_user.idUsuario)
+    if preferencia is None:
+        preferencia = PreferenciaUsuario(usuarioId=current_user.idUsuario)
+        db.session.add(preferencia)
+
+    for campo, valor in cambios.items():
+        setattr(preferencia, campo, valor)
+    preferencia.fechaActualizacion = seguridad.ahora_utc()
     db.session.commit()
-    return {"ok": True, "data": {"tema": tema}, "mensaje": "Preferencia guardada."}, 200
+
+    return {
+        "ok": True,
+        "data": _datos_preferencia(preferencia),
+        "mensaje": "Preferencia guardada.",
+    }, 200
+
+
+def _datos_preferencia(preferencia):
+    datos = {"tema": preferencia.tema if preferencia is not None else "CLARO"}
+    for campo in CAMPOS_NOTIFICACION:
+        datos[campo] = (
+            getattr(preferencia, campo) if preferencia is not None else True
+        )
+    return datos
+
+
+def _validar_preferencia(datos):
+    cambios = {}
+
+    if "tema" in datos:
+        tema = datos.get("tema")
+        if not isinstance(tema, str) or tema.strip().upper() not in (
+            "CLARO",
+            "OSCURO",
+        ):
+            return None, "El tema debe ser CLARO u OSCURO."
+        cambios["tema"] = tema.strip().upper()
+
+    for campo in CAMPOS_NOTIFICACION:
+        if campo in datos:
+            valor = datos[campo]
+            if not isinstance(valor, bool):
+                return None, "Las preferencias de notificación deben ser booleanas."
+            cambios[campo] = valor
+
+    if not cambios:
+        return None, "No se envió ninguna preferencia."
+    return cambios, None
+
+def editar_cuenta(datos):
+    nombre_usuario = (datos.get("nombreUsuario") or "").strip()
+    apaterno = (datos.get("apaterno") or "").strip()
+    amaterno = (datos.get("amaterno") or "").strip()
+    correo = (datos.get("correo") or "").strip().lower()
+
+    # El nombre siempre se toma; los demás campos vacíos conservan su valor.
+    if not nombre_usuario:
+        return {"ok": False, "mensaje": "El nombre de usuario es obligatorio."}, 400
+
+    if len(nombre_usuario) > 80:
+        return {
+            "ok": False,
+            "mensaje": "El nombre de usuario supera 80 caracteres.",
+        }, 400
+
+    apaterno = apaterno or current_user.apaterno
+    amaterno = amaterno or current_user.amaterno
+    correo_cambio = bool(correo) and correo != current_user.correo
+    correo = correo or current_user.correo
+
+    if len(apaterno) > 80 or len(amaterno or "") > 80:
+        return {
+            "ok": False,
+            "mensaje": "Los apellidos superan 80 caracteres.",
+        }, 400
+
+    if len(correo) > 254:
+        return {"ok": False, "mensaje": "El correo supera 254 caracteres."}, 400
+
+    if not validacion.correo_valido(correo):
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
+
+    if correo_cambio:
+        try:
+            repetido = db.session.execute(
+                db.select(Usuario.idUsuario).where(
+                    Usuario.correo == correo,
+                    Usuario.idUsuario != current_user.idUsuario,
+                )
+            ).scalar_one_or_none()
+        except SQLAlchemyError:
+            return {
+                "ok": False,
+                "mensaje": "No se pudo verificar el correo.",
+            }, 503
+
+        if repetido is not None:
+            return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+
+    current_user.nombreUsuario = nombre_usuario
+    current_user.apaterno = apaterno
+    current_user.amaterno = amaterno
+    current_user.correo = correo
+    current_user.fechaActualizacion = seguridad.ahora_utc()
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {
+            "ok": False,
+            "mensaje": "No se pudo actualizar la cuenta.",
+        }, 503
+
+    return {
+        "ok": True,
+        "data": serializar_usuario(current_user),
+        "mensaje": "Cuenta actualizada correctamente.",
+    }, 200
+    
+    
+    

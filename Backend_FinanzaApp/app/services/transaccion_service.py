@@ -11,12 +11,11 @@ from app.models import (
     Cartera,
     Categoria,
     MiembroCartera,
-    Notificacion,
     Periodo,
-    PreferenciaUsuario,
     Transaccion,
     Usuario,
 )
+from app.services import notificacion_service
 TIPOS = {"INGRESO", "GASTO"}
 METODOS_PAGO = {"EFECTIVO", "TARJETA", "TRANSFERENCIA"}
 
@@ -444,29 +443,16 @@ def _buscar_categoria(id_cartera, tipo_cartera, tipo, categoria_id):
 
 
 def _notificar_movimiento(cartera, transaccion):
-    miembros = db.session.execute(
-        db.select(MiembroCartera.usuarioId).where(
-            MiembroCartera.carteraId == cartera.idCartera,
-            MiembroCartera.estado == "ACTIVO",
-            MiembroCartera.usuarioId != transaccion.usuarioId,
-        )
-    ).scalars().all()
-
-    for usuario_id in miembros:
-        preferencia = db.session.get(PreferenciaUsuario, usuario_id)
-        if preferencia is not None and not preferencia.notificacionesApp:
-            continue
-        db.session.add(
-            Notificacion(
-                usuarioId=usuario_id,
-                titulo=f"Nuevo movimiento en {cartera.nombre}",
-                mensaje=(
-                    f"{current_user.nombreUsuario} registró un "
-                    f"{transaccion.tipo.lower()} de ${transaccion.monto:.2f}."
-                ),
-                tipo="MOVIMIENTO",
-            )
-        )
+    notificacion_service.notificar_a_cartera(
+        cartera.idCartera,
+        transaccion.usuarioId,
+        "MOVIMIENTO",
+        f"Nuevo movimiento en {cartera.nombre}",
+        (
+            f"{current_user.nombreUsuario} registró un "
+            f"{transaccion.tipo.lower()} de ${transaccion.monto:.2f}."
+        ),
+    )
 
 
 def _recalcular_saldo(cartera):
