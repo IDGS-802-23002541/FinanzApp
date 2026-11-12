@@ -52,8 +52,7 @@ function GraficaDona({titulo, datos}){
                 <Stack 
                 direction={{ xs: 'column', md: 'row'}}
                 spacing={3}
-                alignItems="center"
-                sx={{mt: 2}}
+                sx={{mt: 2, alignItems: 'center'}}
                 >
                     <Box
                     sx={{

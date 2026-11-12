@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
     "name": "FinanzApp - Auth",
-    "description": "Pruebas del módulo de autenticación: registro (#96) y sesión JWT (#99).",
+    "description": "Pruebas de autenticacion, carteras (incluye cierre/balance), invitaciones, miembros y reportes. Soporte (modulo 9) aun no tiene endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,6 +20,22 @@
     },
     {
       "key": "codigoRecuperacion",
+      "value": ""
+    },
+    {
+      "key": "idCartera",
+      "value": ""
+    },
+    {
+      "key": "idUsuario",
+      "value": ""
+    },
+    {
+      "key": "codigoInvitacion",
+      "value": ""
+    },
+    {
+      "key": "periodoId",
       "value": ""
     }
   ],
@@ -1063,6 +1079,323 @@
             ],
             "url": "{{baseUrl}}/carteras?estado=INACTIVA",
             "description": "Esperado: 400. INACTIVA no existe; el valor de BD es ARCHIVADA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "28 - Detalle de cartera",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Incluye resumen, series y colaboradores."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "29 - Periodos de cartera",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/periodos",
+            "description": "Esperado: 200. Periodos de una cartera Hogar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "30 - Consultar invitacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/invitaciones",
+            "description": "Esperado: 200 como propietario; 403 como colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "31 - Generar invitacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/invitaciones",
+            "description": "Esperado: 201. Solo propietario y cartera activa."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "32 - Unirse a cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"codigo\":\"{{codigoInvitacion}}\"}"
+            },
+            "url": "{{baseUrl}}/invitaciones/unirse",
+            "description": "Esperado: 201. Usar token del colaborador y una clave vigente."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "33 - Eliminar colaborador",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/miembros/{{idUsuario}}",
+            "description": "Esperado: 200. Baja logica; no borra transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "34 - Salir de cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/salir",
+            "description": "Esperado: 200. Usar token del colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "35 - Finalizar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/finalizar",
+            "description": "Esperado: 200. Solo propietario, tipo Viaje/Evento y estado Activa."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "36 - Detalle de cartera finalizada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Debe incluir balance total, por categoria y por participante."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "37 - Inactivar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/inactivar",
+            "description": "Esperado: 200. Estado ARCHIVADA; no borra datos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "38 - Reactivar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/reactivar",
+            "description": "Esperado: 200. Vuelve a ACTIVA si no esta FINALIZADA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "39 - Editar cartera",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Cartera editada\",\"descripcion\":\"Descripcion de prueba\"}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Solo nombre y descripcion."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "01 - Vista previa de reporte",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCartera}}&cantidad=5",
+            "description": "Esperado: 200. Solo carteras del propietario; hayDatos indica si se puede exportar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Exportar reporte CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes/exportar?carteraId={{idCartera}}&formato=CSV",
+            "description": "Esperado: 200 con archivo CSV; 409 si no hay datos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Vista previa por periodo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCartera}}&periodoId={{periodoId}}",
+            "description": "Esperado: 200. El periodo debe pertenecer a la cartera."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Exportar reporte PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes/exportar?carteraId={{idCartera}}&formato=PDF",
+            "description": "Esperado: 200 con archivo application/pdf; 409 si no hay datos."
           },
           "response": [],
           "event": []

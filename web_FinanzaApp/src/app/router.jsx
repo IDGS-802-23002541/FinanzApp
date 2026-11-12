@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import PublicLayout from '../layouts/PublicLayout.jsx'
 import ProtectedRoute from '../routes/ProtectedRoute.jsx'
 import RoleRoute from '../routes/RoleRoute.jsx'
@@ -8,7 +8,12 @@ import Registro from '../features/auth/pages/Registro.jsx'
 import RecuperarContrasena from '../features/auth/pages/RecuperarContrasena.jsx'
 import ListaCarteras from '../features/carteras/pages/Lista.jsx'
 import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
+import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
+import InvitacionQR from '../features/carteras/pages/InvitacionQR.jsx'
+import CierreBalance from '../features/carteras/pages/CierreBalance.jsx'
+import TabPendiente from '../features/carteras/pages/TabPendiente.jsx'
 import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
+import TransaccionesCartera from '../features/transacciones/pages/TransaccionesCartera.jsx'
 import Reportes from '../features/reportes/pages/Reportes.jsx'
 import PagosRecurrentes from '../features/pagos-recurrentes/pages/Lista.jsx'
 import Ajustes from '../features/ajustes/pages/Ajustes.jsx'
@@ -36,7 +41,25 @@ export const router = createBrowserRouter([
       {element: <PanelLayout />, children: [
         {element: <RoleRoute roles={[ROLES.CLIENTE]} />, children: [
           {path: '/carteras', element: <ListaCarteras />},
-          {path: '/carteras/:id', element: <DetalleCartera />},
+          {
+            path: '/carteras/:id',
+            element: <DetalleCartera />,
+            children: [
+              { index: true, element: <Navigate to="resumen" replace /> },
+              { path: 'resumen', element: <DetalleResumen /> },
+              { path: 'transacciones', element: <TransaccionesCartera /> },
+              {
+                path: 'contribuyentes',
+                element: <TabPendiente titulo="Contribuyentes" />,
+              },
+              {
+                path: 'pagos',
+                element: <TabPendiente titulo="Pagos recurrentes" />,
+              },
+              { path: 'invitacion', element: <InvitacionQR /> },
+              { path: 'cierre', element: <CierreBalance /> },
+            ],
+          },
           {path: '/transacciones', element: <Transacciones />},
           {path: '/reportes', element: <Reportes />},
           {path: '/pagos-recurrentes', element: <PagosRecurrentes />},

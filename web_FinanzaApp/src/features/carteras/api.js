@@ -62,6 +62,8 @@ function aVistaDetalle(cartera) {
       saldo: cartera.presupuestoInicial ?? 0,
     },
     series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
+    balance: cartera.balance ?? null,
+    fechaCierre: cartera.fechaCierre ?? null,
   }
 }
 
@@ -112,5 +114,60 @@ export async function crearCartera({
     fechaFin: conPeriodo && fechaFin ? fechaFin : undefined,
   })
 
+  return data
+}
+
+// trae las categorias activas de la cartera, tipo filtra ingreso o gasto 
+export async function listarCategorias(idCartera, tipo){
+  const query = tipo ? `?tipo=${encodeURIComponent(tipo)}` : ''
+  const { data } = await api.get(`/carteras/${idCartera}/categorias${query}`)
+  return data
+}
+
+// crea una categoria nueva en la cartera y regresa la que quedo guardada 
+
+export async function crearCategoria(idCartera, {nombre, tipo}){
+  const {data} = await api.post(`/carteras/${idCartera}/categorias`, {
+    nombre: nombre.trim(),
+    tipo,
+  })
+  return data
+}
+
+// registra un ingreso o gasto, el gasto exige categoriaId 
+export async function crearTransaccion(idCartera, {tipo, monto, fecha,categoriaId, metodoPago,descripcion}){
+  const {data} = await api.post(`/carteras/${idCartera}/transacciones`, {
+    tipo,
+    monto: Number(monto),
+    fecha,
+    // el ingreso usa la catgoria aportaciones del backend, solo el gasto manda id 
+    ...(tipo === 'GASTO' ? {categoriaId: Number(categoriaId)} : {}),
+    metodoPago: metodoPago || undefined,
+    descripcion: descripcion?.trim() || undefined,
+  })
+  return data
+}
+
+// Periodos de ingreso de una cartera Hogar.
+export async function listarPeriodos(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/periodos`)
+  return data
+}
+
+// Invitacion activa y bitacora de ingresos de la cartera.
+export async function obtenerInvitacion(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/invitaciones`)
+  return data
+}
+
+// Genera una invitacion nueva (revoca la anterior).
+export async function generarInvitacion(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/invitaciones`, {})
+  return data
+}
+
+// Cierra una cartera Viaje/Evento y devuelve la cartera con su balance.
+export async function finalizarCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/finalizar`, {})
   return data
 }
