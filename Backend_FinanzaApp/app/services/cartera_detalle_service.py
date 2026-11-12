@@ -48,6 +48,63 @@ def listar_periodos(id_cartera):
     ]
 
 
+def balance(id_cartera):
+    filtros = [
+        Transaccion.carteraId == id_cartera,
+        Transaccion.estado == "ACTIVO",
+    ]
+    ingresos, gastos = _sumas(filtros)
+    return {
+        "totalIngresos": float(ingresos),
+        "totalGastos": float(gastos),
+        "balance": float(ingresos - gastos),
+        "porCategoria": _gastos_por_categoria(filtros),
+        "porParticipante": _balance_por_participante(filtros),
+    }
+
+
+def _balance_por_participante(filtros):
+    filas = db.session.execute(
+        db.select(
+            Transaccion.usuarioId,
+            Usuario.nombreUsuario,
+            Usuario.apaterno,
+            Transaccion.tipo,
+            func.coalesce(func.sum(Transaccion.monto), 0),
+        )
+        .join(Usuario, Usuario.idUsuario == Transaccion.usuarioId)
+        .where(*filtros)
+        .group_by(
+            Transaccion.usuarioId,
+            Usuario.nombreUsuario,
+            Usuario.apaterno,
+            Transaccion.tipo,
+        )
+    ).all()
+
+    participantes = {}
+    for usuario_id, nombre, apaterno, tipo, total in filas:
+        datos = participantes.setdefault(
+            usuario_id,
+            {
+                "usuarioId": usuario_id,
+                "nombre": f"{nombre} {apaterno or ''}".strip(),
+                "totalIngresos": 0.0,
+                "totalGastos": 0.0,
+            },
+        )
+        if tipo == "INGRESO":
+            datos["totalIngresos"] = float(total)
+        else:
+            datos["totalGastos"] = float(total)
+
+    resultado = []
+    for datos in participantes.values():
+        datos["balance"] = datos["totalIngresos"] - datos["totalGastos"]
+        resultado.append(datos)
+    return sorted(resultado, key=lambda item: item["nombre"])
+
+
 def resumen_y_series(cartera, periodo_id=None):
     periodo = _validar_periodo(cartera, periodo_id)
     filtros = [

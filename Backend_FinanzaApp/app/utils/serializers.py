@@ -60,6 +60,9 @@ def serializar_cartera(cartera, rol_bd, admin):
         "avancePresupuesto": 0,
         "fechaInicio": cartera.fechaInicio.isoformat() if cartera.fechaInicio else None,
         "fechaFin": cartera.fechaFin.isoformat() if cartera.fechaFin else None,
+        "fechaCierre": (
+            cartera.fechaCierre.isoformat() if cartera.fechaCierre else None
+        ),
     }
 
 def serializar_comentario(comentario):

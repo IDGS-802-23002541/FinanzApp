@@ -1,5 +1,5 @@
 //Se usa este archivo para renderizar los contenidos y la barra lateral de los paneles por rol
-import { Box, Stack } from '@mui/material'
+import { Box } from '@mui/material'
 import { Outlet } from 'react-router-dom'
 import SideBar from '../components/ui/SideBar.jsx'
 import { useAuth } from '../hooks/useAuth.js'
@@ -28,7 +28,6 @@ const enlacesPorRol = {
 
 export default function PanelLayout() {
     const { usuario } = useAuth()
-    const enlaces = enlacesPorRol[usuario?.rol] || []
     return (
     <Box sx={{ display: 'flex', backgroundColor: 'var(--color-fondo)' }}>
         <SideBar enlaces={enlacesPorRol[usuario.rol]} />

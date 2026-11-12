@@ -28,6 +28,7 @@ def create_app():
     from app.routes.carteras import carteras_bp
     from app.routes.categorias import categorias_bp
     from app.routes.invitaciones import invitaciones_bp
+    from app.routes.miembros import miembros_bp
     from app.routes.transacciones import transacciones_bp
     from app.routes.comentarios import comentarios_bp
     from app.routes.reportes import reportes_bp
@@ -36,6 +37,7 @@ def create_app():
     app.register_blueprint(carteras_bp)
     app.register_blueprint(categorias_bp)
     app.register_blueprint(invitaciones_bp)
+    app.register_blueprint(miembros_bp)
     app.register_blueprint(transacciones_bp)
     app.register_blueprint(comentarios_bp)
     app.register_blueprint(reportes_bp)
