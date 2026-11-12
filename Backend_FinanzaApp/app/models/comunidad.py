@@ -40,6 +40,7 @@ class ComentarioLanding(db.Model):
         db.Index(
             "IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"
         ),
+        db.Index("IX_COMENTARIO_LANDING_ip_fecha", "ip", "fechaCreacion"),
         db.CheckConstraint(
             "estado IN ('PENDIENTE', 'PUBLICADO', 'OCULTO')",
             name="CK_COMENTARIO_LANDING_estado",
@@ -50,6 +51,8 @@ class ComentarioLanding(db.Model):
     nombre = db.Column(db.Unicode(120), nullable=False)
     correo = db.Column(db.Unicode(254))
     comentario = db.Column(db.Unicode(2000), nullable=False)
+    # Origen del envío: se usa solo para el límite anti-spam, no se expone en la API.
+    ip = db.Column(db.Unicode(45))
     fechaCreacion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
     )
