@@ -120,5 +120,14 @@ def guardar_preferencias():
     datos = _cuerpo()
     if datos is None:
         return error("El cuerpo debe ser un objeto JSON.")
-    payload, status = auth_service.guardar_preferencia(datos.get("tema"))
+    payload, status = auth_service.guardar_preferencia(datos)
+    return jsonify(payload), status
+
+@auth_bp.put("/editar_cuenta")
+@jwt_required()
+def editar_cuenta():
+    datos = _cuerpo()
+    if datos is None:
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = auth_service.editar_cuenta(datos)
     return jsonify(payload), status
