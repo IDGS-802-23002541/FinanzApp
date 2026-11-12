@@ -31,22 +31,21 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 ### 1.2 `Tipo de cartera` — no es tabla propia
 > Se usa `Cartera.tipo` (`HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA`) y `CATEGORIAS.tipoCartera` para el catálogo global por tipo.
 
-### 1.3 `Cartera`
+### 1.3 `Cartera` (tabla `CARTERA`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idCartera | int PK | |
-| nombreCartera | string | |
-| descripcion | string | |
-| tipo | string | `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRA` |
-| idPropietario | int FK | Dueño/administrador original |
-| presupuestoInicial | decimal? | Opcional |
-| **estado** | enum | `ACTIVA` \| `ARCHIVADA` (= inactiva) \| `FINALIZADA`. **Finalizada solo Viaje/Evento** |
-| fechaCreacion | datetime | |
-| fechaInicio | date? | Vigencia |
-| fechaFin | date? | Vigencia |
-| fechaCierre | datetime? | Al finalizar |
-| **fechaBaja** | datetime? | **Nuevo** (baja lógica) |
-| color | string | |
+| nombre | string(100) | NOT NULL |
+| descripcion | string(500)? | |
+| presupuestoInicial | decimal(12,2) | NOT NULL, default 0; no aplica a Hogar |
+| tipo | string(10) | NOT NULL, default `OTRA`; `HOGAR` \| `VIAJE` \| `EVENTO` \| `OTRO` |
+| fechaCreacion | datetime | NOT NULL, default `sysutcdatetime()` |
+| fechaInicio | date? | Vigencia (Viaje/Evento/Otro) |
+| fechaFin | date? | Vigencia (Viaje/Evento/Otro) |
+| estado | string(12) | NOT NULL, default `ACTIVA`; `ACTIVA` \| `ARCHIVADA` \| `FINALIZADA` |
+| versionFila | rowversion | NOT NULL, control de concurrencia |
+
+> `FINALIZADA` solo aplica a carteras de tipo Viaje/Evento (HU-04.6).
 
 > La invitación vive en `Invitacion` (ver §1.7): el QR muestra una clave de 8 caracteres que se almacena hasheada en `codigoHash`.
 
@@ -123,46 +122,86 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idPeriodo | int PK | |
-| idCartera | int FK | Debe ser tipo Hogar |
-| frecuencia | enum | `semanal` \| `quincenal` \| `mensual` \| ... |
+| carteraId | int FK | Debe ser tipo Hogar |
+| nombre | string | Nombre visible del periodo |
 | fechaInicio | date | |
-| fechaFin | date | |
-| **activo** | bool | Periodo vigente actual |
+| fechaFin | date | `fechaFin >= fechaInicio` (`CK_PERIODO_fechas`) |
+| estado | enum | `ACTIVO` \| `CERRADO` |
+| fechaCreacion | datetime | Inmutable |
 
-### 2.2 `PagoRecurrente`
+> La migración `SQL/migracion_t232_periodo.sql` crea `PERIODO` y homologa los
+> constraints e índices de `CARTERA` y `MIEMBROS_CARTERA`. Las FK se mantienen
+> sin `CASCADE` porque la baja de carteras es lógica.
+
+### 2.2 `PagoRecurrente` (tabla real: `PAGOS_RECURRENTES`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idPagoRecurrente | int PK | |
-| idCartera | int FK | |
-| idCategoria | int FK | Ver §1.6 | |
-| descripcion | string | |
-| monto | decimal | |
-| periodicidad | enum | `semanal` \| `quincenal` \| `mensual` \| `anual` |
-| proximoVencimiento | date | |
-| estado | enum | `pendiente` \| `hecho` |
-| fechaHecho | datetime? | |
+| carteraId | int FK | Debe ser miembro activo |
+| usuarioId | int FK | Autor del pago |
+| categoriaId | int FK? | |
+| nombre | string | |
+| descripcion | string? | |
+| monto | decimal | Mayor a 0 (`CK_PAGOS_RECURRENTES_monto`) |
+| frecuencia | enum | `DIARIO` \| `SEMANAL` \| `MENSUAL` \| `ANUAL` |
+| fechaInicio | date | |
+| fechaFin | date? | `null` o posterior a `fechaInicio` |
+| proximaEjecucion | date | Próximo vencimiento |
+| estado | enum | `ACTIVO` \| `PAUSADO` \| `CANCELADO` |
+| fechaCreacion | datetime | Inmutable |
 
-### 2.3 `TicketSoporte`
+### 2.2.1 `PagoRecEjecucion` (tabla real: `PAGOS_REC_EJECUCIONES`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idEjecucion | int PK | |
+| pagoRecurrenteId | int FK | |
+| transaccionId | int FK? | Gasto generado al marcar 'Hecho' |
+| fechaProgramada | date | Única por pago (`UQ_PAGOS_REC_EJECUCIONES_fecha`) |
+| fechaEjecucion | datetime? | |
+| monto | decimal | Mayor a 0 |
+| estado | enum | `PENDIENTE` \| `EJECUTADO` \| `FALLIDO` \| `OMITIDO` |
+| mensajeError | string? | |
+
+> Migración `SQL/migracion_t169_pagos.sql`; las FK no usan `CASCADE` porque las
+> bajas son lógicas.
+
+### 2.3 `Ticket` (tabla real: `TICKET`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idTicket | int PK | |
-| idUsuario | int FK | Cliente que reporta |
-| asunto | string | |
-| descripcion | text | Editable mientras esté pendiente |
-| categoria | string? | Clasificación hecha por soporte |
-| **estado** | enum | `pendiente` \| `respondido` \| `cerrado` \| `cancelado` |
-| idTrabajador | int FK? | Asignado |
+| usuarioId | int FK | Cliente que reporta |
+| asunto | string | No vacío |
+| descripcion | text | Editable mientras esté abierto |
+| categoria | enum | `GENERAL` \| `CUENTA` \| `CARTERA` \| `PAGOS` \| `ERROR` \| `OTRO` |
+| prioridad | enum | `BAJA` \| `MEDIA` \| `ALTA` \| `URGENTE` |
+| estado | enum | `ABIERTO` \| `EN_PROCESO` \| `ESPERA` \| `RESUELTO` \| `CERRADO` |
 | fechaCreacion | datetime | |
-| fechaCierre | datetime? | |
+| fechaActualizacion | datetime? | |
+| fechaCierre | datetime? | Posterior a la creación |
 
-### 2.4 `RespuestaTicket`
+### 2.4 `RespuestaTicket` (tabla real: `RESPUESTA_TICKET`)
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idRespuesta | int PK | |
-| idTicket | int FK | |
-| idTrabajador | int FK | Autor |
-| mensaje | text | |
-| fecha | datetime | |
+| ticketId | int FK | |
+| usuarioId | int FK | Autor |
+| mensaje | text | No vacío |
+| fechaCreacion | datetime | |
+| esInterna | bool | Nota interna del equipo |
+
+### 2.4.1 `AsignacionTicket` (tabla real: `ASIGNACION_TICKET`)
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| idAsignacion | int PK | |
+| ticketId | int FK | |
+| trabajadorId | int FK | Responsable asignado |
+| fechaInicio | datetime | |
+| fechaFin | datetime? | |
+| esActual | bool | Un solo registro actual por ticket (índice único filtrado) |
+| observaciones | string? | |
+
+> Migración `SQL/migracion_t211_soporte.sql`; las FK no usan `CASCADE` porque
+> las bajas de tickets son lógicas.
 
 ### 2.5 `Trabajador` (equipo interno)
 | Campo | Tipo | Notas |
@@ -178,21 +217,42 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | idComentario | int PK | |
-| nombre | string | |
-| correo | string | |
-| mensaje | text | |
-| fecha | datetime | |
-| leido | bool | Para el buzón del administrador |
+| nombre | string | Obligatorio, no vacío |
+| correo | string? | |
+| comentario | text | Mensaje del visitante, no vacío |
+| fechaCreacion | datetime | Inmutable |
+| estado | enum | `PENDIENTE` \| `PUBLICADO` \| `OCULTO` |
+
+> Migración `SQL/migracion_t93_comentarios.sql`; el buzón del administrador usa
+> `estado` para ocultar o publicar comentarios sin borrarlos.
 
 ### 2.7 `Notificacion`
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| idNotificacion | int PK | |
-| idUsuario | int FK | Destinatario |
-| tipo | enum | `movimiento` \| `recordatorio` \| `pago_recurrente` |
-| mensaje | string | |
-| leida | bool | |
-| fecha | datetime | |
+| idNotificacion | bigint PK | |
+| usuarioId | int FK | Destinatario |
+| titulo | string | No vacío |
+| mensaje | string | No vacío |
+| tipo | enum? | `MOVIMIENTO` \| `CIERRE` \| `RECORDATORIO` \| `PAGO` |
+| fechaCreacion | datetime | Inmutable |
+| fechaLectura | datetime? | `null` = no leída |
+
+> Migración `SQL/migracion_t184_notificaciones.sql`.
+
+### 2.8 `PreferenciaUsuario`
+| Campo | Tipo | Notas |
+| --- | --- | --- |
+| usuarioId | int PK/FK | |
+| tema | enum | `CLARO` \| `OSCURO` \| `SISTEMA` |
+| notificacionesCorreo | bool | |
+| notificacionesApp | bool | Interruptor general |
+| notificacionesMovimientos | bool | Avisos de movimientos en cartera |
+| notificacionesSistema | bool | Recordatorios del sistema |
+| notificacionesPagos | bool | Recordatorios de pagos recurrentes |
+| moneda | string | `MXN` por defecto |
+| fechaActualizacion | datetime | |
+
+> Los tres interruptores nuevos se agregan en `migracion_t184_notificaciones.sql`.
 
 ---
 

@@ -1,29 +1,45 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Alert,
   Box,
+  Button,
+  Chip,
   CircularProgress,
-  LinearProgress,
-  Paper,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
-import { formatearMonto } from '../../../utils/formato.js'
+import { IconoCasa } from '../../../components/ui/Iconos.jsx'
+import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
+
+const SECCIONES = [
+  { valor: 'resumen', etiqueta: 'Resumen' },
+  { valor: 'transacciones', etiqueta: 'Transacciones' },
+  { valor: 'contribuyentes', etiqueta: 'Contribuyentes' },
+  { valor: 'pagos', etiqueta: 'Pagos recurrentes' },
+  { valor: 'invitacion', etiqueta: 'Invitación QR' },
+  { valor: 'cierre', etiqueta: 'Cierre y balance' },
+]
 
 function DetalleCartera() {
   const { id } = useParams()
+  const navegar = useNavigate()
+  const location = useLocation()
   const [cartera, setCartera] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [modalAbierto, setModalAbierto] = useState(false)
+  const [recarga, setRecarga] = useState(0)
+  const primeraCarga = useRef(true)
 
   useEffect(() => {
-    // evita que una respuesta vieja pinte otra cartera al cambiar de ruta
     let vigente = true
 
     const cargar = async () => {
-      setCargando(true)
+      if (primeraCarga.current) setCargando(true)
       setError('')
 
       try {
@@ -32,16 +48,18 @@ function DetalleCartera() {
       } catch (err) {
         if (vigente) setError(err.message)
       } finally {
-        if (vigente) setCargando(false)
+        if (vigente) {
+          setCargando(false)
+          primeraCarga.current = false
+        }
       }
     }
 
     cargar()
-
     return () => {
       vigente = false
     }
-  }, [id])
+  }, [id, recarga])
 
   if (cargando) {
     return (
@@ -59,101 +77,98 @@ function DetalleCartera() {
     return <Alert severity="info">Cartera no disponible.</Alert>
   }
 
-  // aun no hay transacciones en el sprint, asi que el gasto real queda en cero
-  const gastado = 0
-  const presupuesto = cartera.presupuestoInicial || 0
-  const progreso = presupuesto > 0 ? (gastado / presupuesto) * 100 : 0
+  const segmento = location.pathname.split('/').pop()
+  const seccion = SECCIONES.some((s) => s.valor === segmento)
+    ? segmento
+    : 'resumen'
+  const recargar = () => setRecarga((n) => n + 1)
 
   return (
     <Stack spacing={3}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h1">{cartera.nombre}</Typography>
-        <Typography
-          sx={{
-            fontSize: '0.875rem',
-            color: 'var(--color-texto-terciario)',
-            mt: 0.5,
-          }}
-        >
-          {cartera.categoria} · {cartera.estatus} · {cartera.rol}
-        </Typography>
-
-        {cartera.descripcion && (
-          <Typography sx={{ mt: 1.5 }}>{cartera.descripcion}</Typography>
-        )}
-
-        {cartera.periodo && (
-          <Typography
-            sx={{
-              mt: 1,
-              fontSize: '0.875rem',
-              color: 'var(--color-texto-secundario)',
-            }}
-          >
-            {cartera.periodo}
-          </Typography>
-        )}
-
-        {cartera.administrador && (
-          <Typography
-            sx={{
-              mt: 1,
-              fontSize: '0.875rem',
-              color: 'var(--color-texto-secundario)',
-            }}
-          >
-            Administrador: {cartera.administrador}
-          </Typography>
-        )}
-      </Paper>
+      <Button
+        onClick={() => navegar('/carteras')}
+        sx={{
+          alignSelf: 'flex-start',
+          minHeight: 0,
+          px: 0,
+          color: 'var(--color-texto-terciario)',
+        }}
+      >
+        ← Volver a carteras
+      </Button>
 
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          flexWrap: 'wrap',
         }}
       >
-        <Paper sx={{ p: 2 }}>
-          <Typography
-            sx={{
-              fontSize: '0.75rem',
-              color: 'var(--color-texto-terciario)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Presupuesto
-          </Typography>
-          <Typography variant="h4" sx={{ mt: 0.5 }}>
-            {formatearMonto(presupuesto)}
-          </Typography>
-        </Paper>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-primario)',
+            color: 'var(--color-sobre-primario)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <IconoCasa sx={{ fontSize: 22 }} />
+        </Box>
 
-        <Paper sx={{ p: 2 }}>
-          <Typography
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography variant="h1">{cartera.nombre}</Typography>
+          <Chip
+            label={cartera.categoria}
+            size="small"
             sx={{
-              fontSize: '0.75rem',
-              color: 'var(--color-texto-terciario)',
-              textTransform: 'uppercase',
+              alignSelf: 'flex-start',
+              backgroundColor: 'var(--color-superficie-suave)',
+              color: 'var(--color-texto-secundario)',
+              fontWeight: 700,
             }}
-          >
-            Gastado
-          </Typography>
-          <Typography variant="h4" sx={{ mt: 0.5 }}>
-            {formatearMonto(gastado)}
-          </Typography>
-        </Paper>
+          />
+        </Box>
+
+        <Button
+          variant="contained"
+          onClick={() => setModalAbierto(true)}
+          disabled={cartera.estatus !== 'Activa'}
+          sx={{ ml: 'auto' }}
+        >
+          Registrar transacción
+        </Button>
       </Box>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">Avance del presupuesto</Typography>
-        <LinearProgress
-          variant="determinate"
-          value={progreso}
-          sx={{ mt: 1.5, height: 10, borderRadius: 1 }}
+      <Tabs
+        value={seccion}
+        onChange={(_evento, valor) => navegar(`/carteras/${id}/${valor}`)}
+        variant="scrollable"
+        allowScrollButtonsMobile
+        sx={{ borderBottom: '1px solid var(--color-borde)' }}
+      >
+        {SECCIONES.map((item) => (
+          <Tab key={item.valor} value={item.valor} label={item.etiqueta} />
+        ))}
+      </Tabs>
+
+      <Outlet context={{ cartera, id, recarga, recargar }} />
+
+      {modalAbierto && (
+        <DialogoNuevaTransaccion
+          idCartera={id}
+          onCerrar={() => setModalAbierto(false)}
+          onGuardada={() => {
+            setModalAbierto(false)
+            recargar()
+          }}
         />
-        {/* aqui va la grafica de ingresos y gastos cuando existan transacciones */}
-      </Paper>
+      )}
     </Stack>
   )
 }
