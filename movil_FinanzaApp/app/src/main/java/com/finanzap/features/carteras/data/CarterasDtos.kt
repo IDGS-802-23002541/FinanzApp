@@ -39,6 +39,17 @@ data class RespuestaPeriodos(
 )
 
 @Serializable
+data class RespuestaSalidaCartera(
+    val data: SalidaCarteraDto = SalidaCarteraDto()
+)
+
+@Serializable
+data class SalidaCarteraDto(
+    val carteraId: Int = 0,
+    val estado: String = ""
+)
+
+@Serializable
 data class PeriodoDto(
     val idPeriodo: Int,
     val nombre: String = "",

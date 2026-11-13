@@ -80,4 +80,14 @@ class CarterasRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    override suspend fun salir(idCartera: Int): Result<Unit> =
+        try {
+            carterasApi.salir(idCartera)
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

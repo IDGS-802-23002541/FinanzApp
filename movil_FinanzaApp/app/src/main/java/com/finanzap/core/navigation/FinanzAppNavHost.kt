@@ -161,7 +161,8 @@ fun FinanzAppNavHost(
                             navController.navigate(
                                 Rutas.transacciones(id, nombre, puedeEditar)
                             )
-                        }
+                        },
+                        onSalirDeCartera = { navController.popBackStack() }
                     )
                 }
 

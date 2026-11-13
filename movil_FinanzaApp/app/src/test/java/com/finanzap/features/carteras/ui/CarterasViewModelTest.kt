@@ -146,4 +146,7 @@ private class RepositorioCarterasFalso : CarterasRepository {
         fechaInicio: String?,
         fechaFin: String?
     ): Result<Cartera> = Result.failure(UnsupportedOperationException())
+
+    override suspend fun salir(idCartera: Int): Result<Unit> =
+        Result.failure(UnsupportedOperationException())
 }

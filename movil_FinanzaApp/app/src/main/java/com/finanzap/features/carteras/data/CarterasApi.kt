@@ -27,4 +27,7 @@ interface CarterasApi {
 
     @GET("carteras/{idCartera}/periodos")
     suspend fun periodos(@Path("idCartera") idCartera: Int): RespuestaPeriodos
+
+    @POST("carteras/{idCartera}/salir")
+    suspend fun salir(@Path("idCartera") idCartera: Int): RespuestaSalidaCartera
 }

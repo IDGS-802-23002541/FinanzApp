@@ -137,6 +137,10 @@
     <string name="transacciones_balance">Balance</string>
     <string name="transacciones_pagina">Página %1$d de %2$d</string>
     <string name="transacciones_ver">Ver transacciones</string>
+    <string name="detalle_salir">Salir de la cartera</string>
+    <string name="detalle_salir_titulo">Salir de la cartera</string>
+    <string name="detalle_salir_aviso">Dejarás de ver esta cartera y sus movimientos. ¿Deseas continuar?</string>
+    <string name="detalle_salir_confirmar">Salir</string>
     <string name="transacciones_editar_titulo">Editar transacción</string>
     <string name="transacciones_eliminar_titulo">Eliminar transacción</string>
     <string name="transacciones_eliminar_mensaje">¿Eliminar esta transacción? Dejará de contar en el saldo.</string>

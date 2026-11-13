@@ -141,6 +141,26 @@ class CarteraDetalleViewModel @Inject constructor(
                 }
         }
     }
+
+    fun salir(idCartera: Int) {
+        if (_state.value.saliendo) return
+
+        _state.update { it.copy(saliendo = true, errorSalir = null) }
+        viewModelScope.launch {
+            carterasRepository.salir(idCartera)
+                .onSuccess {
+                    _state.update { it.copy(saliendo = false, salidaExitosa = true) }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            saliendo = false,
+                            errorSalir = mensajeErrorApi(error, "No se pudo salir de la cartera.")
+                        )
+                    }
+                }
+        }
+    }
 }
 
 data class CarteraDetalleUiState(
@@ -156,5 +176,8 @@ data class CarteraDetalleUiState(
     val cargandoInvitacion: Boolean = false,
     val errorInvitacion: String? = null,
     val invitacion: Invitacion? = null,
-    val ingresos: List<IngresoInvitacion> = emptyList()
+    val ingresos: List<IngresoInvitacion> = emptyList(),
+    val saliendo: Boolean = false,
+    val errorSalir: String? = null,
+    val salidaExitosa: Boolean = false
 )

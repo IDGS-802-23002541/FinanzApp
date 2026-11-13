@@ -195,4 +195,7 @@ private class RepositorioNuevaCarteraFalso : CarterasRepository {
             Cartera(id = 99, nombre = nombre, tipo = tipo, rol = RolEnCartera.PROPIETARIO)
         )
     }
+
+    override suspend fun salir(idCartera: Int): Result<Unit> =
+        Result.failure(UnsupportedOperationException())
 }

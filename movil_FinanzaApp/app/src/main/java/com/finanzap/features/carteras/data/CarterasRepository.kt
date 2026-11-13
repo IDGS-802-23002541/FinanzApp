@@ -32,4 +32,6 @@ interface CarterasRepository {
         fechaInicio: String?,
         fechaFin: String?
     ): Result<Cartera>
+
+    suspend fun salir(idCartera: Int): Result<Unit>
 }

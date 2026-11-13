@@ -69,6 +69,11 @@ class CarterasRepositoryImplTest {
             )
         }
 
+        override suspend fun salir(idCartera: Int): RespuestaSalidaCartera {
+            falla?.let { throw it }
+            return RespuestaSalidaCartera()
+        }
+
         override suspend fun listar(
             estado: String?,
             tipo: String?,

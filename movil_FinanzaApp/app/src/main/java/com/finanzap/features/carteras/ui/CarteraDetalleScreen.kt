@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -24,10 +25,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -69,6 +73,7 @@ fun CarteraDetalleScreen(
     onVolver: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
+    onSalirDeCartera: () -> Unit,
     viewModel: CarteraDetalleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -76,6 +81,10 @@ fun CarteraDetalleScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
         viewModel.refrescarInvitacion(carteraId)
+    }
+
+    LaunchedEffect(state.salidaExitosa) {
+        if (state.salidaExitosa) onSalirDeCartera()
     }
 
     val cartera = state.cartera
@@ -91,7 +100,8 @@ fun CarteraDetalleScreen(
         onRegistrarGasto = onRegistrarGasto,
         onVerTransacciones = onVerTransacciones,
         onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) },
-        onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) }
+        onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) },
+        onSalir = { viewModel.salir(carteraId) }
     )
 }
 
@@ -103,7 +113,8 @@ fun CarteraDetalleContenido(
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
     onGenerarInvitacion: () -> Unit,
-    onSeleccionarPeriodo: (Int?) -> Unit
+    onSeleccionarPeriodo: (Int?) -> Unit,
+    onSalir: () -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -143,7 +154,10 @@ fun CarteraDetalleContenido(
                 periodos = state.periodos,
                 periodoSeleccionadoId = state.periodoSeleccionadoId,
                 errorPeriodos = state.errorPeriodos,
-                onSeleccionarPeriodo = onSeleccionarPeriodo
+                onSeleccionarPeriodo = onSeleccionarPeriodo,
+                saliendo = state.saliendo,
+                errorSalir = state.errorSalir,
+                onSalir = onSalir
             )
         }
     }
@@ -165,7 +179,10 @@ private fun DetalleCartera(
     periodos: List<PeriodoCartera>,
     periodoSeleccionadoId: Int?,
     errorPeriodos: String?,
-    onSeleccionarPeriodo: (Int?) -> Unit
+    onSeleccionarPeriodo: (Int?) -> Unit,
+    saliendo: Boolean,
+    errorSalir: String?,
+    onSalir: () -> Unit
 ) {
     val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
     val totalIngresos = resumen?.totalIngresos ?: 0.0
@@ -375,6 +392,57 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+
+    if (cartera.rol == RolEnCartera.COLABORADOR && cartera.estado == "ACTIVA") {
+        var mostrarConfirmacion by remember { mutableStateOf(false) }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = { mostrarConfirmacion = true },
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.detalle_salir))
+        }
+
+        if (errorSalir != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorSalir,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        if (mostrarConfirmacion) {
+            AlertDialog(
+                onDismissRequest = { if (!saliendo) mostrarConfirmacion = false },
+                title = { Text(stringResource(R.string.detalle_salir_titulo)) },
+                text = { Text(stringResource(R.string.detalle_salir_aviso)) },
+                confirmButton = {
+                    TextButton(onClick = onSalir, enabled = !saliendo) {
+                        if (saliendo) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.detalle_salir_confirmar))
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { mostrarConfirmacion = false },
+                        enabled = !saliendo
+                    ) {
+                        Text(stringResource(R.string.comun_cancelar))
+                    }
+                }
+            )
+        }
     }
 }
 
