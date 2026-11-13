@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
-    "name": "FinanzApp - Auth",
-    "description": "Pruebas de autenticacion, carteras (incluye cierre/balance), invitaciones, miembros y reportes. Soporte (modulo 9) aun no tiene endpoints.",
+    "name": "FinanzApp - API",
+    "description": "Regresion del Sprint 3: autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta y notificaciones. Montos MXN; fechas de API en YYYY-MM-DD.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -36,6 +36,18 @@
     },
     {
       "key": "periodoId",
+      "value": ""
+    },
+    {
+      "key": "accessTokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "idTransaccion",
+      "value": ""
+    },
+    {
+      "key": "idCategoria",
       "value": ""
     }
   ],
@@ -1396,6 +1408,286 @@
             ],
             "url": "{{baseUrl}}/reportes/exportar?carteraId={{idCartera}}&formato=PDF",
             "description": "Esperado: 200 con archivo application/pdf; 409 si no hay datos."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Comentarios",
+      "item": [
+        {
+          "name": "01 - Crear comentario (publico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prueba 255\",\n  \"correo\": \"prueba255@dominio.com\",\n  \"comentario\": \"Comentario de regresion\"\n}"
+            },
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 201. Sin JWT. No expone la IP. Limite: 3 por IP cada 10 min; el cuarto devuelve 429."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar comentarios (staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 200 con token ADMIN/TRABAJADOR; 403 con CLIENTE. Usar accessTokenAdmin."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Cuenta",
+      "item": [
+        {
+          "name": "01 - Editar cuenta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"Prueba 255\",\n  \"apaterno\": \"\",\n  \"amaterno\": \"\",\n  \"correo\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/editar_cuenta",
+            "description": "Esperado: 200. nombreUsuario obligatorio; apellidos/correo vacios conservan su valor; correo duplicado 409."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Preferencias: GET",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 200 con tema y los 3 booleanos de notificaciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Preferencias: PUT notificaciones",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificacionesMovimientos\": true,\n  \"notificacionesSistema\": true,\n  \"notificacionesPagos\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 200; PUT parcial y devuelve los 3 booleanos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Preferencias: booleano invalido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificacionesPagos\": \"si\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 400. notificacionesPagos debe ser booleano."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Transacciones",
+      "item": [
+        {
+          "name": "01 - Listar transacciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones?pagina=1&porPagina=20",
+            "description": "Esperado: 200. Incluye paginacion, totales y autor; excluye eliminadas."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Crear gasto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 250.5,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}},\n  \"metodoPago\": \"EFECTIVO\",\n  \"descripcion\": \"Prueba 255\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 201. Monto MXN mayor a 0; fecha YYYY-MM-DD; categoriaId obligatorio para GASTO."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Editar transaccion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 300,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}},\n  \"metodoPago\": \"EFECTIVO\",\n  \"descripcion\": \"Editada 255\"\n}"
+            },
+            "url": "{{baseUrl}}/transacciones/{{idTransaccion}}",
+            "description": "Esperado: 200. Solo propietario y cartera ACTIVA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Eliminar transaccion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transacciones/{{idTransaccion}}",
+            "description": "Esperado: 200. Borrado logico; no elimina fisicamente."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "01 - Listar categorias",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias?tipo=GASTO",
+            "description": "Esperado: 200. Incluye categorias globales y personalizadas compatibles."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Crear categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Categoria 255\",\n  \"tipo\": \"GASTO\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias",
+            "description": "Esperado: 201. Nombre unico por cartera; tipo INGRESO, GASTO o AMBOS."
           },
           "response": [],
           "event": []
