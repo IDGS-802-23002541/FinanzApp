@@ -34,4 +34,16 @@ interface CarterasRepository {
     ): Result<Cartera>
 
     suspend fun salir(idCartera: Int): Result<Unit>
+
+    suspend fun editar(
+        idCartera: Int,
+        nombre: String,
+        tipo: TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Cartera>
+
+    suspend fun inactivar(idCartera: Int): Result<Cartera>
 }

@@ -64,17 +64,43 @@ class CarterasRepositoryImpl @Inject constructor(
     ): Result<Cartera> =
         try {
             val respuesta = carterasApi.crear(
-                CrearCarteraRequest(
-                    nombre = nombre.trim(),
-                    tipo = tipo.name,
-                    descripcion = descripcion?.trim()?.ifBlank { null },
-                    presupuestoInicial = presupuestoInicial,
-                    fechaInicio = fechaInicio,
-                    fechaFin = fechaFin
+                peticionCartera(
+                    nombre, tipo, descripcion, presupuestoInicial, fechaInicio, fechaFin
                 )
             )
-            val creada = respuesta.data.aCartera()
-            Result.success(creada)
+            Result.success(respuesta.data.aCartera())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun editar(
+        idCartera: Int,
+        nombre: String,
+        tipo: TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Cartera> =
+        try {
+            val respuesta = carterasApi.editar(
+                idCartera,
+                peticionCartera(
+                    nombre, tipo, descripcion, presupuestoInicial, fechaInicio, fechaFin
+                )
+            )
+            Result.success(respuesta.data.aCartera())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun inactivar(idCartera: Int): Result<Cartera> =
+        try {
+            Result.success(carterasApi.inactivar(idCartera).data.aCartera())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -90,4 +116,20 @@ class CarterasRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    private fun peticionCartera(
+        nombre: String,
+        tipo: TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ) = CrearCarteraRequest(
+        nombre = nombre.trim(),
+        tipo = tipo.name,
+        descripcion = descripcion?.trim()?.ifBlank { null },
+        presupuestoInicial = presupuestoInicial,
+        fechaInicio = fechaInicio,
+        fechaFin = fechaFin
+    )
 }

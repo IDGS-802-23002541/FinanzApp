@@ -3,6 +3,7 @@ package com.finanzap.features.carteras.data
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -30,4 +31,13 @@ interface CarterasApi {
 
     @POST("carteras/{idCartera}/salir")
     suspend fun salir(@Path("idCartera") idCartera: Int): RespuestaSalidaCartera
+
+    @PUT("carteras/{idCartera}")
+    suspend fun editar(
+        @Path("idCartera") idCartera: Int,
+        @Body peticion: CrearCarteraRequest
+    ): RespuestaCartera
+
+    @POST("carteras/{idCartera}/inactivar")
+    suspend fun inactivar(@Path("idCartera") idCartera: Int): RespuestaCartera
 }

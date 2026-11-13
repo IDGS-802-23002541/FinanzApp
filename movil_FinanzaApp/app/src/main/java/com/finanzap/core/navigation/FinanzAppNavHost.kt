@@ -26,8 +26,8 @@ import com.finanzap.features.auth.ui.MiCuentaScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
+import com.finanzap.features.carteras.ui.FormularioCarteraScreen
 import com.finanzap.features.carteras.ui.UnirseCarteraScreen
-import com.finanzap.features.carteras.ui.NuevaCarteraScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
 import com.finanzap.features.transacciones.ui.TransaccionesScreen
 import kotlinx.coroutines.flow.Flow
@@ -162,7 +162,24 @@ fun FinanzAppNavHost(
                                 Rutas.transacciones(id, nombre, puedeEditar)
                             )
                         },
-                        onSalirDeCartera = { navController.popBackStack() }
+                        onSalirDeCartera = { navController.popBackStack() },
+                        onEditarCartera = { id ->
+                            navController.navigate(Rutas.editarCartera(id))
+                        },
+                        onCarteraInactivada = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = Rutas.EditarCartera,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType }
+                    )
+                ) { entrada ->
+                    FormularioCarteraScreen(
+                        onVolver = { navController.popBackStack() },
+                        onGuardada = { navController.popBackStack() },
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0
                     )
                 }
 
@@ -215,9 +232,9 @@ fun FinanzAppNavHost(
                 }
 
                 composable(Rutas.NuevaCartera) {
-                    NuevaCarteraScreen(
+                    FormularioCarteraScreen(
                         onVolver = { navController.popBackStack() },
-                        onCreada = { navController.popBackStack() }
+                        onGuardada = { navController.popBackStack() }
                     )
                 }
 
@@ -263,6 +280,7 @@ fun FinanzAppNavHost(
 private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Carteras,
     Rutas.NuevaCartera,
+    Rutas.EditarCartera,
     Rutas.CarteraDetalle,
     Rutas.UnirseCartera,
     Rutas.Transacciones,

@@ -149,6 +149,20 @@ private class RepositorioCarterasFalso : CarterasRepository {
 
     override suspend fun salir(idCartera: Int): Result<Unit> =
         Result.failure(UnsupportedOperationException())
+
+    override suspend fun editar(
+        idCartera: Int,
+        nombre: String,
+        tipo: com.finanzap.features.carteras.TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<com.finanzap.features.carteras.Cartera> =
+        Result.failure(UnsupportedOperationException())
+
+    override suspend fun inactivar(idCartera: Int): Result<com.finanzap.features.carteras.Cartera> =
+        Result.failure(UnsupportedOperationException())
 }
 
 private class RepositorioFalso : TransaccionesRepository {

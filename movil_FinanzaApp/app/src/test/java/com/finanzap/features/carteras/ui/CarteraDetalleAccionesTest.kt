@@ -26,7 +26,7 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class CarteraDetalleSalirTest {
+class CarteraDetalleAccionesTest {
 
     private val carteras = RepositorioSalirFalso()
     private val invitaciones = InvitacionesFalso()
@@ -67,12 +67,41 @@ class CarteraDetalleSalirTest {
             viewModel.state.value.errorSalir
         )
     }
+
+    @Test
+    fun `inactivar marca la cartera como inactiva`() = runTest {
+        val viewModel = CarteraDetalleViewModel(carteras, invitaciones)
+
+        viewModel.inactivar(7)
+
+        assertEquals(7, carteras.ultimaInactivacion)
+        assertTrue(viewModel.state.value.inactivada)
+        assertFalse(viewModel.state.value.inactivando)
+        assertNull(viewModel.state.value.errorInactivar)
+    }
+
+    @Test
+    fun `error al inactivar muestra mensaje y no marca la cartera`() = runTest {
+        carteras.fallaInactivar = IllegalStateException("409")
+        val viewModel = CarteraDetalleViewModel(carteras, invitaciones)
+
+        viewModel.inactivar(7)
+
+        assertFalse(viewModel.state.value.inactivada)
+        assertFalse(viewModel.state.value.inactivando)
+        assertEquals(
+            "No se pudo inactivar la cartera.",
+            viewModel.state.value.errorInactivar
+        )
+    }
 }
 
 private class RepositorioSalirFalso : CarterasRepository {
 
     var fallaSalir: Exception? = null
     var ultimaSalida: Int? = null
+    var fallaInactivar: Exception? = null
+    var ultimaInactivacion: Int? = null
 
     override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
 
@@ -105,6 +134,25 @@ private class RepositorioSalirFalso : CarterasRepository {
         val error = fallaSalir
         if (error != null) return Result.failure(error)
         return Result.success(Unit)
+    }
+
+    override suspend fun editar(
+        idCartera: Int,
+        nombre: String,
+        tipo: TipoCartera,
+        descripcion: String?,
+        presupuestoInicial: Double,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Cartera> = Result.failure(UnsupportedOperationException())
+
+    override suspend fun inactivar(idCartera: Int): Result<Cartera> {
+        ultimaInactivacion = idCartera
+        val error = fallaInactivar
+        if (error != null) return Result.failure(error)
+        return Result.success(
+            Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO, estado = "ARCHIVADA")
+        )
     }
 }
 

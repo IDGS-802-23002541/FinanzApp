@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,22 +55,27 @@ import com.finanzap.features.carteras.TipoCartera
 private enum class CampoFecha { INICIO, FIN }
 
 @Composable
-fun NuevaCarteraScreen(
+fun FormularioCarteraScreen(
     onVolver: () -> Unit,
-    onCreada: () -> Unit,
-    viewModel: NuevaCarteraViewModel = hiltViewModel()
+    onGuardada: () -> Unit,
+    carteraId: Int? = null,
+    viewModel: FormularioCarteraViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(carteraId) {
+        if (carteraId != null) viewModel.cargarParaEditar(carteraId)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.eventos.collect { evento ->
             when (evento) {
-                NuevaCarteraEvento.CarteraCreada -> onCreada()
+                FormularioCarteraEvento.CarteraGuardada -> onGuardada()
             }
         }
     }
 
-    NuevaCarteraContenido(
+    FormularioCarteraContenido(
         state = state,
         onVolver = onVolver,
         onNombreChange = viewModel::onNombreChange,
@@ -84,8 +90,8 @@ fun NuevaCarteraScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NuevaCarteraContenido(
-    state: NuevaCarteraUiState,
+fun FormularioCarteraContenido(
+    state: FormularioCarteraUiState,
     onVolver: () -> Unit,
     onNombreChange: (String) -> Unit,
     onTipoChange: (TipoCartera) -> Unit,
@@ -96,9 +102,13 @@ fun NuevaCarteraContenido(
     onGuardar: () -> Unit
 ) {
     var fechaEnEdicion by remember { mutableStateOf<CampoFecha?>(null) }
+    val editando = state.carteraId != null
+    val bloqueado = state.guardando || state.cargando
 
     PantallaFormulario(
-        titulo = stringResource(R.string.nueva_cartera_titulo),
+        titulo = stringResource(
+            if (editando) R.string.cartera_editar_titulo else R.string.nueva_cartera_titulo
+        ),
         onVolver = onVolver,
         descripcionVolver = stringResource(R.string.comun_volver)
     ) {
@@ -111,7 +121,7 @@ fun NuevaCarteraContenido(
             isError = state.errorNombre != null,
             supportingText = state.errorNombre?.let { { Text(it) } },
             singleLine = true,
-            enabled = !state.guardando,
+            enabled = !bloqueado,
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth()
@@ -136,7 +146,7 @@ fun NuevaCarteraContenido(
                 FilterChip(
                     selected = state.tipo == tipo,
                     onClick = { onTipoChange(tipo) },
-                    enabled = !state.guardando,
+                    enabled = !bloqueado,
                     label = { Text(tipo.etiqueta) }
                 )
             }
@@ -156,7 +166,7 @@ fun NuevaCarteraContenido(
             label = { Text(stringResource(R.string.nueva_cartera_descripcion)) },
             isError = state.errorDescripcion != null,
             supportingText = state.errorDescripcion?.let { { Text(it) } },
-            enabled = !state.guardando,
+            enabled = !bloqueado,
             minLines = 3,
             maxLines = 5,
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
@@ -172,7 +182,7 @@ fun NuevaCarteraContenido(
             isError = state.errorPresupuesto != null,
             supportingText = state.errorPresupuesto?.let { { Text(it) } },
             singleLine = true,
-            enabled = !state.guardando,
+            enabled = !bloqueado,
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,
@@ -213,12 +223,24 @@ fun NuevaCarteraContenido(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        BotonPrincipal(
-            texto = stringResource(R.string.nueva_cartera_guardar),
-            textoCargando = stringResource(R.string.nueva_cartera_guardando),
-            cargando = state.guardando,
-            onClick = onGuardar
-        )
+        if (state.cargando) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        } else {
+            BotonPrincipal(
+                texto = stringResource(
+                    if (editando) {
+                        R.string.cartera_editar_guardar
+                    } else {
+                        R.string.nueva_cartera_guardar
+                    }
+                ),
+                textoCargando = stringResource(R.string.nueva_cartera_guardando),
+                cargando = state.guardando,
+                onClick = onGuardar
+            )
+        }
     }
 
     fechaEnEdicion?.let { campo ->

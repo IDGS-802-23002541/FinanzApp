@@ -141,6 +141,12 @@
     <string name="detalle_salir_titulo">Salir de la cartera</string>
     <string name="detalle_salir_aviso">Dejarás de ver esta cartera y sus movimientos. ¿Deseas continuar?</string>
     <string name="detalle_salir_confirmar">Salir</string>
+    <string name="cartera_editar_titulo">Editar cartera</string>
+    <string name="cartera_editar_guardar">Guardar cambios</string>
+    <string name="cartera_inactivar">Inactivar cartera</string>
+    <string name="cartera_inactivar_titulo">Inactivar cartera</string>
+    <string name="cartera_inactivar_aviso">La cartera dejará de estar activa y se revocarán sus invitaciones. Sus datos no se borran. ¿Deseas continuar?</string>
+    <string name="cartera_inactivar_confirmar">Inactivar</string>
     <string name="transacciones_editar_titulo">Editar transacción</string>
     <string name="transacciones_eliminar_titulo">Eliminar transacción</string>
     <string name="transacciones_eliminar_mensaje">¿Eliminar esta transacción? Dejará de contar en el saldo.</string>

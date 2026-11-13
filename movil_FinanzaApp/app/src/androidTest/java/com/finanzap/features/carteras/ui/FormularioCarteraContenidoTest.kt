@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class NuevaCarteraContenidoTest {
+class FormularioCarteraContenidoTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -21,8 +21,8 @@ class NuevaCarteraContenidoTest {
     fun muestraErroresDeNombreYTipo() {
         composeRule.setContent {
             FinanzAppTheme {
-                NuevaCarteraContenido(
-                    state = NuevaCarteraUiState(
+                FormularioCarteraContenido(
+                    state = FormularioCarteraUiState(
                         errorNombre = "El nombre es obligatorio.",
                         errorTipo = "Elige el tipo de cartera."
                     ),
@@ -47,8 +47,8 @@ class NuevaCarteraContenidoTest {
         var guardado = false
         composeRule.setContent {
             FinanzAppTheme {
-                NuevaCarteraContenido(
-                    state = NuevaCarteraUiState(nombre = "Casa Borja"),
+                FormularioCarteraContenido(
+                    state = FormularioCarteraUiState(nombre = "Casa Borja"),
                     onVolver = {},
                     onNombreChange = {},
                     onTipoChange = {},

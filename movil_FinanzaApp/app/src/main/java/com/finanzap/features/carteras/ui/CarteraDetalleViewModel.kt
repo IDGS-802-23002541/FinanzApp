@@ -161,6 +161,29 @@ class CarteraDetalleViewModel @Inject constructor(
                 }
         }
     }
+
+    fun inactivar(idCartera: Int) {
+        if (_state.value.inactivando) return
+
+        _state.update { it.copy(inactivando = true, errorInactivar = null) }
+        viewModelScope.launch {
+            carterasRepository.inactivar(idCartera)
+                .onSuccess {
+                    _state.update { it.copy(inactivando = false, inactivada = true) }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            inactivando = false,
+                            errorInactivar = mensajeErrorApi(
+                                error,
+                                "No se pudo inactivar la cartera."
+                            )
+                        )
+                    }
+                }
+        }
+    }
 }
 
 data class CarteraDetalleUiState(
@@ -179,5 +202,8 @@ data class CarteraDetalleUiState(
     val ingresos: List<IngresoInvitacion> = emptyList(),
     val saliendo: Boolean = false,
     val errorSalir: String? = null,
-    val salidaExitosa: Boolean = false
+    val salidaExitosa: Boolean = false,
+    val inactivando: Boolean = false,
+    val errorInactivar: String? = null,
+    val inactivada: Boolean = false
 )

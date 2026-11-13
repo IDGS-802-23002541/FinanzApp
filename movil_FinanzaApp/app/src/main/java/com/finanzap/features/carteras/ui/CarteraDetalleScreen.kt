@@ -74,6 +74,8 @@ fun CarteraDetalleScreen(
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
     onSalirDeCartera: () -> Unit,
+    onEditarCartera: (Int) -> Unit,
+    onCarteraInactivada: () -> Unit,
     viewModel: CarteraDetalleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -85,6 +87,10 @@ fun CarteraDetalleScreen(
 
     LaunchedEffect(state.salidaExitosa) {
         if (state.salidaExitosa) onSalirDeCartera()
+    }
+
+    LaunchedEffect(state.inactivada) {
+        if (state.inactivada) onCarteraInactivada()
     }
 
     val cartera = state.cartera
@@ -101,7 +107,9 @@ fun CarteraDetalleScreen(
         onVerTransacciones = onVerTransacciones,
         onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) },
         onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) },
-        onSalir = { viewModel.salir(carteraId) }
+        onSalir = { viewModel.salir(carteraId) },
+        onEditar = { onEditarCartera(carteraId) },
+        onInactivar = { viewModel.inactivar(carteraId) }
     )
 }
 
@@ -114,7 +122,9 @@ fun CarteraDetalleContenido(
     onVerTransacciones: (Int, String, Boolean) -> Unit,
     onGenerarInvitacion: () -> Unit,
     onSeleccionarPeriodo: (Int?) -> Unit,
-    onSalir: () -> Unit
+    onSalir: () -> Unit,
+    onEditar: () -> Unit,
+    onInactivar: () -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -157,7 +167,11 @@ fun CarteraDetalleContenido(
                 onSeleccionarPeriodo = onSeleccionarPeriodo,
                 saliendo = state.saliendo,
                 errorSalir = state.errorSalir,
-                onSalir = onSalir
+                onSalir = onSalir,
+                inactivando = state.inactivando,
+                errorInactivar = state.errorInactivar,
+                onEditar = onEditar,
+                onInactivar = onInactivar
             )
         }
     }
@@ -182,7 +196,11 @@ private fun DetalleCartera(
     onSeleccionarPeriodo: (Int?) -> Unit,
     saliendo: Boolean,
     errorSalir: String?,
-    onSalir: () -> Unit
+    onSalir: () -> Unit,
+    inactivando: Boolean,
+    errorInactivar: String?,
+    onEditar: () -> Unit,
+    onInactivar: () -> Unit
 ) {
     val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
     val totalIngresos = resumen?.totalIngresos ?: 0.0
@@ -392,6 +410,69 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+
+    if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado != "FINALIZADA") {
+        var mostrarConfirmacionInactivar by remember { mutableStateOf(false) }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = onEditar,
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.cartera_editar_titulo))
+        }
+
+        if (cartera.estado == "ACTIVA") {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = { mostrarConfirmacionInactivar = true },
+                shape = RoundedCornerShape(Dimensiones.RadioCampo),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.cartera_inactivar))
+            }
+
+            if (errorInactivar != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorInactivar,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            if (mostrarConfirmacionInactivar) {
+                AlertDialog(
+                    onDismissRequest = { if (!inactivando) mostrarConfirmacionInactivar = false },
+                    title = { Text(stringResource(R.string.cartera_inactivar_titulo)) },
+                    text = { Text(stringResource(R.string.cartera_inactivar_aviso)) },
+                    confirmButton = {
+                        TextButton(onClick = onInactivar, enabled = !inactivando) {
+                            if (inactivando) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.height(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(stringResource(R.string.cartera_inactivar_confirmar))
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { mostrarConfirmacionInactivar = false },
+                            enabled = !inactivando
+                        ) {
+                            Text(stringResource(R.string.comun_cancelar))
+                        }
+                    }
+                )
+            }
+        }
     }
 
     if (cartera.rol == RolEnCartera.COLABORADOR && cartera.estado == "ACTIVA") {

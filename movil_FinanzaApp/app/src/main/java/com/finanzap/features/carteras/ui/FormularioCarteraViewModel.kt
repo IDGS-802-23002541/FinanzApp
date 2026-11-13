@@ -17,15 +17,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class NuevaCarteraViewModel @Inject constructor(
+class FormularioCarteraViewModel @Inject constructor(
     private val carterasRepository: CarterasRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(NuevaCarteraUiState())
-    val state: StateFlow<NuevaCarteraUiState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(FormularioCarteraUiState())
+    val state: StateFlow<FormularioCarteraUiState> = _state.asStateFlow()
 
-    private val _eventos = Channel<NuevaCarteraEvento>(Channel.BUFFERED)
-    val eventos: Flow<NuevaCarteraEvento> = _eventos.receiveAsFlow()
+    private val _eventos = Channel<FormularioCarteraEvento>(Channel.BUFFERED)
+    val eventos: Flow<FormularioCarteraEvento> = _eventos.receiveAsFlow()
 
     fun onNombreChange(nombre: String) {
         _state.update { it.copy(nombre = nombre, errorNombre = null, errorGeneral = null) }
@@ -51,9 +51,50 @@ class NuevaCarteraViewModel @Inject constructor(
         _state.update { it.copy(fechaFin = fecha, errorFechas = null, errorGeneral = null) }
     }
 
+    fun cargarParaEditar(idCartera: Int) {
+        if (_state.value.carteraId != null) return
+        _state.update { it.copy(cargando = true, errorGeneral = null) }
+        viewModelScope.launch {
+            carterasRepository.detalle(idCartera)
+                .onSuccess { detalle ->
+                    val cartera = detalle.cartera
+                    _state.update {
+                        it.copy(
+                            cargando = false,
+                            carteraId = cartera.id,
+                            nombre = cartera.nombre,
+                            tipo = cartera.tipo,
+                            descripcion = cartera.descripcion.orEmpty(),
+                            presupuesto = if (cartera.presupuestoInicial > 0) {
+                                cartera.presupuestoInicial
+                                    .toBigDecimal()
+                                    .stripTrailingZeros()
+                                    .toPlainString()
+                            } else {
+                                ""
+                            },
+                            fechaInicio = cartera.fechaInicio,
+                            fechaFin = cartera.fechaFin
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            cargando = false,
+                            errorGeneral = mensajeErrorApi(
+                                error,
+                                "No se pudo cargar la cartera."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
     fun guardar() {
         val actual = _state.value
-        if (actual.guardando) return
+        if (actual.guardando || actual.cargando) return
 
         val nombre = actual.nombre.trim()
         val tipo = actual.tipo
@@ -103,17 +144,31 @@ class NuevaCarteraViewModel @Inject constructor(
 
         viewModelScope.launch {
             _state.update { it.copy(guardando = true, errorGeneral = null) }
-            carterasRepository.crear(
-                nombre = nombre,
-                tipo = tipo!!,
-                descripcion = descripcion.ifBlank { null },
-                presupuestoInicial = monto ?: 0.0,
-                fechaInicio = actual.fechaInicio,
-                fechaFin = actual.fechaFin
-            )
+            val idCartera = actual.carteraId
+            val resultado = if (idCartera == null) {
+                carterasRepository.crear(
+                    nombre = nombre,
+                    tipo = tipo!!,
+                    descripcion = descripcion.ifBlank { null },
+                    presupuestoInicial = monto ?: 0.0,
+                    fechaInicio = actual.fechaInicio,
+                    fechaFin = actual.fechaFin
+                )
+            } else {
+                carterasRepository.editar(
+                    idCartera = idCartera,
+                    nombre = nombre,
+                    tipo = tipo!!,
+                    descripcion = descripcion.ifBlank { null },
+                    presupuestoInicial = monto ?: 0.0,
+                    fechaInicio = actual.fechaInicio,
+                    fechaFin = actual.fechaFin
+                )
+            }
+            resultado
                 .onSuccess {
                     _state.update { it.copy(guardando = false) }
-                    _eventos.trySend(NuevaCarteraEvento.CarteraCreada)
+                    _eventos.trySend(FormularioCarteraEvento.CarteraGuardada)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -121,7 +176,7 @@ class NuevaCarteraViewModel @Inject constructor(
                             guardando = false,
                             errorGeneral = mensajeErrorApi(
                                 error,
-                                "No se pudo crear la cartera. Intenta de nuevo."
+                                "No se pudo guardar la cartera. Intenta de nuevo."
                             )
                         )
                     }
@@ -130,13 +185,15 @@ class NuevaCarteraViewModel @Inject constructor(
     }
 }
 
-data class NuevaCarteraUiState(
+data class FormularioCarteraUiState(
+    val carteraId: Int? = null,
     val nombre: String = "",
     val tipo: TipoCartera? = null,
     val descripcion: String = "",
     val presupuesto: String = "",
     val fechaInicio: String? = null,
     val fechaFin: String? = null,
+    val cargando: Boolean = false,
     val guardando: Boolean = false,
     val errorNombre: String? = null,
     val errorTipo: String? = null,
@@ -146,6 +203,6 @@ data class NuevaCarteraUiState(
     val errorGeneral: String? = null
 )
 
-sealed interface NuevaCarteraEvento {
-    data object CarteraCreada : NuevaCarteraEvento
+sealed interface FormularioCarteraEvento {
+    data object CarteraGuardada : FormularioCarteraEvento
 }
