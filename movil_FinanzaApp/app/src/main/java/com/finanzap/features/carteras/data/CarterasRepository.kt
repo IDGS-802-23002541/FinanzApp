@@ -1,5 +1,6 @@
 package com.finanzap.features.carteras.data
 
+import com.finanzap.features.carteras.BalanceCierre
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
 import com.finanzap.features.carteras.PeriodoCartera
@@ -34,6 +35,8 @@ interface CarterasRepository {
     ): Result<Cartera>
 
     suspend fun salir(idCartera: Int): Result<Unit>
+
+    suspend fun finalizar(idCartera: Int): Result<BalanceCierre>
 
     suspend fun editar(
         idCartera: Int,

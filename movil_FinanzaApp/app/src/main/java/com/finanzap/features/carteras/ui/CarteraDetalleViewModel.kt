@@ -3,6 +3,7 @@ package com.finanzap.features.carteras.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.core.util.mensajeErrorApi
+import com.finanzap.features.carteras.BalanceCierre
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.ColaboradorCartera
 import com.finanzap.features.carteras.IngresoInvitacion
@@ -43,7 +44,8 @@ class CarteraDetalleViewModel @Inject constructor(
                             cartera = detalle.cartera,
                             resumen = detalle.resumen,
                             series = detalle.series,
-                            colaboradores = detalle.colaboradores
+                            colaboradores = detalle.colaboradores,
+                            balance = detalle.balance
                         )
                     }
                 }
@@ -162,6 +164,36 @@ class CarteraDetalleViewModel @Inject constructor(
         }
     }
 
+    fun finalizar(idCartera: Int) {
+        if (_state.value.finalizando) return
+
+        _state.update { it.copy(finalizando = true, errorFinalizar = null) }
+        viewModelScope.launch {
+            carterasRepository.finalizar(idCartera)
+                .onSuccess { balance ->
+                    _state.update {
+                        it.copy(
+                            finalizando = false,
+                            balance = balance,
+                            cierreExitoso = true
+                        )
+                    }
+                    cargar(idCartera)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            finalizando = false,
+                            errorFinalizar = mensajeErrorApi(
+                                error,
+                                "No se pudo cerrar la cartera."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
     fun inactivar(idCartera: Int) {
         if (_state.value.inactivando) return
 
@@ -205,5 +237,9 @@ data class CarteraDetalleUiState(
     val salidaExitosa: Boolean = false,
     val inactivando: Boolean = false,
     val errorInactivar: String? = null,
-    val inactivada: Boolean = false
+    val inactivada: Boolean = false,
+    val balance: BalanceCierre? = null,
+    val finalizando: Boolean = false,
+    val errorFinalizar: String? = null,
+    val cierreExitoso: Boolean = false
 )

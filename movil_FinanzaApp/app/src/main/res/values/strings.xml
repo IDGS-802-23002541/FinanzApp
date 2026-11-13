@@ -147,6 +147,13 @@
     <string name="cartera_inactivar_titulo">Inactivar cartera</string>
     <string name="cartera_inactivar_aviso">La cartera dejará de estar activa y se revocarán sus invitaciones. Sus datos no se borran. ¿Deseas continuar?</string>
     <string name="cartera_inactivar_confirmar">Inactivar</string>
+    <string name="cartera_cerrar">Cerrar cartera</string>
+    <string name="cartera_cerrar_titulo">Cerrar cartera</string>
+    <string name="cartera_cerrar_aviso">Se calculará el balance final y la cartera quedará en solo lectura. ¿Deseas continuar?</string>
+    <string name="cartera_cerrar_confirmar">Cerrar</string>
+    <string name="cartera_balance_titulo">Balance final</string>
+    <string name="cartera_balance_categorias">Por categoría</string>
+    <string name="cartera_balance_participantes">Por participante</string>
     <string name="transacciones_editar_titulo">Editar transacción</string>
     <string name="transacciones_eliminar_titulo">Eliminar transacción</string>
     <string name="transacciones_eliminar_mensaje">¿Eliminar esta transacción? Dejará de contar en el saldo.</string>

@@ -57,6 +57,7 @@ import com.finanzap.core.util.formatearFechaHoraCorta
 import com.finanzap.core.util.formatearMoneda
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
+import com.finanzap.features.carteras.BalanceCierre
 import com.finanzap.features.carteras.ColaboradorCartera
 import com.finanzap.features.carteras.IngresoInvitacion
 import com.finanzap.features.carteras.Invitacion
@@ -65,6 +66,7 @@ import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.SerieCategoria
 import com.finanzap.features.carteras.SeriePeriodo
 import com.finanzap.features.carteras.SeriesCartera
+import com.finanzap.features.carteras.TipoCartera
 import com.finanzap.features.carteras.RolEnCartera
 
 @Composable
@@ -109,7 +111,8 @@ fun CarteraDetalleScreen(
         onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) },
         onSalir = { viewModel.salir(carteraId) },
         onEditar = { onEditarCartera(carteraId) },
-        onInactivar = { viewModel.inactivar(carteraId) }
+        onInactivar = { viewModel.inactivar(carteraId) },
+        onFinalizar = { viewModel.finalizar(carteraId) }
     )
 }
 
@@ -124,7 +127,8 @@ fun CarteraDetalleContenido(
     onSeleccionarPeriodo: (Int?) -> Unit,
     onSalir: () -> Unit,
     onEditar: () -> Unit,
-    onInactivar: () -> Unit
+    onInactivar: () -> Unit,
+    onFinalizar: () -> Unit
 ) {
     PantallaFormulario(
         titulo = stringResource(R.string.detalle_titulo),
@@ -168,6 +172,10 @@ fun CarteraDetalleContenido(
                 saliendo = state.saliendo,
                 errorSalir = state.errorSalir,
                 onSalir = onSalir,
+                balance = state.balance,
+                finalizando = state.finalizando,
+                errorFinalizar = state.errorFinalizar,
+                onFinalizar = onFinalizar,
                 inactivando = state.inactivando,
                 errorInactivar = state.errorInactivar,
                 onEditar = onEditar,
@@ -197,6 +205,10 @@ private fun DetalleCartera(
     saliendo: Boolean,
     errorSalir: String?,
     onSalir: () -> Unit,
+    balance: BalanceCierre?,
+    finalizando: Boolean,
+    errorFinalizar: String?,
+    onFinalizar: () -> Unit,
     inactivando: Boolean,
     errorInactivar: String?,
     onEditar: () -> Unit,
@@ -410,6 +422,65 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+
+    if (balance != null) {
+        Spacer(modifier = Modifier.height(24.dp))
+        BalanceCierreSeccion(balance = balance)
+    }
+
+    if (cartera.rol == RolEnCartera.PROPIETARIO &&
+        cartera.estado == "ACTIVA" &&
+        (cartera.tipo == TipoCartera.VIAJE || cartera.tipo == TipoCartera.EVENTO)
+    ) {
+        var mostrarConfirmacionCierre by remember { mutableStateOf(false) }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = { mostrarConfirmacionCierre = true },
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.cartera_cerrar))
+        }
+
+        if (errorFinalizar != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorFinalizar,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        if (mostrarConfirmacionCierre) {
+            AlertDialog(
+                onDismissRequest = { if (!finalizando) mostrarConfirmacionCierre = false },
+                title = { Text(stringResource(R.string.cartera_cerrar_titulo)) },
+                text = { Text(stringResource(R.string.cartera_cerrar_aviso)) },
+                confirmButton = {
+                    TextButton(onClick = onFinalizar, enabled = !finalizando) {
+                        if (finalizando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.cartera_cerrar_confirmar))
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { mostrarConfirmacionCierre = false },
+                        enabled = !finalizando
+                    ) {
+                        Text(stringResource(R.string.comun_cancelar))
+                    }
+                }
+            )
+        }
     }
 
     if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado != "FINALIZADA") {
@@ -696,6 +767,101 @@ private fun GraficaPeriodos(periodos: List<SeriePeriodo>) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BalanceCierreSeccion(balance: BalanceCierre) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.cartera_balance_titulo),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            FilaBalance(
+                etiqueta = stringResource(R.string.transacciones_ingresos),
+                valor = formatearMoneda(balance.totalIngresos)
+            )
+            FilaBalance(
+                etiqueta = stringResource(R.string.transacciones_gastos),
+                valor = formatearMoneda(balance.totalGastos)
+            )
+            FilaBalance(
+                etiqueta = stringResource(R.string.transacciones_balance),
+                valor = formatearMoneda(balance.balance),
+                destacado = true
+            )
+
+            if (balance.porCategoria.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.cartera_balance_categorias),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                balance.porCategoria.forEach { categoria ->
+                    FilaBalance(
+                        etiqueta = categoria.nombre,
+                        valor = formatearMoneda(categoria.total)
+                    )
+                }
+            }
+
+            if (balance.porParticipante.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.cartera_balance_participantes),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                balance.porParticipante.forEach { participante ->
+                    FilaBalance(
+                        etiqueta = participante.nombre,
+                        valor = formatearMoneda(participante.balance)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilaBalance(
+    etiqueta: String,
+    valor: String,
+    destacado: Boolean = false
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = etiqueta,
+            style = if (destacado) {
+                MaterialTheme.typography.labelMedium
+            } else {
+                MaterialTheme.typography.bodySmall
+            },
+            fontWeight = if (destacado) FontWeight.Bold else null,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = valor,
+            style = if (destacado) {
+                MaterialTheme.typography.labelMedium
+            } else {
+                MaterialTheme.typography.bodySmall
+            },
+            fontWeight = if (destacado) FontWeight.Bold else null,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

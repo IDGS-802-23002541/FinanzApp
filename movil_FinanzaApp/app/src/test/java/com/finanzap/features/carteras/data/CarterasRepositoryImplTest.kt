@@ -78,6 +78,16 @@ class CarterasRepositoryImplTest {
         assertEquals("ARCHIVADA", resultado.getOrThrow().estado)
     }
 
+    @Test
+    fun `finalizar mapea el balance de cierre`() = runTest {
+        val repo = CarterasRepositoryImpl(ApiFalsa())
+
+        val resultado = repo.finalizar(3)
+
+        assertTrue(resultado.isSuccess)
+        assertEquals(1800.0, resultado.getOrThrow().balance, 0.0)
+    }
+
     private class ApiFalsa(val falla: Exception? = null) : CarterasApi {
         var ultimoEstado: String? = "sin asignar"
         var ultimaBusqueda: String? = "sin asignar"
@@ -130,6 +140,25 @@ class CarterasRepositoryImplTest {
                     nombre = "Casa",
                     tipo = "HOGAR",
                     estado = "ARCHIVADA"
+                )
+            )
+        }
+
+        override suspend fun finalizar(idCartera: Int): RespuestaCierre {
+            falla?.let { throw it }
+            return RespuestaCierre(
+                data = CierreDto(
+                    cartera = CarteraDto(
+                        id = idCartera,
+                        nombre = "Viaje",
+                        tipo = "VIAJE",
+                        estado = "FINALIZADA"
+                    ),
+                    balance = BalanceCierreDto(
+                        totalIngresos = 3000.0,
+                        totalGastos = 1200.0,
+                        balance = 1800.0
+                    )
                 )
             )
         }

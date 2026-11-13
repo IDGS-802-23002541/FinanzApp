@@ -4,7 +4,8 @@ data class CarteraDetalle(
     val cartera: Cartera,
     val resumen: ResumenCartera,
     val series: SeriesCartera,
-    val colaboradores: List<ColaboradorCartera> = emptyList()
+    val colaboradores: List<ColaboradorCartera> = emptyList(),
+    val balance: BalanceCierre? = null
 )
 
 data class ColaboradorCartera(
@@ -33,7 +34,6 @@ data class SeriesCartera(
     val ingresosVsEgresos: List<SeriePeriodo> = emptyList(),
     val gastosPorCategoria: List<SerieCategoria> = emptyList()
 )
-
 data class SeriePeriodo(
     val periodoId: Int?,
     val nombre: String,
@@ -47,4 +47,27 @@ data class SerieCategoria(
     val categoriaId: Int?,
     val nombre: String,
     val total: Double
+)
+
+data class BalanceCierre(
+    val presupuestoInicial: Double = 0.0,
+    val totalIngresos: Double = 0.0,
+    val totalGastos: Double = 0.0,
+    val balance: Double = 0.0,
+    val porCategoria: List<BalanceCategoria> = emptyList(),
+    val porParticipante: List<BalanceParticipante> = emptyList()
+)
+
+data class BalanceCategoria(
+    val categoriaId: Int?,
+    val nombre: String,
+    val total: Double
+)
+
+data class BalanceParticipante(
+    val usuarioId: Int,
+    val nombre: String,
+    val totalIngresos: Double = 0.0,
+    val totalGastos: Double = 0.0,
+    val balance: Double = 0.0
 )

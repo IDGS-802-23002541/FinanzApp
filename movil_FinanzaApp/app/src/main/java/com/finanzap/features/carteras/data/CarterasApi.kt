@@ -32,6 +32,9 @@ interface CarterasApi {
     @POST("carteras/{idCartera}/salir")
     suspend fun salir(@Path("idCartera") idCartera: Int): RespuestaSalidaCartera
 
+    @POST("carteras/{idCartera}/finalizar")
+    suspend fun finalizar(@Path("idCartera") idCartera: Int): RespuestaCierre
+
     @PUT("carteras/{idCartera}")
     suspend fun editar(
         @Path("idCartera") idCartera: Int,

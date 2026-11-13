@@ -1,5 +1,8 @@
 package com.finanzap.features.carteras.data
 
+import com.finanzap.features.carteras.BalanceCategoria
+import com.finanzap.features.carteras.BalanceCierre
+import com.finanzap.features.carteras.BalanceParticipante
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
 import com.finanzap.features.carteras.ColaboradorCartera
@@ -50,6 +53,65 @@ data class SalidaCarteraDto(
 )
 
 @Serializable
+data class RespuestaCierre(
+    val data: CierreDto
+)
+
+@Serializable
+data class CierreDto(
+    val cartera: CarteraDto,
+    val balance: BalanceCierreDto = BalanceCierreDto()
+)
+
+@Serializable
+data class BalanceCierreDto(
+    val presupuestoInicial: Double = 0.0,
+    val totalIngresos: Double = 0.0,
+    val totalGastos: Double = 0.0,
+    val balance: Double = 0.0,
+    val porCategoria: List<BalanceCategoriaDto> = emptyList(),
+    val porParticipante: List<BalanceParticipanteDto> = emptyList()
+)
+
+@Serializable
+data class BalanceCategoriaDto(
+    val categoriaId: Int? = null,
+    val nombre: String = "",
+    val total: Double = 0.0
+)
+
+@Serializable
+data class BalanceParticipanteDto(
+    val usuarioId: Int = 0,
+    val nombre: String = "",
+    val totalIngresos: Double = 0.0,
+    val totalGastos: Double = 0.0,
+    val balance: Double = 0.0
+)
+
+fun BalanceCierreDto.aBalance(): BalanceCierre = BalanceCierre(
+    presupuestoInicial = presupuestoInicial,
+    totalIngresos = totalIngresos,
+    totalGastos = totalGastos,
+    balance = balance,
+    porCategoria = porCategoria.map {
+        BalanceCategoria(
+            categoriaId = it.categoriaId,
+            nombre = it.nombre,
+            total = it.total
+        )
+    },
+    porParticipante = porParticipante.map {
+        BalanceParticipante(
+            usuarioId = it.usuarioId,
+            nombre = it.nombre,
+            totalIngresos = it.totalIngresos,
+            totalGastos = it.totalGastos,
+            balance = it.balance
+        )
+    }
+)
+@Serializable
 data class PeriodoDto(
     val idPeriodo: Int,
     val nombre: String = "",
@@ -77,7 +139,8 @@ data class CarteraDto(
     val fechaFin: String? = null,
     val resumen: ResumenCarteraDto? = null,
     val series: SeriesCarteraDto? = null,
-    val colaboradores: List<ColaboradorDto> = emptyList()
+    val colaboradores: List<ColaboradorDto> = emptyList(),
+    val balance: BalanceCierreDto? = null
 )
 
 @Serializable
@@ -182,6 +245,7 @@ fun CarteraDto.aCarteraDetalle(): CarteraDetalle {
                 iniciales = it.iniciales,
                 rol = it.rol
             )
-        }
+        },
+        balance = balance?.aBalance()
     )
 }

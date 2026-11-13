@@ -7,6 +7,7 @@ import com.finanzap.features.carteras.ResumenCartera
 import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.SeriesCartera
 import com.finanzap.features.carteras.TipoCartera
+import com.finanzap.features.carteras.BalanceCierre
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import com.finanzap.features.carteras.Invitacion
@@ -94,6 +95,34 @@ class CarteraDetalleAccionesTest {
             viewModel.state.value.errorInactivar
         )
     }
+
+    @Test
+    fun `finalizar guarda el balance y marca el cierre`() = runTest {
+        val viewModel = CarteraDetalleViewModel(carteras, invitaciones)
+
+        viewModel.finalizar(7)
+
+        assertEquals(7, carteras.ultimaFinalizacion)
+        assertTrue(viewModel.state.value.cierreExitoso)
+        assertFalse(viewModel.state.value.finalizando)
+        assertEquals(800.0, viewModel.state.value.balance?.balance)
+        assertNull(viewModel.state.value.errorFinalizar)
+    }
+
+    @Test
+    fun `error al finalizar muestra mensaje y no marca el cierre`() = runTest {
+        carteras.fallaFinalizar = IllegalStateException("409")
+        val viewModel = CarteraDetalleViewModel(carteras, invitaciones)
+
+        viewModel.finalizar(7)
+
+        assertFalse(viewModel.state.value.cierreExitoso)
+        assertFalse(viewModel.state.value.finalizando)
+        assertEquals(
+            "No se pudo cerrar la cartera.",
+            viewModel.state.value.errorFinalizar
+        )
+    }
 }
 
 private class RepositorioSalirFalso : CarterasRepository {
@@ -102,6 +131,8 @@ private class RepositorioSalirFalso : CarterasRepository {
     var ultimaSalida: Int? = null
     var fallaInactivar: Exception? = null
     var ultimaInactivacion: Int? = null
+    var fallaFinalizar: Exception? = null
+    var ultimaFinalizacion: Int? = null
 
     override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
 
@@ -153,6 +184,13 @@ private class RepositorioSalirFalso : CarterasRepository {
         return Result.success(
             Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO, estado = "ARCHIVADA")
         )
+    }
+
+    override suspend fun finalizar(idCartera: Int): Result<BalanceCierre> {
+        ultimaFinalizacion = idCartera
+        val error = fallaFinalizar
+        if (error != null) return Result.failure(error)
+        return Result.success(BalanceCierre(balance = 800.0))
     }
 }
 

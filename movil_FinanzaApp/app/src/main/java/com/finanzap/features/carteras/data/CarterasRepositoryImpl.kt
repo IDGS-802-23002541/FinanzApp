@@ -1,5 +1,6 @@
 package com.finanzap.features.carteras.data
 
+import com.finanzap.features.carteras.BalanceCierre
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.CarteraDetalle
 import com.finanzap.features.carteras.PeriodoCartera
@@ -111,6 +112,15 @@ class CarterasRepositoryImpl @Inject constructor(
         try {
             carterasApi.salir(idCartera)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun finalizar(idCartera: Int): Result<BalanceCierre> =
+        try {
+            Result.success(carterasApi.finalizar(idCartera).data.balance.aBalance())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
