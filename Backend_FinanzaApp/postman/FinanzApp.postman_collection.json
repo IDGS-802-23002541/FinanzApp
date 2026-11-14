@@ -49,6 +49,14 @@
     {
       "key": "idCategoria",
       "value": ""
+    },
+    {
+      "key": "idPagoRecurrente",
+      "value": ""
+    },
+    {
+      "key": "idTicket",
+      "value": ""
     }
   ],
   "item": [
@@ -1688,6 +1696,280 @@
             },
             "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias",
             "description": "Esperado: 201. Nombre unico por cartera; tipo INGRESO, GASTO o AMBOS."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Pagos recurrentes",
+      "item": [
+        {
+          "name": "01 - Crear pago recurrente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carteraId\": {{idCartera}},\n  \"nombre\": \"Renta\",\n  \"descripcion\": \"Pago mensual\",\n  \"monto\": 4500,\n  \"frecuencia\": \"MENSUAL\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"fechaFin\": \"2027-12-01\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes",
+            "description": "Esperado: 201. Solo el propietario; un colaborador recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar pagos recurrentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes?carteraId={{idCartera}}&estado=ACTIVO&pagina=1&porPagina=20",
+            "description": "Esperado: 200 con la lista y la paginacion."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Editar pago recurrente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Renta\",\n  \"monto\": 4800,\n  \"estado\": \"PAUSADO\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}",
+            "description": "Esperado: 200. Solo el propietario; un colaborador recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Cancelar pago recurrente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}",
+            "description": "Esperado: 200 con estado CANCELADO (borrado logico)."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Marcar pago recurrente como hecho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaProgramada\": \"2026-12-01\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}/hecho",
+            "description": "Esperado: 201 con la ejecucion y la transaccion creada."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "06 - Marcar el mismo periodo de nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaProgramada\": \"2026-12-01\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}/hecho",
+            "description": "Esperado: 409. El periodo ya fue marcado como hecho."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Soporte",
+      "item": [
+        {
+          "name": "01 - Crear reporte de ayuda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"asunto\": \"No puedo cerrar mi cartera\",\n  \"descripcion\": \"Al confirmar me sale un error.\",\n  \"categoria\": \"CARTERA\",\n  \"prioridad\": \"MEDIA\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets",
+            "description": "Esperado: 201 con el ticket en estado ABIERTO."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar mis reportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/soporte/tickets?estado=ABIERTO&pagina=1&porPagina=20",
+            "description": "Esperado: 200. Un cliente ve sus tickets; el staff ve todos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Responder reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"Ya lo revisamos y corregimos.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/respuestas",
+            "description": "Esperado: 201. El propietario del ticket o el staff."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Asignar reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Revisado con el equipo.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/asignar",
+            "description": "Esperado: 200. Solo ADMIN o TRABAJADOR; un cliente recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Cerrar reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Resuelto.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/cerrar",
+            "description": "Esperado: 200 con estado CERRADO. Solo ADMIN o TRABAJADOR."
           },
           "response": [],
           "event": []
