@@ -49,25 +49,25 @@ def test_editar_y_eliminar_requieren_token():
 
 
 def test_entero_parametro():
-    assert transaccion_service._entero_parametro("pagina", "2", 1) == (2, None)
-    assert transaccion_service._entero_parametro("pagina", "0", 1)[1] is not None
-    assert transaccion_service._entero_parametro("pagina", "abc", 1)[1] is not None
-    assert transaccion_service._entero_parametro("porPagina", "101", 1, 100)[1] is not None
-    assert transaccion_service._entero_parametro("porPagina", "100", 1, 100) == (
+    assert transaccion_service.entero_parametro("pagina", "2", 1) == (2, None)
+    assert transaccion_service.entero_parametro("pagina", "0", 1)[1] is not None
+    assert transaccion_service.entero_parametro("pagina", "abc", 1)[1] is not None
+    assert transaccion_service.entero_parametro("porPagina", "101", 1, 100)[1] is not None
+    assert transaccion_service.entero_parametro("porPagina", "100", 1, 100) == (
         100,
         None,
     )
 
 
 def test_monto_debe_ser_mayor_a_cero():
-    assert transaccion_service._validar_monto(0)[1] is not None
-    assert transaccion_service._validar_monto(-5)[1] is not None
-    assert transaccion_service._validar_monto("10")[1] is not None
-    assert transaccion_service._validar_monto(True)[1] is not None
+    assert transaccion_service.validar_monto(0)[1] is not None
+    assert transaccion_service.validar_monto(-5)[1] is not None
+    assert transaccion_service.validar_monto("10")[1] is not None
+    assert transaccion_service.validar_monto(True)[1] is not None
 
 
 def test_monto_valido_se_redondea():
-    monto, error = transaccion_service._validar_monto(10.5)
+    monto, error = transaccion_service.validar_monto(10.5)
     assert error is None
     assert monto == Decimal("10.50")
 
