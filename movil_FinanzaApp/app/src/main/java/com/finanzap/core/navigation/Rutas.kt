@@ -13,6 +13,8 @@ object Rutas {
     const val Transacciones =
         "carteras/detalle/{carteraId}/transacciones?nombre={nombre}&puedeEditar={puedeEditar}"
     const val NuevaTransaccion = "transacciones/nueva/{carteraId}?nombre={nombre}"
+    const val Pagos =
+        "carteras/detalle/{carteraId}/pagos?nombre={nombre}&puedeEditar={puedeEditar}"
     const val MiCuenta = "cuenta"
     const val EditarCuenta = "cuenta/editar"
     const val PreferenciasNotificacion = "cuenta/preferencias"
@@ -29,5 +31,9 @@ object Rutas {
 
     fun transacciones(carteraId: Int, nombre: String, puedeEditar: Boolean): String =
         "carteras/detalle/$carteraId/transacciones" +
+            "?nombre=${Uri.encode(nombre)}&puedeEditar=$puedeEditar"
+
+    fun pagos(carteraId: Int, nombre: String, puedeEditar: Boolean): String =
+        "carteras/detalle/$carteraId/pagos" +
             "?nombre=${Uri.encode(nombre)}&puedeEditar=$puedeEditar"
 }

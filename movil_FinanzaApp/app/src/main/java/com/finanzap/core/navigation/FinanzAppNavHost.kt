@@ -30,6 +30,7 @@ import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.FormularioCarteraScreen
 import com.finanzap.features.carteras.ui.UnirseCarteraScreen
+import com.finanzap.features.pagos.ui.PagosScreen
 import com.finanzap.features.reportes.ui.ReportesScreen
 import com.finanzap.features.soporte.ui.SoporteScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
@@ -166,6 +167,11 @@ fun FinanzAppNavHost(
                                 Rutas.transacciones(id, nombre, puedeEditar)
                             )
                         },
+                        onVerPagos = { id, nombre, puedeEditar ->
+                            navController.navigate(
+                                Rutas.pagos(id, nombre, puedeEditar)
+                            )
+                        },
                         onSalirDeCartera = { navController.popBackStack() },
                         onEditarCartera = { id ->
                             navController.navigate(Rutas.editarCartera(id))
@@ -202,6 +208,28 @@ fun FinanzAppNavHost(
                     )
                 ) { entrada ->
                     TransaccionesScreen(
+                        carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
+                        carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
+                        puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = Rutas.Pagos,
+                    arguments = listOf(
+                        navArgument("carteraId") { type = NavType.IntType },
+                        navArgument("nombre") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                        navArgument("puedeEditar") {
+                            type = NavType.BoolType
+                            defaultValue = false
+                        }
+                    )
+                ) { entrada ->
+                    PagosScreen(
                         carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
                         carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
                         puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
@@ -299,7 +327,8 @@ private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.CarteraDetalle,
     Rutas.UnirseCartera,
     Rutas.Transacciones,
-    Rutas.NuevaTransaccion -> SeccionMenu.CARTERAS
+    Rutas.NuevaTransaccion,
+    Rutas.Pagos -> SeccionMenu.CARTERAS
 
     Rutas.Reportes -> SeccionMenu.REPORTES
     Rutas.Soporte -> SeccionMenu.SOPORTE

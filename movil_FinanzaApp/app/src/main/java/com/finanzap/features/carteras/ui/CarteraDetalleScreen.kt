@@ -75,6 +75,7 @@ fun CarteraDetalleScreen(
     onVolver: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean) -> Unit,
     onSalirDeCartera: () -> Unit,
     onEditarCartera: (Int) -> Unit,
     onCarteraInactivada: () -> Unit,
@@ -107,6 +108,7 @@ fun CarteraDetalleScreen(
         onReintentar = { viewModel.cargar(carteraId) },
         onRegistrarGasto = onRegistrarGasto,
         onVerTransacciones = onVerTransacciones,
+        onVerPagos = onVerPagos,
         onGenerarInvitacion = { viewModel.generarInvitacion(carteraId) },
         onSeleccionarPeriodo = { viewModel.seleccionarPeriodo(carteraId, it) },
         onSalir = { viewModel.salir(carteraId) },
@@ -123,6 +125,7 @@ fun CarteraDetalleContenido(
     onReintentar: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean) -> Unit,
     onGenerarInvitacion: () -> Unit,
     onSeleccionarPeriodo: (Int?) -> Unit,
     onSalir: () -> Unit,
@@ -157,6 +160,7 @@ fun CarteraDetalleContenido(
                 cartera = state.cartera,
                 onRegistrarGasto = onRegistrarGasto,
                 onVerTransacciones = onVerTransacciones,
+                onVerPagos = onVerPagos,
                 resumen = state.resumen,
                 series = state.series,
                 colaboradores = state.colaboradores,
@@ -190,6 +194,7 @@ private fun DetalleCartera(
     cartera: Cartera,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean) -> Unit,
     resumen: ResumenCartera?,
     series: SeriesCartera?,
     colaboradores: List<ColaboradorCartera>,
@@ -422,6 +427,22 @@ private fun DetalleCartera(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(stringResource(R.string.transacciones_ver))
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    OutlinedButton(
+        onClick = {
+            onVerPagos(
+                cartera.id,
+                cartera.nombre,
+                cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
+            )
+        },
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.carteras_ver_pagos))
     }
 
     if (balance != null) {

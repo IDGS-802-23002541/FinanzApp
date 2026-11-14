@@ -15,6 +15,9 @@ import com.finanzap.features.carteras.data.CarterasRepositoryImpl
 import com.finanzap.features.carteras.data.InvitacionesApi
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import com.finanzap.features.carteras.data.InvitacionesRepositoryImpl
+import com.finanzap.features.pagos.data.PagosApi
+import com.finanzap.features.pagos.data.PagosRepository
+import com.finanzap.features.pagos.data.PagosRepositoryImpl
 import com.finanzap.features.reportes.data.ReportesApi
 import com.finanzap.features.reportes.data.ReportesRepository
 import com.finanzap.features.reportes.data.ReportesRepositoryImpl
@@ -82,6 +85,10 @@ abstract class Modulos {
     @Binds
     @Singleton
     abstract fun bindSoporteRepository(impl: SoporteRepositoryImpl): SoporteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPagosRepository(impl: PagosRepositoryImpl): PagosRepository
 
     companion object {
 
@@ -152,5 +159,10 @@ abstract class Modulos {
         @Singleton
         fun provideSoporteApi(retrofit: Retrofit): SoporteApi =
             retrofit.create(SoporteApi::class.java)
+
+        @Provides
+        @Singleton
+        fun providePagosApi(retrofit: Retrofit): PagosApi =
+            retrofit.create(PagosApi::class.java)
     }
 }

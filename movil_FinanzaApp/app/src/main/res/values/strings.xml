@@ -271,4 +271,43 @@
     <string name="soporte_estado_espera">En espera</string>
     <string name="soporte_estado_resuelto">Resuelto</string>
     <string name="soporte_estado_cerrado">Cerrado</string>
+
+    <!-- Pagos recurrentes -->
+    <string name="pagos_titulo">Pagos recurrentes</string>
+    <string name="pagos_descripcion">Programa los pagos fijos de la cartera y márcalos como realizados cuando ocurran.</string>
+    <string name="pagos_solo_consulta">Solo el propietario de la cartera puede crear y modificar pagos recurrentes.</string>
+    <string name="pagos_nuevo">Nuevo pago</string>
+    <string name="pagos_formulario_nuevo_titulo">Datos del pago</string>
+    <string name="pagos_formulario_editar_titulo">Editar pago</string>
+    <string name="pagos_nombre">Nombre del pago</string>
+    <string name="pagos_monto">Monto</string>
+    <string name="pagos_frecuencia">Frecuencia</string>
+    <string name="pagos_fecha_inicio">Fecha de inicio</string>
+    <string name="pagos_fecha_fin">Fecha de fin</string>
+    <string name="pagos_sin_fecha">Sin fecha</string>
+    <string name="pagos_quitar_fecha">Quitar fecha de fin</string>
+    <string name="pagos_descripcion_campo">Descripción (opcional)</string>
+    <string name="pagos_guardar">Guardar pago</string>
+    <string name="pagos_error_nombre">Escribe el nombre del pago.</string>
+    <string name="pagos_error_nombre_largo">El nombre admite hasta 120 caracteres.</string>
+    <string name="pagos_error_monto">Ingresa un monto mayor a 0.</string>
+    <string name="pagos_error_fecha_inicio">Elige la fecha de inicio.</string>
+    <string name="pagos_error_fechas">La fecha fin no puede ser anterior a la fecha inicio.</string>
+    <string name="pagos_marcar_hecho">Marcar como hecho</string>
+    <string name="pagos_cancelar_titulo">Cancelar pago recurrente</string>
+    <string name="pagos_cancelar_mensaje">El pago dejará de programarse. Los gastos ya registrados se conservan. ¿Deseas continuar?</string>
+    <string name="pagos_cancelar_confirmar">Sí, cancelar</string>
+    <string name="pagos_vacio_titulo">Sin pagos recurrentes</string>
+    <string name="pagos_vacio_mensaje">Cuando programes un pago recurrente aparecerá aquí.</string>
+    <string name="pagos_pagina">Página %1$d de %2$d</string>
+    <string name="pagos_proxima_ejecucion">Próxima: %1$s</string>
+    <string name="pagos_frecuencia_texto">Frecuencia: %1$s</string>
+    <string name="pagos_frecuencia_diaria">Diaria</string>
+    <string name="pagos_frecuencia_semanal">Semanal</string>
+    <string name="pagos_frecuencia_mensual">Mensual</string>
+    <string name="pagos_frecuencia_anual">Anual</string>
+    <string name="pagos_estado_activo">Activo</string>
+    <string name="pagos_estado_pausado">Pausado</string>
+    <string name="pagos_estado_cancelado">Cancelado</string>
+    <string name="carteras_ver_pagos">Ver pagos recurrentes</string>
 </resources>
