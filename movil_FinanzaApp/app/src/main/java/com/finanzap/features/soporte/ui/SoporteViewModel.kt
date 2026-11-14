@@ -2,6 +2,7 @@ package com.finanzap.features.soporte.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.soporte.data.SoporteRepository
 import com.finanzap.features.soporte.data.Ticket
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -108,7 +109,13 @@ class SoporteViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _state.update {
-                        it.copy(guardando = false, errorFormulario = error.mensaje())
+                        it.copy(
+                            guardando = false,
+                            errorFormulario = mensajeErrorApi(
+                                error,
+                                "No se pudo enviar el reporte."
+                            )
+                        )
                     }
                 }
         }
@@ -166,7 +173,13 @@ class SoporteViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _state.update {
-                        it.copy(respondiendo = false, errorRespuesta = error.mensaje())
+                        it.copy(
+                            respondiendo = false,
+                            errorRespuesta = mensajeErrorApi(
+                                error,
+                                "No se pudo enviar la respuesta."
+                            )
+                        )
                     }
                 }
         }
@@ -189,7 +202,13 @@ class SoporteViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _state.update {
-                        it.copy(cargando = false, error = error.mensaje())
+                        it.copy(
+                            cargando = false,
+                            error = mensajeErrorApi(
+                                error,
+                                "No se pudieron cargar los reportes."
+                            )
+                        )
                     }
                 }
         }
@@ -216,5 +235,3 @@ data class SoporteUiState(
     val errorRespuesta: String? = null,
     val respondiendo: Boolean = false
 )
-
-private fun Throwable.mensaje(): String = message ?: "No se pudo completar la operación."

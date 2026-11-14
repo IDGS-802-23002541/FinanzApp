@@ -1,6 +1,5 @@
 package com.finanzap.features.soporte
 
-import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.soporte.data.ListadoTickets
 import com.finanzap.features.soporte.data.PaginacionTickets
 import com.finanzap.features.soporte.data.RespuestaTicket
@@ -130,9 +129,7 @@ private class RepositorioSoporteFalso : SoporteRepository {
     override suspend fun listarTickets(pagina: Int, porPagina: Int): Result<ListadoTickets> {
         val error = falla
         if (error != null) {
-            return Result.failure(
-                Exception(mensajeErrorApi(error, "No se pudieron cargar los tickets."))
-            )
+            return Result.failure(error)
         }
         return Result.success(
             ListadoTickets(

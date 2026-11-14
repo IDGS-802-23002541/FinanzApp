@@ -1,12 +1,8 @@
 package com.finanzap.features.soporte.data
 
-import com.finanzap.core.util.mensajeErrorApi
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 
-/**
- * Traduce los fallos de la API a un mensaje que la pantalla pueda mostrar.
- */
 class SoporteRepositoryImpl @Inject constructor(
     private val soporteApi: SoporteApi
 ) : SoporteRepository {
@@ -19,9 +15,7 @@ class SoporteRepositoryImpl @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(
-                Exception(mensajeErrorApi(e, "No se pudieron cargar los tickets."), e)
-            )
+            Result.failure(e)
         }
 
     override suspend fun crearTicket(
@@ -43,9 +37,7 @@ class SoporteRepositoryImpl @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(
-                Exception(mensajeErrorApi(e, "No se pudo crear el ticket."), e)
-            )
+            Result.failure(e)
         }
 
     override suspend fun responderTicket(
@@ -61,8 +53,6 @@ class SoporteRepositoryImpl @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(
-                Exception(mensajeErrorApi(e, "No se pudo enviar la respuesta."), e)
-            )
+            Result.failure(e)
         }
 }
