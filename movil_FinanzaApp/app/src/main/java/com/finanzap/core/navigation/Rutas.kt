@@ -14,6 +14,8 @@ object Rutas {
         "carteras/detalle/{carteraId}/transacciones?nombre={nombre}&puedeEditar={puedeEditar}"
     const val NuevaTransaccion = "transacciones/nueva/{carteraId}?nombre={nombre}"
     const val MiCuenta = "cuenta"
+    const val EditarCuenta = "cuenta/editar"
+    const val PreferenciasNotificacion = "cuenta/preferencias"
     const val CambiarContrasena = "cuenta/contrasena"
     const val Reportes = "reportes"
     const val Soporte = "soporte"

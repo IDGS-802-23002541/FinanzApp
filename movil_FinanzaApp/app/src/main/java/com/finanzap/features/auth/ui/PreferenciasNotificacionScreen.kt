@@ -1,0 +1,173 @@
+package com.finanzap.features.auth.ui
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.finanzap.R
+import com.finanzap.core.ui.BannerError
+import com.finanzap.core.ui.BotonPrincipal
+import com.finanzap.core.ui.EstadoError
+import com.finanzap.core.ui.PantallaFormulario
+
+@Composable
+fun PreferenciasNotificacionScreen(
+    onVolver: () -> Unit,
+    viewModel: PreferenciasNotificacionViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var guardado by remember { mutableStateOf(false) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.cargar()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                PreferenciasNotificacionEvento.PreferenciasGuardadas -> guardado = true
+            }
+        }
+    }
+
+    PreferenciasNotificacionContenido(
+        state = state,
+        guardado = guardado,
+        onVolver = onVolver,
+        onMovimientosChange = viewModel::onMovimientosChange,
+        onSistemaChange = viewModel::onSistemaChange,
+        onPagosChange = viewModel::onPagosChange,
+        onGuardar = viewModel::guardar,
+        onReintentar = viewModel::cargar
+    )
+}
+
+@Composable
+fun PreferenciasNotificacionContenido(
+    state: PreferenciasNotificacionUiState,
+    guardado: Boolean,
+    onVolver: () -> Unit,
+    onMovimientosChange: (Boolean) -> Unit,
+    onSistemaChange: (Boolean) -> Unit,
+    onPagosChange: (Boolean) -> Unit,
+    onGuardar: () -> Unit,
+    onReintentar: () -> Unit
+) {
+    PantallaFormulario(
+        titulo = stringResource(R.string.preferencias_titulo),
+        onVolver = onVolver,
+        descripcionVolver = stringResource(R.string.comun_volver)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.preferencias_descripcion),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (state.cargando) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            return@PantallaFormulario
+        }
+
+        val errorCarga = state.errorCarga
+        if (errorCarga != null) {
+            EstadoError(mensaje = errorCarga, onReintentar = onReintentar)
+            return@PantallaFormulario
+        }
+
+        FilaPreferencia(
+            texto = stringResource(R.string.preferencias_movimientos),
+            activo = state.movimientos,
+            habilitado = !state.guardando,
+            onChange = onMovimientosChange
+        )
+
+        FilaPreferencia(
+            texto = stringResource(R.string.preferencias_sistema),
+            activo = state.sistema,
+            habilitado = !state.guardando,
+            onChange = onSistemaChange
+        )
+
+        FilaPreferencia(
+            texto = stringResource(R.string.preferencias_pagos),
+            activo = state.pagos,
+            habilitado = !state.guardando,
+            onChange = onPagosChange
+        )
+
+        if (guardado) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.preferencias_guardadas),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        val errorGuardado = state.errorGuardado
+        if (errorGuardado != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            BannerError(mensaje = errorGuardado)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        BotonPrincipal(
+            texto = stringResource(R.string.preferencias_guardar),
+            textoCargando = stringResource(R.string.comun_guardando),
+            cargando = state.guardando,
+            onClick = onGuardar
+        )
+    }
+}
+
+@Composable
+private fun FilaPreferencia(
+    texto: String,
+    activo: Boolean,
+    habilitado: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = texto,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = activo,
+            onCheckedChange = onChange,
+            enabled = habilitado
+        )
+    }
+}

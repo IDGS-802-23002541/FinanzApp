@@ -21,13 +21,17 @@ import com.finanzap.core.ui.MenuLateral
 import com.finanzap.core.ui.PantallaPendiente
 import com.finanzap.core.ui.SeccionMenu
 import com.finanzap.features.auth.ui.CambiarContrasenaScreen
+import com.finanzap.features.auth.ui.CuentaEditarScreen
 import com.finanzap.features.auth.ui.LoginScreen
 import com.finanzap.features.auth.ui.MiCuentaScreen
+import com.finanzap.features.auth.ui.PreferenciasNotificacionScreen
 import com.finanzap.features.auth.ui.RecuperarContrasenaScreen
 import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.FormularioCarteraScreen
 import com.finanzap.features.carteras.ui.UnirseCarteraScreen
+import com.finanzap.features.reportes.ui.ReportesScreen
+import com.finanzap.features.soporte.ui.SoporteScreen
 import com.finanzap.features.transacciones.ui.RegistrarTransaccionScreen
 import com.finanzap.features.transacciones.ui.TransaccionesScreen
 import kotlinx.coroutines.flow.Flow
@@ -214,6 +218,10 @@ fun FinanzAppNavHost(
                 composable(Rutas.MiCuenta) {
                     MiCuentaScreen(
                         onVolver = { navController.popBackStack() },
+                        onEditarCuenta = { navController.navigate(Rutas.EditarCuenta) },
+                        onPreferenciasNotificacion = {
+                            navController.navigate(Rutas.PreferenciasNotificacion)
+                        },
                         onCambiarContrasena = { navController.navigate(Rutas.CambiarContrasena) },
                         onCuentaCerrada = {
                             navController.navigate(Rutas.Login) {
@@ -221,6 +229,19 @@ fun FinanzAppNavHost(
                                 launchSingleTop = true
                             }
                         }
+                    )
+                }
+
+                composable(Rutas.EditarCuenta) {
+                    CuentaEditarScreen(
+                        onVolver = { navController.popBackStack() },
+                        onGuardada = { navController.popBackStack() }
+                    )
+                }
+
+                composable(Rutas.PreferenciasNotificacion) {
+                    PreferenciasNotificacionScreen(
+                        onVolver = { navController.popBackStack() }
                     )
                 }
 
@@ -256,19 +277,13 @@ fun FinanzAppNavHost(
                 }
 
                 composable(Rutas.Reportes) {
-                    PantallaPendiente(
-                        titulo = stringResource(R.string.reportes_titulo),
-                        descripcionVolver = stringResource(R.string.comun_volver),
-                        mensaje = stringResource(R.string.comun_pendiente_mensaje),
+                    ReportesScreen(
                         onVolver = { navController.popBackStack() }
                     )
                 }
 
                 composable(Rutas.Soporte) {
-                    PantallaPendiente(
-                        titulo = stringResource(R.string.soporte_titulo),
-                        descripcionVolver = stringResource(R.string.comun_volver),
-                        mensaje = stringResource(R.string.comun_pendiente_mensaje),
+                    SoporteScreen(
                         onVolver = { navController.popBackStack() }
                     )
                 }
@@ -289,6 +304,8 @@ private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
     Rutas.Reportes -> SeccionMenu.REPORTES
     Rutas.Soporte -> SeccionMenu.SOPORTE
     Rutas.MiCuenta,
+    Rutas.EditarCuenta,
+    Rutas.PreferenciasNotificacion,
     Rutas.CambiarContrasena -> SeccionMenu.MI_CUENTA
 
     else -> null

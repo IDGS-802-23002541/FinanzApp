@@ -15,6 +15,12 @@ import com.finanzap.features.carteras.data.CarterasRepositoryImpl
 import com.finanzap.features.carteras.data.InvitacionesApi
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import com.finanzap.features.carteras.data.InvitacionesRepositoryImpl
+import com.finanzap.features.reportes.data.ReportesApi
+import com.finanzap.features.reportes.data.ReportesRepository
+import com.finanzap.features.reportes.data.ReportesRepositoryImpl
+import com.finanzap.features.soporte.data.SoporteApi
+import com.finanzap.features.soporte.data.SoporteRepository
+import com.finanzap.features.soporte.data.SoporteRepositoryImpl
 import com.finanzap.features.transacciones.data.CategoriasApi
 import com.finanzap.features.transacciones.data.CategoriasRepository
 import com.finanzap.features.transacciones.data.CategoriasRepositoryImpl
@@ -68,6 +74,14 @@ abstract class Modulos {
     @Binds
     @Singleton
     abstract fun bindSesionLocal(impl: SesionLocalCifrada): SesionLocal
+
+    @Binds
+    @Singleton
+    abstract fun bindReportesRepository(impl: ReportesRepositoryImpl): ReportesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSoporteRepository(impl: SoporteRepositoryImpl): SoporteRepository
 
     companion object {
 
@@ -128,5 +142,15 @@ abstract class Modulos {
         @Singleton
         fun provideCategoriasApi(retrofit: Retrofit): CategoriasApi =
             retrofit.create(CategoriasApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideReportesApi(retrofit: Retrofit): ReportesApi =
+            retrofit.create(ReportesApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideSoporteApi(retrofit: Retrofit): SoporteApi =
+            retrofit.create(SoporteApi::class.java)
     }
 }
