@@ -74,6 +74,10 @@ dependencies {
     // Almacenamiento cifrado del token
     implementation(libs.androidx.security.crypto)
 
+    // QR: generación local y escaneo con ML Kit
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)

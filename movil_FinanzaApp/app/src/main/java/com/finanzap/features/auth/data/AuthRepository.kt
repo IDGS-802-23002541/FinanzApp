@@ -31,7 +31,30 @@ interface AuthRepository {
 
     suspend fun eliminarCuenta(contrasena: String): Result<Unit>
 
+    /** Actualiza los datos del usuario con sesión activa; los campos vacíos conservan su valor. */
+    suspend fun editarCuenta(
+        nombreUsuario: String,
+        apaterno: String,
+        amaterno: String,
+        correo: String
+    ): Result<Unit>
+
+    suspend fun obtenerPreferencias(): Result<PreferenciasNotificacion>
+
+    suspend fun guardarPreferencias(
+        movimientos: Boolean,
+        sistema: Boolean,
+        pagos: Boolean
+    ): Result<PreferenciasNotificacion>
+
     suspend fun cerrarSesion()
 
     fun haySesion(): Boolean
 }
+
+/** Avisos que el usuario con sesión activa quiere recibir. */
+data class PreferenciasNotificacion(
+    val movimientos: Boolean,
+    val sistema: Boolean,
+    val pagos: Boolean
+)

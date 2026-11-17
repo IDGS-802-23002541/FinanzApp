@@ -39,7 +39,10 @@ def generar(id_cartera):
     if cartera.estado != "ACTIVA":
         return {
             "ok": False,
-            "mensaje": "No se pueden generar invitaciones en una cartera inactiva o finalizada.",
+            "mensaje": (
+                "No se pueden generar invitaciones en una cartera "
+                "inactiva o finalizada."
+            ),
         }, 409
 
     ahora = _ahora()
@@ -57,7 +60,10 @@ def generar(id_cartera):
         codigo = _generar_codigo()
         if codigo is None:
             db.session.rollback()
-            return {"ok": False, "mensaje": "No se pudo generar la invitación."}, 503
+            return {
+                "ok": False,
+                "mensaje": "No se pudo generar la invitación.",
+            }, 503
 
         invitacion = Invitacion(
             carteraId=id_cartera,
@@ -70,7 +76,10 @@ def generar(id_cartera):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo generar la invitación."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo generar la invitación.",
+        }, 503
 
     return {
         "ok": True,
@@ -97,7 +106,10 @@ def consultar(id_cartera):
     if membresia.rol != "ADMIN":
         return {
             "ok": False,
-            "mensaje": "Solo el propietario o administrador puede ver la invitación.",
+            "mensaje": (
+                "Solo el propietario o administrador puede ver la "
+                "invitación."
+            ),
         }, 403
 
     try:
@@ -121,16 +133,24 @@ def consultar(id_cartera):
             .order_by(MiembroCartera.fechaUnion.desc())
         ).all()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudo obtener la invitación."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo obtener la invitación.",
+        }, 503
 
     return {
         "ok": True,
         "data": {
-            "invitacion": _serializar_invitacion(invitacion) if invitacion else None,
+            "invitacion": (
+                _serializar_invitacion(invitacion) if invitacion else None
+            ),
             "ingresos": [
                 {
                     "idUsuario": usuario.idUsuario,
-                    "nombre": f"{usuario.nombreUsuario} {usuario.apaterno or ''}".strip(),
+                    "nombre": (
+                        f"{usuario.nombreUsuario} "
+                        f"{usuario.apaterno or ''}"
+                    ).strip(),
                     "iniciales": _iniciales(usuario),
                     "fechaUnion": membresia_miembro.fechaUnion.isoformat(),
                 }
@@ -154,13 +174,19 @@ def unirse(codigo):
             db.select(Invitacion).where(Invitacion.codigoHash == codigo)
         ).scalar_one_or_none()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudo validar la invitación."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo validar la invitación.",
+        }, 503
 
     if not invitacion:
         return {"ok": False, "mensaje": "Invitación no encontrada."}, 404
 
     if invitacion.estado != "ACTIVA":
-        return {"ok": False, "mensaje": "La invitación ya no está vigente."}, 409
+        return {
+            "ok": False,
+            "mensaje": "La invitación ya no está vigente.",
+        }, 409
 
     ahora = _ahora()
     if invitacion.fechaExpiracion <= ahora:
@@ -263,7 +289,10 @@ def _serializar_invitacion(invitacion):
 
 
 def _iniciales(usuario):
-    return f"{(usuario.nombreUsuario or ' ')[0]}{(usuario.apaterno or ' ')[0]}".upper()
+    return (
+        f"{(usuario.nombreUsuario or ' ')[0]}"
+        f"{(usuario.apaterno or ' ')[0]}"
+    ).upper()
 
 
 def _ahora():

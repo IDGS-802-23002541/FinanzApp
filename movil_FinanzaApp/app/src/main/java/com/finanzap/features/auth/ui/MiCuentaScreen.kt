@@ -34,6 +34,8 @@ import com.finanzap.core.ui.Dimensiones
 @Composable
 fun MiCuentaScreen(
     onVolver: () -> Unit,
+    onEditarCuenta: () -> Unit,
+    onPreferenciasNotificacion: () -> Unit,
     onCambiarContrasena: () -> Unit,
     onCuentaCerrada: () -> Unit,
     viewModel: MiCuentaViewModel = hiltViewModel()
@@ -51,6 +53,8 @@ fun MiCuentaScreen(
     MiCuentaContenido(
         state = state,
         onVolver = onVolver,
+        onEditarCuenta = onEditarCuenta,
+        onPreferenciasNotificacion = onPreferenciasNotificacion,
         onCambiarContrasena = onCambiarContrasena,
         onPedirAccion = viewModel::onPedirAccion,
         onContrasenaChange = viewModel::onContrasenaChange,
@@ -63,6 +67,8 @@ fun MiCuentaScreen(
 fun MiCuentaContenido(
     state: MiCuentaUiState,
     onVolver: () -> Unit,
+    onEditarCuenta: () -> Unit,
+    onPreferenciasNotificacion: () -> Unit,
     onCambiarContrasena: () -> Unit,
     onPedirAccion: (AccionCuenta) -> Unit,
     onContrasenaChange: (String) -> Unit,
@@ -83,6 +89,26 @@ fun MiCuentaContenido(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedButton(
+            onClick = onEditarCuenta,
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.cuenta_editar_datos))
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onPreferenciasNotificacion,
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.cuenta_preferencias))
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(
             onClick = onCambiarContrasena,

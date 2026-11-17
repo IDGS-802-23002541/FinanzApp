@@ -27,6 +27,8 @@ class MiCuentaContenidoTest {
                         errorContrasena = "Ingresa tu contraseña para confirmar."
                     ),
                     onVolver = {},
+                    onEditarCuenta = {},
+                    onPreferenciasNotificacion = {},
                     onCambiarContrasena = {},
                     onPedirAccion = {},
                     onContrasenaChange = {},
@@ -48,6 +50,8 @@ class MiCuentaContenidoTest {
                 MiCuentaContenido(
                     state = MiCuentaUiState(accion = AccionCuenta.ELIMINAR),
                     onVolver = {},
+                    onEditarCuenta = {},
+                    onPreferenciasNotificacion = {},
                     onCambiarContrasena = {},
                     onPedirAccion = {},
                     onContrasenaChange = {},

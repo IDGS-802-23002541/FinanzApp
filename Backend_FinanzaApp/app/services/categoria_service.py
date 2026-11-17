@@ -21,7 +21,10 @@ def listar(id_cartera, tipo=None):
             return {"ok": False, "mensaje": "El tipo no es válido."}, 400
         tipo = tipo.strip().upper()
         if tipo not in {"INGRESO", "GASTO"}:
-            return {"ok": False, "mensaje": "El tipo debe ser INGRESO o GASTO."}, 400
+            return {
+                "ok": False,
+                "mensaje": "El tipo debe ser INGRESO o GASTO.",
+            }, 400
 
     filtros = [
         Categoria.estado == "ACTIVA",
@@ -46,7 +49,10 @@ def listar(id_cartera, tipo=None):
             .order_by(Categoria.orden, Categoria.nombre)
         ).scalars().all()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudieron obtener las categorías."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudieron obtener las categorías.",
+        }, 503
 
     return {
         "ok": True,
@@ -63,7 +69,10 @@ def crear(id_cartera, datos):
     if cartera.estado != "ACTIVA":
         return {
             "ok": False,
-            "mensaje": "No se pueden crear categorías en una cartera inactiva o finalizada.",
+            "mensaje": (
+                "No se pueden crear categorías en una cartera inactiva "
+                "o finalizada."
+            ),
         }, 409
 
     nombre, error = _validar_nombre(datos.get("nombre"))
@@ -75,7 +84,10 @@ def crear(id_cartera, datos):
         return {"ok": False, "mensaje": "El tipo no es válido."}, 400
     tipo = tipo.strip().upper()
     if tipo not in TIPOS:
-        return {"ok": False, "mensaje": "El tipo debe ser INGRESO, GASTO o AMBOS."}, 400
+        return {
+            "ok": False,
+            "mensaje": "El tipo debe ser INGRESO, GASTO o AMBOS.",
+        }, 400
 
     try:
         existe = db.session.execute(
@@ -87,7 +99,9 @@ def crear(id_cartera, datos):
         if existe:
             return {
                 "ok": False,
-                "mensaje": "Ya existe una categoría con ese nombre en la cartera.",
+                "mensaje": (
+                    "Ya existe una categoría con ese nombre en la cartera."
+                ),
             }, 409
         orden = (
             db.session.execute(
@@ -98,7 +112,10 @@ def crear(id_cartera, datos):
             + 1
         )
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudo validar la categoría."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo validar la categoría.",
+        }, 503
 
     categoria = Categoria(
         carteraId=id_cartera,
@@ -132,7 +149,10 @@ def _cartera_del_miembro(id_cartera):
     try:
         fila = db.session.execute(
             db.select(Cartera)
-            .join(MiembroCartera, MiembroCartera.carteraId == Cartera.idCartera)
+            .join(
+                MiembroCartera,
+                MiembroCartera.carteraId == Cartera.idCartera,
+            )
             .where(
                 MiembroCartera.carteraId == id_cartera,
                 MiembroCartera.usuarioId == current_user.idUsuario,

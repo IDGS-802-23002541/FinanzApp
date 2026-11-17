@@ -42,7 +42,10 @@ def crear(id_cartera, datos):
     if cartera.estado != "ACTIVA":
         return {
             "ok": False,
-            "mensaje": "No se pueden registrar movimientos en una cartera inactiva o finalizada.",
+            "mensaje": (
+                "No se pueden registrar movimientos en una cartera "
+                "inactiva o finalizada."
+            ),
         }, 409
 
     campos, error = _validar_datos(datos, id_cartera, cartera.tipo)
@@ -63,12 +66,15 @@ def crear(id_cartera, datos):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo registrar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo registrar la transacción.",
+        }, 503
 
     return {
         "ok": True,
         "data": {
-            "transaccion": _serializar(transaccion),
+            "transaccion": serializar_transaccion(transaccion),
             "resumen": resumen,
         },
         "mensaje": "Transacción registrada correctamente.",
@@ -76,10 +82,10 @@ def crear(id_cartera, datos):
 
 
 def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
-    pagina, error = _entero_parametro("pagina", pagina, 1)
+    pagina, error = entero_parametro("pagina", pagina, 1)
     if error:
         return {"ok": False, "mensaje": error}, 400
-    por_pagina, error = _entero_parametro("porPagina", por_pagina, 1, 100)
+    por_pagina, error = entero_parametro("porPagina", por_pagina, 1, 100)
     if error:
         return {"ok": False, "mensaje": error}, 400
 
@@ -103,13 +109,16 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
     ]
 
     if periodo_id not in (None, ""):
-        periodo_id, error = _entero_parametro("periodoId", periodo_id, 1)
+        periodo_id, error = entero_parametro("periodoId", periodo_id, 1)
         if error:
             return {"ok": False, "mensaje": error}, 400
         try:
             periodo = db.session.get(Periodo, periodo_id)
         except SQLAlchemyError:
-            return {"ok": False, "mensaje": "No se pudo validar el periodo."}, 503
+            return {
+                "ok": False,
+                "mensaje": "No se pudo validar el periodo.",
+            }, 503
         if periodo is None or periodo.carteraId != id_cartera:
             return {
                 "ok": False,
@@ -155,7 +164,10 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
             .group_by(Transaccion.tipo)
         ).all()
     except SQLAlchemyError:
-        return {"ok": False, "mensaje": "No se pudieron obtener las transacciones."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudieron obtener las transacciones.",
+        }, 503
 
     por_tipo = {tipo: Decimal(monto) for tipo, monto in totales}
     ingresos = por_tipo.get("INGRESO", Decimal("0"))
@@ -209,12 +221,15 @@ def actualizar(id_transaccion, datos):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo actualizar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo actualizar la transacción.",
+        }, 503
 
     return {
         "ok": True,
         "data": {
-            "transaccion": _serializar(transaccion),
+            "transaccion": serializar_transaccion(transaccion),
             "resumen": resumen,
         },
         "mensaje": "Transacción actualizada correctamente.",
@@ -235,7 +250,10 @@ def eliminar(id_transaccion):
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        return {"ok": False, "mensaje": "No se pudo eliminar la transacción."}, 503
+        return {
+            "ok": False,
+            "mensaje": "No se pudo eliminar la transacción.",
+        }, 503
 
     return {
         "ok": True,
@@ -267,7 +285,13 @@ def _buscar_editable(id_transaccion):
         return (
             None,
             None,
-            ({"ok": False, "mensaje": "No se pudo validar la transacción."}, 503),
+            (
+                {
+                    "ok": False,
+                    "mensaje": "No se pudo validar la transacción.",
+                },
+                503,
+            ),
         )
 
     if not fila:
@@ -293,7 +317,10 @@ def _buscar_editable(id_transaccion):
             (
                 {
                     "ok": False,
-                    "mensaje": "No se pueden modificar movimientos en una cartera inactiva o finalizada.",
+                    "mensaje": (
+                        "No se pueden modificar movimientos en una cartera "
+                        "inactiva o finalizada."
+                    ),
                 },
                 409,
             ),
@@ -306,7 +333,10 @@ def _buscar_editable(id_transaccion):
             (
                 {
                     "ok": False,
-                    "mensaje": "Solo el propietario o administrador puede editar o eliminar transacciones.",
+                    "mensaje": (
+                        "Solo el propietario o administrador puede editar "
+                        "o eliminar transacciones."
+                    ),
                 },
                 403,
             ),
@@ -323,7 +353,7 @@ def _validar_datos(datos, id_cartera, tipo_cartera):
     if tipo not in TIPOS:
         return None, ("El tipo debe ser INGRESO o GASTO.", 400)
 
-    monto, error = _validar_monto(datos.get("monto"))
+    monto, error = validar_monto(datos.get("monto"))
     if error:
         return None, (error, 400)
 
@@ -379,7 +409,7 @@ def _validar_datos(datos, id_cartera, tipo_cartera):
     }, None
 
 
-def _validar_monto(valor):
+def validar_monto(valor):
     if valor is None:
         return None, "El monto es obligatorio."
     if isinstance(valor, bool) or not isinstance(valor, (int, float)):
@@ -478,7 +508,7 @@ def _recalcular_saldo(cartera):
     }
 
 
-def _serializar(transaccion):
+def serializar_transaccion(transaccion):
     return {
         "idTransaccion": transaccion.idTransaccion,
         "carteraId": transaccion.carteraId,
@@ -495,7 +525,7 @@ def _serializar(transaccion):
 
 
 def _serializar_listado(transaccion, autor, categoria):
-    datos = _serializar(transaccion)
+    datos = serializar_transaccion(transaccion)
     datos["categoria"] = (
         {"idCategoria": categoria.idCategoria, "nombre": categoria.nombre}
         if categoria
@@ -508,7 +538,7 @@ def _serializar_listado(transaccion, autor, categoria):
     return datos
 
 
-def _entero_parametro(nombre, valor, minimo, maximo=None):
+def entero_parametro(nombre, valor, minimo, maximo=None):
     try:
         numero = int(valor)
     except (TypeError, ValueError):

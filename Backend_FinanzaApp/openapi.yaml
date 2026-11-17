@@ -11,10 +11,14 @@ tags:
     description: Registro, sesión y recuperación de cuenta
   - name: Carteras
     description: Creación y consulta de carteras
-  - name: Reportes
-    description: Vista previa y exportación de reportes
   - name: Comentarios
     description: Alta de comentarios desde la landing y buzón para el staff
+  - name: Reportes
+    description: Vista previa y exportación de reportes
+  - name: Pagos recurrentes
+    description: Alta, consulta y marcado de pagos recurrentes
+  - name: Soporte
+    description: Reportes de ayuda, respuestas y gestión de tickets
 paths:
   /auth/registro:
     post:
@@ -1646,6 +1650,108 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /comentarios:
+    post:
+      tags:
+        - Comentarios
+      summary: Enviar un comentario desde la landing
+      description: >-
+        Endpoint público (sin sesión). Valida nombre, correo y mensaje, y aplica
+        un límite anti-spam de 3 comentarios por IP cada 10 minutos.
+      operationId: crearComentario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComentarioRequest'
+            example:
+              nombre: Aideé Casillas
+              correo: aidee@ejemplo.com
+              comentario: Me gustó la app, ¿tienen versión de escritorio?
+      responses:
+        '201':
+          description: Comentario registrado con estado PENDIENTE
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Comentario'
+                  mensaje:
+                    type: string
+                    example: Comentario creado correctamente.
+        '400':
+          description: >-
+            Datos inválidos: campos faltantes o vacíos, longitudes excedidas
+            (nombre 120, correo 254, comentario 2000) o correo mal formado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Límite de comentarios por IP excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo guardar el comentario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Comentarios
+      summary: Ver el buzón de comentarios de la landing
+      description: >-
+        Devuelve todos los comentarios enviados desde la landing, del más
+        reciente al más antiguo. Solo para staff (ADMIN o TRABAJADOR). No
+        expone la IP de origen.
+      operationId: listarComentarios
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Buzón de comentarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comentario'
+                  mensaje:
+                    type: string
+                    example: Comentarios obtenidos correctamente.
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es ADMIN ni TRABAJADOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener los comentarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /reportes:
     get:
       tags:
@@ -1858,7 +1964,7 @@ paths:
         - in: query
           name: formato
           required: false
-          description: Formato del archivo: CSV o PDF.
+          description: 'Formato del archivo: CSV o PDF.'
           schema:
             type: string
             enum:
@@ -2045,6 +2151,567 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: No se pudieron obtener los comentarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /pagos-recurrentes:
+    post:
+      tags:
+        - Pagos recurrentes
+      summary: Registrar un pago recurrente
+      description: >-
+        Crea un pago recurrente de la cartera. Solo el propietario puede
+        registrarlo. La frecuencia es DIARIO, SEMANAL, MENSUAL o ANUAL y el
+        monto debe ser mayor a cero.
+      operationId: crearPagoRecurrente
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagoRecurrenteCrearRequest'
+            example:
+              carteraId: 1
+              nombre: Renta
+              descripcion: Pago mensual de la renta
+              monto: 4500
+              frecuencia: MENSUAL
+              fechaInicio: '2026-12-01'
+              fechaFin: '2027-12-01'
+              categoriaId: 3
+      responses:
+        '201':
+          description: Pago recurrente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagoRecurrenteRespuesta'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo guardar el pago recurrente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Pagos recurrentes
+      summary: Listar pagos recurrentes
+      description: >-
+        Lista los pagos recurrentes de las carteras del usuario con paginación
+        y filtro opcional por cartera y estado. Los colaboradores solo
+        consultan.
+      operationId: listarPagosRecurrentes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: carteraId
+          schema:
+            type: integer
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum:
+              - ACTIVO
+              - PAUSADO
+              - CANCELADO
+        - in: query
+          name: pagina
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: porPagina
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Pagos recurrentes paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagosRecurrentesLista'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener el listado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /pagos-recurrentes/{idPago}:
+    put:
+      tags:
+        - Pagos recurrentes
+      summary: Editar un pago recurrente
+      description: Actualiza los datos del pago recurrente. Solo el propietario de la cartera.
+      operationId: editarPagoRecurrente
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idPago
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagoRecurrenteEditarRequest'
+            example:
+              nombre: Renta
+              monto: 4800
+              estado: PAUSADO
+      responses:
+        '200':
+          description: Pago recurrente actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagoRecurrenteRespuesta'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El pago recurrente no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar el pago recurrente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Pagos recurrentes
+      summary: Cancelar un pago recurrente
+      description: Cancela el pago recurrente de forma lógica con el estado CANCELADO. Solo el propietario.
+      operationId: cancelarPagoRecurrente
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idPago
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Pago recurrente cancelado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagoRecurrenteRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El pago recurrente no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo cancelar el pago recurrente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /pagos-recurrentes/{idPago}/hecho:
+    post:
+      tags:
+        - Pagos recurrentes
+      summary: Marcar un pago recurrente como hecho
+      description: >-
+        Registra la ejecución del periodo indicado y crea el gasto
+        correspondiente. No se puede marcar dos veces el mismo periodo.
+      operationId: marcarPagoRecurrenteHecho
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idPago
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fechaProgramada:
+                  type: string
+                  format: date
+                  example: '2026-12-01'
+      responses:
+        '201':
+          description: Pago marcado como hecho
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagoRecurrenteHechoRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario de la cartera
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El pago recurrente no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El periodo ya fue marcado como hecho
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo registrar la ejecución
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /soporte/tickets:
+    post:
+      tags:
+        - Soporte
+      summary: Crear un reporte de ayuda
+      description: Crea un ticket de soporte del usuario autenticado con estado ABIERTO.
+      operationId: crearTicket
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCrearRequest'
+            example:
+              asunto: No puedo cerrar mi cartera
+              descripcion: Al confirmar me sale un error de validación.
+              categoria: CARTERA
+              prioridad: MEDIA
+      responses:
+        '201':
+          description: Ticket creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketRespuesta'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo guardar el ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Soporte
+      summary: Listar reportes de ayuda
+      description: >-
+        Un cliente ve sus propios tickets y un usuario con rol ADMIN o
+        TRABAJADOR ve todos. Incluye filtro por estado y paginación.
+      operationId: listarTickets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum:
+              - ABIERTO
+              - EN_PROCESO
+              - ESPERA
+              - RESUELTO
+              - CERRADO
+        - in: query
+          name: pagina
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: porPagina
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Tickets paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketsLista'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo obtener el listado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /soporte/tickets/{idTicket}/respuestas:
+    post:
+      tags:
+        - Soporte
+      summary: Responder un reporte de ayuda
+      description: Responde el propietario del ticket o un usuario con rol ADMIN o TRABAJADOR.
+      operationId: responderTicket
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTicket
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mensaje
+              properties:
+                mensaje:
+                  type: string
+                  maxLength: 3000
+                  example: Ya lo revisamos y corregimos.
+      responses:
+        '201':
+          description: Respuesta creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaTicketRespuesta'
+        '400':
+          description: Mensaje vacío
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es propietario del ticket ni es staff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El ticket no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo guardar la respuesta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /soporte/tickets/{idTicket}/asignar:
+    post:
+      tags:
+        - Soporte
+      summary: Asignar un reporte de ayuda
+      description: >-
+        Asigna el ticket a un trabajador o al propio usuario con rol ADMIN o
+        TRABAJADOR. Cierra la asignación anterior y deja el ticket en
+        EN_PROCESO.
+      operationId: asignarTicket
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTicket
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trabajadorId:
+                  type: integer
+                  example: 7
+                observaciones:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Ticket asignado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Solo el personal con rol ADMIN o TRABAJADOR puede asignar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El ticket no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo asignar el ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /soporte/tickets/{idTicket}/cerrar:
+    post:
+      tags:
+        - Soporte
+      summary: Cerrar un reporte de ayuda
+      description: Cierra el ticket con estado CERRADO y fecha de cierre. Solo el personal con rol ADMIN o TRABAJADOR.
+      operationId: cerrarTicket
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTicket
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observaciones:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Ticket cerrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketRespuesta'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Solo el personal con rol ADMIN o TRABAJADOR puede cerrar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: El ticket no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo cerrar el ticket
           content:
             application/json:
               schema:
@@ -3219,3 +3886,411 @@ components:
           description: >-
             Si se omite o viene vacío, conserva el valor actual. Debe ser único.
           example: aidee@ejemplo.com
+    PagoRecurrenteCrearRequest:
+      type: object
+      required:
+        - carteraId
+        - nombre
+        - monto
+        - frecuencia
+        - fechaInicio
+      properties:
+        carteraId:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          maxLength: 120
+          example: Renta
+        descripcion:
+          type: string
+          maxLength: 500
+          example: Pago mensual de la renta
+        monto:
+          type: number
+          format: double
+          example: 4500
+        frecuencia:
+          type: string
+          enum:
+            - DIARIO
+            - SEMANAL
+            - MENSUAL
+            - ANUAL
+          example: MENSUAL
+        fechaInicio:
+          type: string
+          format: date
+          example: '2026-12-01'
+        fechaFin:
+          type: string
+          format: date
+          example: '2027-12-01'
+        categoriaId:
+          type: integer
+          example: 3
+    PagoRecurrenteEditarRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+        descripcion:
+          type: string
+          maxLength: 500
+        monto:
+          type: number
+          format: double
+        frecuencia:
+          type: string
+          enum:
+            - DIARIO
+            - SEMANAL
+            - MENSUAL
+            - ANUAL
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+        categoriaId:
+          type: integer
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - PAUSADO
+            - CANCELADO
+    PagoRecurrente:
+      type: object
+      properties:
+        idPagoRecurrente:
+          type: integer
+          example: 4
+        carteraId:
+          type: integer
+          example: 1
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 3
+        nombre:
+          type: string
+          example: Renta
+        descripcion:
+          type: string
+          nullable: true
+          example: Pago mensual de la renta
+        monto:
+          type: number
+          format: double
+          example: 4500
+        frecuencia:
+          type: string
+          enum:
+            - DIARIO
+            - SEMANAL
+            - MENSUAL
+            - ANUAL
+        fechaInicio:
+          type: string
+          format: date
+          example: '2026-12-01'
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          example: '2027-12-01'
+        proximaEjecucion:
+          type: string
+          format: date
+          example: '2026-12-01'
+        estado:
+          type: string
+          enum:
+            - ACTIVO
+            - PAUSADO
+            - CANCELADO
+    PagoRecurrenteRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            pago:
+              $ref: '#/components/schemas/PagoRecurrente'
+        mensaje:
+          type: string
+          example: Pago recurrente registrado correctamente.
+    PagosRecurrentesLista:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            pagos:
+              type: array
+              items:
+                $ref: '#/components/schemas/PagoRecurrente'
+            paginacion:
+              type: object
+              properties:
+                pagina:
+                  type: integer
+                  example: 1
+                porPagina:
+                  type: integer
+                  example: 20
+                total:
+                  type: integer
+                  example: 3
+                totalPaginas:
+                  type: integer
+                  example: 1
+        mensaje:
+          type: string
+          example: Listado de pagos recurrentes.
+    PagoRecEjecucion:
+      type: object
+      properties:
+        idEjecucion:
+          type: integer
+          example: 9
+        pagoRecurrenteId:
+          type: integer
+          example: 4
+        transaccionId:
+          type: integer
+          nullable: true
+          example: 21
+        fechaProgramada:
+          type: string
+          format: date
+          example: '2026-12-01'
+        monto:
+          type: number
+          format: double
+          example: 4500
+        estado:
+          type: string
+          enum:
+            - PENDIENTE
+            - EJECUTADO
+            - FALLIDO
+            - OMITIDO
+    PagoRecurrenteHechoRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            ejecucion:
+              $ref: '#/components/schemas/PagoRecEjecucion'
+            transaccion:
+              $ref: '#/components/schemas/Transaccion'
+        mensaje:
+          type: string
+          example: Pago recurrente marcado como hecho.
+    TicketCrearRequest:
+      type: object
+      required:
+        - asunto
+        - descripcion
+      properties:
+        asunto:
+          type: string
+          maxLength: 150
+          example: No puedo cerrar mi cartera
+        descripcion:
+          type: string
+          maxLength: 3000
+          example: Al confirmar me sale un error de validación.
+        categoria:
+          type: string
+          enum:
+            - GENERAL
+            - CUENTA
+            - CARTERA
+            - PAGOS
+            - ERROR
+            - OTRO
+          default: GENERAL
+        prioridad:
+          type: string
+          enum:
+            - BAJA
+            - MEDIA
+            - ALTA
+            - URGENTE
+          default: MEDIA
+    RespuestaTicket:
+      type: object
+      properties:
+        idRespuesta:
+          type: integer
+          example: 3
+        ticketId:
+          type: integer
+          example: 2
+        mensaje:
+          type: string
+          example: Ya lo revisamos y corregimos.
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-11-14T18:00:00'
+    AsignacionTicket:
+      type: object
+      properties:
+        idAsignacion:
+          type: integer
+          example: 5
+        ticketId:
+          type: integer
+          example: 2
+        trabajadorId:
+          type: integer
+          example: 7
+        fechaInicio:
+          type: string
+          format: date-time
+          example: '2026-11-14T18:00:00'
+        observaciones:
+          type: string
+          nullable: true
+          example: Revisado con el equipo.
+    Ticket:
+      type: object
+      properties:
+        idTicket:
+          type: integer
+          example: 2
+        asunto:
+          type: string
+          example: No puedo cerrar mi cartera
+        descripcion:
+          type: string
+          example: Al confirmar me sale un error de validación.
+        categoria:
+          type: string
+          enum:
+            - GENERAL
+            - CUENTA
+            - CARTERA
+            - PAGOS
+            - ERROR
+            - OTRO
+        prioridad:
+          type: string
+          enum:
+            - BAJA
+            - MEDIA
+            - ALTA
+            - URGENTE
+        estado:
+          type: string
+          enum:
+            - ABIERTO
+            - EN_PROCESO
+            - ESPERA
+            - RESUELTO
+            - CERRADO
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-11-14T18:00:00'
+        fechaCierre:
+          type: string
+          format: date-time
+          nullable: true
+        respuestas:
+          type: array
+          items:
+            $ref: '#/components/schemas/RespuestaTicket'
+        asignacionActual:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AsignacionTicket'
+    TicketRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            ticket:
+              $ref: '#/components/schemas/Ticket'
+        mensaje:
+          type: string
+          example: Reporte de ayuda creado correctamente.
+    TicketsLista:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            tickets:
+              type: array
+              items:
+                $ref: '#/components/schemas/Ticket'
+            paginacion:
+              type: object
+              properties:
+                pagina:
+                  type: integer
+                  example: 1
+                porPagina:
+                  type: integer
+                  example: 20
+                total:
+                  type: integer
+                  example: 2
+                totalPaginas:
+                  type: integer
+                  example: 1
+        mensaje:
+          type: string
+          example: Listado de reportes de ayuda.
+    RespuestaTicketRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            respuesta:
+              $ref: '#/components/schemas/RespuestaTicket'
+        mensaje:
+          type: string
+          example: Respuesta enviada correctamente.
+    AsignacionRespuesta:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            asignacion:
+              $ref: '#/components/schemas/AsignacionTicket'
+        mensaje:
+          type: string
+          example: Ticket asignado correctamente.

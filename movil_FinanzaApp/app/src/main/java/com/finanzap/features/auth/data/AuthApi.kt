@@ -1,8 +1,10 @@
 package com.finanzap.features.auth.data
 
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 // Definición de los endpoints de autenticación.
 interface AuthApi {
@@ -30,4 +32,13 @@ interface AuthApi {
 
     @HTTP(method = "DELETE", path = "auth/cuenta", hasBody = true)
     suspend fun eliminarCuenta(@Body peticion: ConfirmacionCuentaRequest): RespuestaMensaje
+
+    @PUT("auth/editar_cuenta")
+    suspend fun editarCuenta(@Body peticion: EditarCuentaRequest): RespuestaMensaje
+
+    @GET("auth/preferencias")
+    suspend fun obtenerPreferencias(): RespuestaPreferencias
+
+    @PUT("auth/preferencias")
+    suspend fun guardarPreferencias(@Body peticion: PreferenciasRequest): RespuestaPreferencias
 }

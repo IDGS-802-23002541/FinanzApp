@@ -40,8 +40,9 @@ class ComentarioLanding(db.Model):
         db.Index(
             "IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"
         ),
+        db.Index("IX_COMENTARIO_LANDING_ip_fecha", "ip", "fechaCreacion"),
         db.CheckConstraint(
-            "estado IN ('PENDIENTE', 'PUBLICADO', 'OCULTO')",
+            "estado IN ('PENDIENTE', 'ATENDIDO', 'ARCHIVADO')",
             name="CK_COMENTARIO_LANDING_estado",
         ),
         db.Index("IX_COMENTARIO_LANDING_ip_fecha", "ip", "fechaCreacion"),

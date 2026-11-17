@@ -10,6 +10,12 @@
     <string name="comun_ocultar_contrasena">Ocultar contraseña</string>
     <string name="comun_volver">Volver</string>
     <string name="comun_guardando">Guardando…</string>
+    <string name="comun_crear">Crear</string>
+    <string name="comun_editar">Editar</string>
+    <string name="comun_eliminar">Eliminar</string>
+    <string name="comun_guardar">Guardar</string>
+    <string name="comun_anterior">Anterior</string>
+    <string name="comun_siguiente">Siguiente</string>
     <string name="comun_pendiente_titulo">Próximamente</string>
     <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
     <string name="menu_abrir">Abrir menú</string>
@@ -51,6 +57,25 @@
     <string name="mi_cuenta_eliminar_titulo">Eliminar cuenta</string>
     <string name="mi_cuenta_eliminar_aviso">Tus datos y tus carteras se eliminarán y sus colaboradores perderán acceso. Tus transacciones registradas se conservan. Esta acción no se puede deshacer.</string>
     <string name="mi_cuenta_eliminar_confirmar">Sí, eliminar</string>
+    <string name="cuenta_editar_datos">Editar mis datos</string>
+    <string name="cuenta_preferencias">Preferencias de notificación</string>
+
+    <!-- Editar cuenta -->
+    <string name="cuenta_editar_titulo">Editar cuenta</string>
+    <string name="cuenta_editar_descripcion">Los apellidos y el correo se conservan si los dejas vacíos. El nombre de usuario siempre se actualiza.</string>
+    <string name="cuenta_editar_nombre">Nombre de usuario</string>
+    <string name="cuenta_editar_apaterno">Apellido paterno (opcional)</string>
+    <string name="cuenta_editar_amaterno">Apellido materno (opcional)</string>
+    <string name="cuenta_editar_guardar">Guardar cambios</string>
+
+    <!-- Preferencias de notificación -->
+    <string name="preferencias_titulo">Notificaciones</string>
+    <string name="preferencias_descripcion">Elige qué avisos quieres recibir.</string>
+    <string name="preferencias_movimientos">Movimientos en cartera</string>
+    <string name="preferencias_sistema">Recordatorios del sistema</string>
+    <string name="preferencias_pagos">Recordatorios de pagos recurrentes</string>
+    <string name="preferencias_guardar">Guardar preferencias</string>
+    <string name="preferencias_guardadas">Preferencias guardadas.</string>
 
     <!-- Cambiar contraseña -->
     <string name="cambiar_contrasena_titulo">Cambiar contraseña</string>
@@ -65,6 +90,35 @@
 
     <!-- Carteras -->
     <string name="carteras_titulo">Carteras</string>
+    <string name="detalle_titulo">Detalle de cartera</string>
+    <string name="detalle_estado">Estado</string>
+    <string name="detalle_presupuesto">Presupuesto inicial</string>
+    <string name="detalle_graficas">Gráficas</string>
+    <string name="detalle_colaboradores">Colaboradores</string>
+    <string name="detalle_rol_colaborador">Colaborador</string>
+    <string name="detalle_periodo">Periodo</string>
+    <string name="detalle_periodo_todos">Todos</string>
+    <string name="detalle_ingresos_vs_egresos">Ingresos vs egresos</string>
+    <string name="detalle_gastos_categoria">Gastos por categoría</string>
+    <string name="detalle_sin_datos">Sin datos para mostrar.</string>
+    <string name="detalle_error">No se pudo cargar la cartera.</string>
+    <string name="detalle_invitacion">Invitación QR</string>
+    <string name="detalle_invitacion_sin_activa">Aún no hay una invitación activa.</string>
+    <string name="detalle_invitacion_generar">Generar QR</string>
+    <string name="detalle_invitacion_regenerar">Regenerar QR</string>
+    <string name="detalle_invitacion_generando">Generando…</string>
+    <string name="detalle_invitacion_ingresos">Miembros que se unieron</string>
+    <string name="detalle_invitacion_sin_ingresos">Aún nadie se ha unido con este QR.</string>
+    <string name="detalle_invitacion_vence">Vence: %1$s</string>
+    <string name="detalle_invitacion_qr_descripcion">Código QR de invitación</string>
+    <string name="carteras_unirse">Unirse con QR o código</string>
+    <string name="unirse_titulo">Unirse a cartera</string>
+    <string name="unirse_descripcion">Escanea el QR o ingresa el código de 8 caracteres.</string>
+    <string name="unirse_codigo">Código de invitación</string>
+    <string name="unirse_escanear">Escanear QR</string>
+    <string name="unirse_accion">Unirme</string>
+    <string name="unirse_error_codigo">Ingresa un código válido de 8 caracteres.</string>
+    <string name="unirse_error_escaner">No se pudo leer el QR. Intenta de nuevo.</string>
     <string name="carteras_descripcion">Administra tus carteras y consulta aquellas en las que participas como contribuyente.</string>
     <string name="carteras_descripcion_compartidas">Soy contribuyente en %1$d carteras de otros usuarios.</string>
     <string name="carteras_cerrar_sesion">Cerrar sesión</string>
@@ -92,9 +146,55 @@
     <string name="carteras_pendiente_detalle">El detalle de la cartera llega con la HU #48.</string>
     <string name="carteras_pendiente_gasto">Registrar gasto llega con la HU #54.</string>
 
+    <!-- Transacciones -->
+    <string name="transaccion_titulo">Nueva transacción</string>
+    <string name="transacciones_titulo">Transacciones</string>
+    <string name="transacciones_vacio_titulo">Sin transacciones</string>
+    <string name="transacciones_vacio_mensaje">Cuando registres un ingreso o gasto aparecerá aquí.</string>
+    <string name="transacciones_ingresos">Ingresos</string>
+    <string name="transacciones_gastos">Gastos</string>
+    <string name="transacciones_balance">Balance</string>
+    <string name="transacciones_pagina">Página %1$d de %2$d</string>
+    <string name="transacciones_ver">Ver transacciones</string>
+    <string name="detalle_salir">Salir de la cartera</string>
+    <string name="detalle_salir_titulo">Salir de la cartera</string>
+    <string name="detalle_salir_aviso">Dejarás de ver esta cartera y sus movimientos. ¿Deseas continuar?</string>
+    <string name="detalle_salir_confirmar">Salir</string>
+    <string name="cartera_editar_titulo">Editar cartera</string>
+    <string name="cartera_editar_guardar">Guardar cambios</string>
+    <string name="cartera_inactivar">Inactivar cartera</string>
+    <string name="cartera_inactivar_titulo">Inactivar cartera</string>
+    <string name="cartera_inactivar_aviso">La cartera dejará de estar activa y se revocarán sus invitaciones. Sus datos no se borran. ¿Deseas continuar?</string>
+    <string name="cartera_inactivar_confirmar">Inactivar</string>
+    <string name="cartera_cerrar">Cerrar cartera</string>
+    <string name="cartera_cerrar_titulo">Cerrar cartera</string>
+    <string name="cartera_cerrar_aviso">Se calculará el balance final y la cartera quedará en solo lectura. ¿Deseas continuar?</string>
+    <string name="cartera_cerrar_confirmar">Cerrar</string>
+    <string name="cartera_balance_titulo">Balance final</string>
+    <string name="cartera_balance_categorias">Por categoría</string>
+    <string name="cartera_balance_participantes">Por participante</string>
+    <string name="transacciones_editar_titulo">Editar transacción</string>
+    <string name="transacciones_eliminar_titulo">Eliminar transacción</string>
+    <string name="transacciones_eliminar_mensaje">¿Eliminar esta transacción? Dejará de contar en el saldo.</string>
+    <string name="transacciones_categoria_actual">Categoría: %1$s</string>
+    <string name="transacciones_sin_categoria">Sin categoría</string>
+    <string name="transaccion_tipo">Tipo</string>
+    <string name="transaccion_ingreso">Ingreso</string>
+    <string name="transaccion_gasto">Gasto</string>
+    <string name="transaccion_monto">Monto</string>
+    <string name="transaccion_categoria">Categoría</string>
+    <string name="transaccion_fecha">Fecha</string>
+    <string name="transaccion_descripcion">Descripción (opcional)</string>
+    <string name="transaccion_guardar">Guardar transacción</string>
+    <string name="transaccion_pendiente_titulo">Vista previa</string>
+    <string name="transaccion_pendiente_mensaje">La lógica de guardado se implementará con el equipo.</string>
+    <string name="categoria_buscar">Buscar o crear categoría</string>
+    <string name="categoria_crear">Crear «%1$s»</string>
+    <string name="categoria_confirmar_titulo">Crear categoría</string>
+    <string name="categoria_confirmar_mensaje">¿Agregar «%1$s» a tus categorías?</string>
+
     <!-- Nueva cartera -->
-    <string name="nueva_cartera_titulo">Nueva cartera</string>
-    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
+    <string name="nueva_cartera_titulo">Nueva cartera</string>    <string name="nueva_cartera_nombre">Nombre de la cartera</string>
     <string name="nueva_cartera_tipo">Tipo de cartera</string>
     <string name="nueva_cartera_descripcion">Descripción (opcional)</string>
     <string name="nueva_cartera_presupuesto">Presupuesto inicial (opcional)</string>
@@ -108,4 +208,106 @@
 
     <!-- Errores -->
     <string name="error_reintentar">Reintentar</string>
+
+    <!-- Reportes -->
+    <string name="reportes_descripcion">Filtra tus carteras, revisa la vista previa y exporta el reporte.</string>
+    <string name="reportes_cartera">Cartera</string>
+    <string name="reportes_cartera_todas">Todas mis carteras</string>
+    <string name="reportes_tipo">Tipo</string>
+    <string name="reportes_tipo_todos">Todos los tipos</string>
+    <string name="reportes_periodo">Periodo</string>
+    <string name="reportes_periodo_todos">Sin periodo</string>
+    <string name="reportes_fecha_inicio_texto">Desde: %1$s</string>
+    <string name="reportes_fecha_fin_texto">Hasta: %1$s</string>
+    <string name="reportes_sin_fecha">Sin fecha</string>
+    <string name="reportes_quitar_fecha">Quitar fecha</string>
+    <string name="reportes_actualizar">Actualizar vista previa</string>
+    <string name="reportes_actualizando">Consultando…</string>
+    <string name="reportes_ingresos">Ingresos</string>
+    <string name="reportes_gastos">Gastos</string>
+    <string name="reportes_ahorro">Ahorro</string>
+    <string name="reportes_movimientos">Movimientos</string>
+    <string name="reportes_rango_fechas">Del %1$s al %2$s</string>
+    <string name="reportes_ingresos_vs_egresos">Ingresos vs egresos</string>
+    <string name="reportes_gastos_categoria">Gastos por categoría</string>
+    <string name="reportes_sin_datos">Sin datos para mostrar.</string>
+    <string name="reportes_vacio_titulo">Sin datos</string>
+    <string name="reportes_vacio_mensaje">No hay movimientos para los filtros seleccionados.</string>
+    <string name="reportes_exportar_csv">Exportar CSV</string>
+    <string name="reportes_exportar_pdf">Exportar PDF</string>
+    <string name="reportes_exportando">Generando…</string>
+    <string name="reportes_archivo_titulo">Archivo guardado en el dispositivo</string>
+
+    <!-- Soporte -->
+    <string name="soporte_descripcion">Reporta una duda o un problema y sigue aquí el avance del equipo de soporte.</string>
+    <string name="soporte_nuevo_reporte">Nuevo reporte</string>
+    <string name="soporte_formulario_titulo">Datos del reporte</string>
+    <string name="soporte_asunto">Asunto</string>
+    <string name="soporte_descripcion_campo">Descripción</string>
+    <string name="soporte_categoria">Categoría</string>
+    <string name="soporte_prioridad">Prioridad</string>
+    <string name="soporte_enviar_reporte">Enviar reporte</string>
+    <string name="soporte_enviando_reporte">Enviando…</string>
+    <string name="soporte_vacio_titulo">Sin reportes</string>
+    <string name="soporte_vacio_mensaje">Cuando reportes una duda o un problema aparecerá aquí.</string>
+    <string name="soporte_responder">Responder</string>
+    <string name="soporte_respuesta_mensaje">Tu respuesta</string>
+    <string name="soporte_enviar_respuesta">Enviar respuesta</string>
+    <string name="soporte_respuestas">Respuestas</string>
+    <string name="soporte_asignado">Atendido por el equipo de soporte</string>
+    <string name="soporte_pagina">Página %1$d de %2$d</string>
+    <string name="soporte_categoria_general">General</string>
+    <string name="soporte_categoria_cuenta">Cuenta</string>
+    <string name="soporte_categoria_cartera">Cartera</string>
+    <string name="soporte_categoria_pagos">Pagos</string>
+    <string name="soporte_categoria_error">Error</string>
+    <string name="soporte_categoria_otro">Otro</string>
+    <string name="soporte_prioridad_baja">Baja</string>
+    <string name="soporte_prioridad_media">Media</string>
+    <string name="soporte_prioridad_alta">Alta</string>
+    <string name="soporte_prioridad_urgente">Urgente</string>
+    <string name="soporte_estado_abierto">Abierto</string>
+    <string name="soporte_estado_en_proceso">En proceso</string>
+    <string name="soporte_estado_espera">En espera</string>
+    <string name="soporte_estado_resuelto">Resuelto</string>
+    <string name="soporte_estado_cerrado">Cerrado</string>
+
+    <!-- Pagos recurrentes -->
+    <string name="pagos_titulo">Pagos recurrentes</string>
+    <string name="pagos_descripcion">Programa los pagos fijos de la cartera y márcalos como realizados cuando ocurran.</string>
+    <string name="pagos_solo_consulta">Solo el propietario de la cartera puede crear y modificar pagos recurrentes.</string>
+    <string name="pagos_nuevo">Nuevo pago</string>
+    <string name="pagos_formulario_nuevo_titulo">Datos del pago</string>
+    <string name="pagos_formulario_editar_titulo">Editar pago</string>
+    <string name="pagos_nombre">Nombre del pago</string>
+    <string name="pagos_monto">Monto</string>
+    <string name="pagos_frecuencia">Frecuencia</string>
+    <string name="pagos_fecha_inicio">Fecha de inicio</string>
+    <string name="pagos_fecha_fin">Fecha de fin</string>
+    <string name="pagos_sin_fecha">Sin fecha</string>
+    <string name="pagos_quitar_fecha">Quitar fecha de fin</string>
+    <string name="pagos_descripcion_campo">Descripción (opcional)</string>
+    <string name="pagos_guardar">Guardar pago</string>
+    <string name="pagos_error_nombre">Escribe el nombre del pago.</string>
+    <string name="pagos_error_nombre_largo">El nombre admite hasta 120 caracteres.</string>
+    <string name="pagos_error_monto">Ingresa un monto mayor a 0.</string>
+    <string name="pagos_error_fecha_inicio">Elige la fecha de inicio.</string>
+    <string name="pagos_error_fechas">La fecha fin no puede ser anterior a la fecha inicio.</string>
+    <string name="pagos_marcar_hecho">Marcar como hecho</string>
+    <string name="pagos_cancelar_titulo">Cancelar pago recurrente</string>
+    <string name="pagos_cancelar_mensaje">El pago dejará de programarse. Los gastos ya registrados se conservan. ¿Deseas continuar?</string>
+    <string name="pagos_cancelar_confirmar">Sí, cancelar</string>
+    <string name="pagos_vacio_titulo">Sin pagos recurrentes</string>
+    <string name="pagos_vacio_mensaje">Cuando programes un pago recurrente aparecerá aquí.</string>
+    <string name="pagos_pagina">Página %1$d de %2$d</string>
+    <string name="pagos_proxima_ejecucion">Próxima: %1$s</string>
+    <string name="pagos_frecuencia_texto">Frecuencia: %1$s</string>
+    <string name="pagos_frecuencia_diaria">Diaria</string>
+    <string name="pagos_frecuencia_semanal">Semanal</string>
+    <string name="pagos_frecuencia_mensual">Mensual</string>
+    <string name="pagos_frecuencia_anual">Anual</string>
+    <string name="pagos_estado_activo">Activo</string>
+    <string name="pagos_estado_pausado">Pausado</string>
+    <string name="pagos_estado_cancelado">Cancelado</string>
+    <string name="carteras_ver_pagos">Ver pagos recurrentes</string>
 </resources>

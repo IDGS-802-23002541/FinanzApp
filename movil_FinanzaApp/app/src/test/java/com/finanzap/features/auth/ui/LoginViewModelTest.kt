@@ -1,6 +1,7 @@
 package com.finanzap.features.auth.ui
 
 import com.finanzap.features.auth.data.AuthRepository
+import com.finanzap.features.auth.data.PreferenciasNotificacion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -116,6 +117,22 @@ private class RepositorioLoginFalso : AuthRepository {
 
     override suspend fun eliminarCuenta(contrasena: String): Result<Unit> =
         Result.success(Unit)
+
+    override suspend fun editarCuenta(
+        nombreUsuario: String,
+        apaterno: String,
+        amaterno: String,
+        correo: String
+    ): Result<Unit> = Result.failure(UnsupportedOperationException())
+
+    override suspend fun obtenerPreferencias(): Result<PreferenciasNotificacion> =
+        Result.failure(UnsupportedOperationException())
+
+    override suspend fun guardarPreferencias(
+        movimientos: Boolean,
+        sistema: Boolean,
+        pagos: Boolean
+    ): Result<PreferenciasNotificacion> = Result.failure(UnsupportedOperationException())
 
     override suspend fun cerrarSesion() = Unit
 

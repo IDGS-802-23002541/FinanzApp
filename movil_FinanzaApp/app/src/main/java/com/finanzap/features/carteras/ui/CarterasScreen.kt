@@ -42,19 +42,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,11 +69,13 @@ import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.TipoCartera
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import kotlinx.coroutines.launch
 
 @Composable
 fun CarterasScreen(
     onNuevaCartera: () -> Unit,
+    onAbrirCartera: (Cartera) -> Unit,
+    onRegistrarGasto: (Cartera) -> Unit,
+    onUnirseCartera: () -> Unit,
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,6 +89,9 @@ fun CarterasScreen(
         state = state,
         acciones = CarterasAcciones(
             onNuevaCartera = onNuevaCartera,
+            onAbrirCartera = onAbrirCartera,
+            onRegistrarGasto = onRegistrarGasto,
+            onUnirseCartera = onUnirseCartera,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
             onBusquedaChange = viewModel::onBusquedaChange,
@@ -100,6 +102,9 @@ fun CarterasScreen(
 
 data class CarterasAcciones(
     val onNuevaCartera: () -> Unit,
+    val onAbrirCartera: (Cartera) -> Unit,
+    val onRegistrarGasto: (Cartera) -> Unit,
+    val onUnirseCartera: () -> Unit,
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
     val onBusquedaChange: (String) -> Unit,
@@ -112,24 +117,16 @@ fun CarterasContenido(
     acciones: CarterasAcciones
 ) {
     val onNuevaCartera = acciones.onNuevaCartera
+    val onAbrirCartera = acciones.onAbrirCartera
+    val onRegistrarGasto = acciones.onRegistrarGasto
+    val onUnirseCartera = acciones.onUnirseCartera
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
     val onBusquedaChange = acciones.onBusquedaChange
     val onReintentar = acciones.onReintentar
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val alcance = rememberCoroutineScope()
-
-    val avisar: (String) -> Unit = { mensaje ->
-        alcance.launch { snackbarHostState.showSnackbar(mensaje) }
-    }
-
-    val mensajeDetalle = stringResource(R.string.carteras_pendiente_detalle)
-    val mensajeGasto = stringResource(R.string.carteras_pendiente_gasto)
-
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        containerColor = MaterialTheme.colorScheme.background
     ) { margen ->
         LazyColumn(
             modifier = Modifier
@@ -142,7 +139,8 @@ fun CarterasContenido(
                 Encabezado(
                     compartidas = state.segmento == Segmento.COMPARTIDAS,
                     totalCompartidas = state.totalCompartidas,
-                    onNuevaCartera = onNuevaCartera
+                    onNuevaCartera = onNuevaCartera,
+                    onUnirseCartera = onUnirseCartera
                 )
             }
 
@@ -193,7 +191,9 @@ fun CarterasContenido(
                         EstadoVacio(
                             icono = Icons.AutoMirrored.Filled.List,
                             titulo = stringResource(R.string.carteras_vacio_compartidas_titulo),
-                            mensaje = stringResource(R.string.carteras_vacio_compartidas_mensaje)
+                            mensaje = stringResource(R.string.carteras_vacio_compartidas_mensaje),
+                            textoBoton = stringResource(R.string.carteras_unirse),
+                            onBoton = onUnirseCartera
                         )
                     } else {
                         EstadoVacio(
@@ -208,12 +208,16 @@ fun CarterasContenido(
 
                 else -> items(items = state.carteras, key = { it.id }) { cartera ->
                     if (cartera.rol == RolEnCartera.PROPIETARIO) {
-                        TarjetaPropia(cartera = cartera, onAbrir = { avisar(mensajeDetalle) })
+                        TarjetaPropia(
+                            cartera = cartera,
+                            onAbrir = { onAbrirCartera(cartera) },
+                            onRegistrarGasto = { onRegistrarGasto(cartera) }
+                        )
                     } else {
                         TarjetaCompartida(
                             cartera = cartera,
-                            onRegistrarGasto = { avisar(mensajeGasto) },
-                            onVerCartera = { avisar(mensajeDetalle) }
+                            onRegistrarGasto = { onRegistrarGasto(cartera) },
+                            onVerCartera = { onAbrirCartera(cartera) }
                         )
                     }
                 }
@@ -226,7 +230,8 @@ fun CarterasContenido(
 private fun Encabezado(
     compartidas: Boolean,
     totalCompartidas: Int,
-    onNuevaCartera: () -> Unit
+    onNuevaCartera: () -> Unit,
+    onUnirseCartera: () -> Unit
 ) {
     val abrirMenu = LocalAbrirMenu.current
     Column {
@@ -248,6 +253,12 @@ private fun Encabezado(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = onUnirseCartera) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_qr),
+                    contentDescription = stringResource(R.string.carteras_unirse)
+                )
+            }
             FilledIconButton(onClick = onNuevaCartera) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -426,7 +437,11 @@ private fun Buscador(busqueda: String, onBusquedaChange: (String) -> Unit) {
 }
 
 @Composable
-private fun TarjetaPropia(cartera: Cartera, onAbrir: () -> Unit) {
+private fun TarjetaPropia(
+    cartera: Cartera,
+    onAbrir: () -> Unit,
+    onRegistrarGasto: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -496,12 +511,28 @@ private fun TarjetaPropia(cartera: Cartera, onAbrir: () -> Unit) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    onClick = onAbrir,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(percent = 50)
-                ) {
-                    Text(stringResource(R.string.carteras_abrir))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onRegistrarGasto,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.carteras_registrar_gasto),
+                            maxLines = 1
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onAbrir,
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.carteras_abrir),
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }

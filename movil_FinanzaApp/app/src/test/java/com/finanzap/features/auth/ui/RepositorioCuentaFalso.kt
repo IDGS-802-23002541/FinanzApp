@@ -1,6 +1,7 @@
 package com.finanzap.features.auth.ui
 
 import com.finanzap.features.auth.data.AuthRepository
+import com.finanzap.features.auth.data.PreferenciasNotificacion
 
 // Doble compartido por los tests de cuenta: cambiar, desactivar y eliminar.
 class RepositorioCuentaFalso : AuthRepository {
@@ -39,6 +40,22 @@ class RepositorioCuentaFalso : AuthRepository {
         val error = falla
         return if (error != null) Result.failure(error) else Result.success(Unit)
     }
+
+    override suspend fun editarCuenta(
+        nombreUsuario: String,
+        apaterno: String,
+        amaterno: String,
+        correo: String
+    ): Result<Unit> = Result.failure(UnsupportedOperationException())
+
+    override suspend fun obtenerPreferencias(): Result<PreferenciasNotificacion> =
+        Result.failure(UnsupportedOperationException())
+
+    override suspend fun guardarPreferencias(
+        movimientos: Boolean,
+        sistema: Boolean,
+        pagos: Boolean
+    ): Result<PreferenciasNotificacion> = Result.failure(UnsupportedOperationException())
 
     override suspend fun cerrarSesion() = Unit
 
