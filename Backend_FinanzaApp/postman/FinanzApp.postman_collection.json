@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
     "name": "FinanzApp - API",
-    "description": "Regresion del Sprint 3: autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta y notificaciones. Montos MXN; fechas de API en YYYY-MM-DD.",
+    "description": "Regresion del Sprint 3 y matriz de permisos/casos borde (#255/#256): autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta y notificaciones. Montos MXN; fechas de API en YYYY-MM-DD.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -48,6 +48,26 @@
     },
     {
       "key": "idCategoria",
+      "value": ""
+    },
+    {
+      "key": "accessTokenColaborador",
+      "value": ""
+    },
+    {
+      "key": "idCarteraAjena",
+      "value": ""
+    },
+    {
+      "key": "idPropietario",
+      "value": ""
+    },
+    {
+      "key": "idTransaccionAjena",
+      "value": ""
+    },
+    {
+      "key": "correoExistente",
       "value": ""
     }
   ],
@@ -1688,6 +1708,308 @@
             },
             "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias",
             "description": "Esperado: 201. Nombre unico por cartera; tipo INGRESO, GASTO o AMBOS."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Permisos y casos borde",
+      "description": "Matriz de #256. Ticket ya cerrado: no aplica porque el modulo de soporte no tiene endpoints implementados.",
+      "item": [
+        {
+          "name": "01 - Cliente consulta buzon de comentarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 403. El buzon es solo ADMIN/TRABAJADOR. Usar accessToken de CLIENTE."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Colaborador edita cartera ajena",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intento colaborador 256\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}",
+            "description": "Esperado: 403 o 404. Colaborador no puede editar una cartera que no administra."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Colaborador inactiva cartera ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/inactivar",
+            "description": "Esperado: 403 o 404. Solo propietario puede inactivar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Colaborador finaliza cartera ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/finalizar",
+            "description": "Esperado: 403. Solo propietario y tipo Viaje/Evento."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Colaborador elimina al propietario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/miembros/{{idPropietario}}",
+            "description": "Esperado: 403. El propietario no puede ser eliminado por un colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "06 - Cliente consulta cartera ajena",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}",
+            "description": "Esperado: 404. Un usuario no debe ver carteras donde no es miembro."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "07 - Cliente consulta reporte de cartera ajena",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCarteraAjena}}",
+            "description": "Esperado: 404. Reportes solo considera carteras del propietario."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "08 - Gasto con monto cero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 0,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 400. El monto debe ser mayor a cero."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "09 - Gasto con monto negativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": -10,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 400. El monto debe ser mayor a cero."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "10 - Cartera con periodo invertido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cartera invertida 256\",\n  \"tipo\": \"VIAJE\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"fechaFin\": \"2026-11-01\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 400. fechaFin no puede ser anterior a fechaInicio."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "11 - Correo duplicado al editar cuenta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"Prueba 256\",\n  \"correo\": \"{{correoExistente}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/editar_cuenta",
+            "description": "Esperado: 409. correoExistente debe ser el correo de otra cuenta."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "12 - Colaborador edita transaccion ajena",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 100,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/transacciones/{{idTransaccionAjena}}",
+            "description": "Esperado: 403. Solo el propietario puede editar transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "13 - Colaborador elimina transaccion ajena",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transacciones/{{idTransaccionAjena}}",
+            "description": "Esperado: 403. Solo el propietario puede eliminar transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "14 - Colaborador genera invitacion ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/invitaciones",
+            "description": "Esperado: 403 o 404. Solo el propietario puede generar invitaciones."
           },
           "response": [],
           "event": []
