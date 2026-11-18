@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { admitePeriodo } from '../api.js'
+import { admitePeriodo, crearCartera, editarCartera } from '../api.js'
 
 const CATEGORIAS = ['Hogar', 'Viaje', 'Evento', 'Otro']
 const FORMULARIO_VACIO = {
@@ -30,6 +30,23 @@ const sxBoton = {
   px: 2,
   fontSize: '0.875rem',
   textTransform: 'none',
+}
+
+// Precarga el formulario cuando se edita; en creacion arranca limpio.
+function valoresIniciales(cartera) {
+  if (!cartera) return FORMULARIO_VACIO
+
+  return {
+    nombre: cartera.nombre ?? '',
+    descripcion: cartera.descripcion ?? '',
+    categoria: cartera.categoria ?? '',
+    presupuesto:
+      cartera.presupuestoInicial != null
+        ? String(cartera.presupuestoInicial)
+        : '',
+    fechaInicio: cartera.fechaInicio ?? '',
+    fechaFin: cartera.fechaFin ?? '',
+  }
 }
 
 // CA2 de HU-03.1: nombre y categoría son obligatorios.
@@ -61,10 +78,11 @@ function validar({ nombre, categoria, presupuesto, fechaInicio, fechaFin }) {
   return errores
 }
 
-// Formulario de crear cartera (HU-03.1). Se monta al abrir el modal, así que
-// siempre arranca limpio; el guardado lo hace la página.
-function DialogoNuevaCartera({ onCerrar, onCrear }) {
-  const [formulario, setFormulario] = useState(FORMULARIO_VACIO)
+// Formulario de crear/editar cartera (HU-03.1 y HU-04.5). Se monta al abrir el
+// modal; si recibe cartera precarga los datos y guarda contra la API.
+function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
+  const esEdicion = Boolean(cartera)
+  const [formulario, setFormulario] = useState(() => valoresIniciales(cartera))
   const [errores, setErrores] = useState({})
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -103,7 +121,12 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
     setErrorEnvio('')
 
     try {
-      await onCrear(formulario)
+      if (esEdicion) {
+        await editarCartera(cartera.id, formulario)
+      } else {
+        await crearCartera(formulario)
+      }
+      onGuardada()
     } catch (err) {
       // El backend valida lo mismo y devuelve el motivo; el modal sigue abierto.
       setErrorEnvio(err.message)
@@ -115,7 +138,9 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
   return (
     <Dialog open onClose={onCerrar} maxWidth="md" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Nueva cartera</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {esEdicion ? 'Editar cartera' : 'Nueva cartera'}
+        </DialogTitle>
 
         <DialogContent dividers>
           <Typography
@@ -125,8 +150,9 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
               mb: 2,
             }}
           >
-            Dale un nombre y elige el tipo de cartera; podrás agregar miembros
-            después.
+            {esEdicion
+              ? 'Actualiza los datos de la cartera. Los cambios aplican a todos sus miembros.'
+              : 'Dale un nombre y elige el tipo de cartera; podrás agregar miembros después.'}
           </Typography>
 
           <Stack spacing={2}>
@@ -167,6 +193,7 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
                 size="small"
                 select
                 label="Categoría"
+                disabled={esEdicion}
                 value={formulario.categoria}
                 onChange={cambiarCategoria}
                 error={Boolean(errores.categoria)}
@@ -228,6 +255,17 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
               )}
             </Box>
 
+            {esEdicion && (
+              <Typography
+                sx={{
+                  fontSize: '0.8125rem',
+                  color: 'var(--color-texto-terciario)',
+                }}
+              >
+                El tipo no se puede modificar una vez creada la cartera.
+              </Typography>
+            )}
+
             {formulario.categoria === 'Hogar' && (
               <Typography
                 sx={{
@@ -253,7 +291,11 @@ function DialogoNuevaCartera({ onCerrar, onCrear }) {
             Cancelar
           </Button>
           <Button type="submit" variant="contained" disabled={enviando} sx={sxBoton}>
-            {enviando ? 'Creando…' : 'Crear cartera'}
+            {enviando
+              ? 'Guardando…'
+              : esEdicion
+                ? 'Guardar cambios'
+                : 'Crear cartera'}
           </Button>
         </DialogActions>
       </Box>
