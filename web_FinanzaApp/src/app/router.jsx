@@ -16,6 +16,7 @@ import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
 import TransaccionesCartera from '../features/transacciones/pages/TransaccionesCartera.jsx'
 import Reportes from '../features/reportes/pages/Reportes.jsx'
 import PagosRecurrentes from '../features/pagos-recurrentes/pages/Lista.jsx'
+import PagosCartera from '../features/pagos-recurrentes/pages/PagosCartera.jsx'
 import Ajustes from '../features/ajustes/pages/Ajustes.jsx'
 import Soporte from '../features/soporte/pages/MisTickets.jsx'
 import InicioAdmin from '../features/admin/pages/Inicio.jsx'
@@ -52,10 +53,7 @@ export const router = createBrowserRouter([
                 path: 'contribuyentes',
                 element: <TabPendiente titulo="Contribuyentes" />,
               },
-              {
-                path: 'pagos',
-                element: <TabPendiente titulo="Pagos recurrentes" />,
-              },
+              { path: 'pagos', element: <PagosCartera /> },
               { path: 'invitacion', element: <InvitacionQR /> },
               { path: 'cierre', element: <CierreBalance /> },
             ],
