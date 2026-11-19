@@ -5,6 +5,10 @@ import {
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   InputAdornment,
   Stack,
   TextField,
@@ -12,7 +16,7 @@ import {
 } from '@mui/material'
 import TarjetaCartera from '../components/TarjetaCartera.jsx'
 import DialogoNuevaCartera from '../components/DialogoNuevaCartera.jsx'
-import { crearCartera, filtrarCarteras } from '../api.js'
+import { filtrarCarteras, inactivarCartera } from '../api.js'
 import {
   IconoArchivo,
   IconoBuscar,
@@ -86,6 +90,10 @@ function ListaCarteras() {
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
   const [totales, setTotales] = useState(null)
+  const [editando, setEditando] = useState(null)
+  const [porInactivar, setPorInactivar] = useState(null)
+  const [errorInactivar, setErrorInactivar] = useState('')
+  const [inactivando, setInactivando] = useState(false)
 
   // La búsqueda espera a que dejes de escribir para no pedir por cada tecla.
   useEffect(() => {
@@ -183,11 +191,37 @@ function ListaCarteras() {
   }
 
   // CA3 de HU-03.1: al crear, se cierra el modal y la cartera aparece luego.
-  const manejarCrear = async (formulario) => {
-    await crearCartera(formulario)
+  const manejarCreada = () => {
     setDialogoAbierto(false)
     limpiarFiltros()
     setRecarga((actual) => actual + 1)
+  }
+
+  // HU-04.5: editar refresca la lista y los contadores del dashboard.
+  const manejarEditada = () => {
+    setEditando(null)
+    setRecarga((actual) => actual + 1)
+  }
+
+  const abrirInactivar = (cartera) => {
+    setErrorInactivar('')
+    setPorInactivar(cartera)
+  }
+
+  // La baja es logica: el backend cambia el estado a ARCHIVADA.
+  const confirmarInactivar = async () => {
+    setInactivando(true)
+    setErrorInactivar('')
+
+    try {
+      await inactivarCartera(porInactivar.id)
+      setPorInactivar(null)
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorInactivar(err.message)
+    } finally {
+      setInactivando(false)
+    }
   }
 
   return (
@@ -474,6 +508,8 @@ function ListaCarteras() {
                 key={cartera.id}
                 {...cartera}
                 onAbrir={() => navegar(`/carteras/${cartera.id}`)}
+                onEditar={() => setEditando(cartera)}
+                onInactivar={() => abrirInactivar(cartera)}
               />
             ))}
           </Box>
@@ -483,8 +519,76 @@ function ListaCarteras() {
       {dialogoAbierto && (
         <DialogoNuevaCartera
           onCerrar={() => setDialogoAbierto(false)}
-          onCrear={manejarCrear}
+          onGuardada={manejarCreada}
         />
+      )}
+
+      {editando && (
+        <DialogoNuevaCartera
+          cartera={editando}
+          onCerrar={() => setEditando(null)}
+          onGuardada={manejarEditada}
+        />
+      )}
+
+      {porInactivar && (
+        <Dialog
+          open
+          onClose={() => setPorInactivar(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Eliminar cartera</DialogTitle>
+          <DialogContent>
+            <Typography
+              sx={{
+                fontSize: '0.875rem',
+                color: 'var(--color-texto-secundario)',
+              }}
+            >
+              Se dará de baja {porInactivar.nombre} y sus miembros dejarán de
+              verla. El historial se conserva.
+            </Typography>
+
+            <Box
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderLeft: '3px solid var(--color-alerta)',
+                backgroundColor: 'var(--color-superficie-suave)',
+                borderRadius: '8px',
+              }}
+            >
+              <Typography
+                sx={{ fontSize: '0.8125rem', color: 'var(--color-alerta)' }}
+              >
+                La baja es lógica: no se borra información físicamente.
+              </Typography>
+            </Box>
+
+            {errorInactivar && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {errorInactivar}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              onClick={() => setPorInactivar(null)}
+              disabled={inactivando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="error"
+              variant="contained"
+              onClick={confirmarInactivar}
+              disabled={inactivando}
+            >
+              {inactivando ? 'Eliminando…' : 'Eliminar cartera'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Stack>
   )

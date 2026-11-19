@@ -1,8 +1,10 @@
 package com.finanzap.features.soporte.data
 
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -17,9 +19,14 @@ interface SoporteApi {
         @Query("porPagina") porPagina: Int = 20
     ): RespuestaListarTickets
 
-    @POST("soporte/tickets/{idTicket}/respuestas")
-    suspend fun crearRespuesta(
+    @PUT("soporte/tickets/{idTicket}")
+    suspend fun actualizarTicket(
         @Path("idTicket") idTicket: Int,
-        @Body peticion: ResponderTicketRequest
-    ): RespuestaResponderTicket
+        @Body peticion: EditarTicketRequest
+    ): RespuestaCrearTicket
+
+    @DELETE("soporte/tickets/{idTicket}")
+    suspend fun eliminarTicket(
+        @Path("idTicket") idTicket: Int
+    ): RespuestaEliminarTicket
 }

@@ -28,6 +28,23 @@ def listar_tickets():
     return jsonify(payload), status
 
 
+@soporte_bp.put("/tickets/<int:idTicket>")
+@jwt_required()
+def editar_ticket(idTicket):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = soporte_service.editar_ticket(idTicket, datos)
+    return jsonify(payload), status
+
+
+@soporte_bp.delete("/tickets/<int:idTicket>")
+@jwt_required()
+def eliminar_ticket(idTicket):
+    payload, status = soporte_service.eliminar_ticket(idTicket)
+    return jsonify(payload), status
+
+
 @soporte_bp.post("/tickets/<int:idTicket>/respuestas")
 @jwt_required()
 def crear_respuesta(idTicket):

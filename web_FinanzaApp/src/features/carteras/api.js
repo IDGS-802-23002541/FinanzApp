@@ -40,10 +40,23 @@ function aVistaCartera(cartera) {
     estatus: ESTATUS_POR_ESTADO[cartera.estado],
     rol: ROL_EN_PANTALLA[cartera.rol],
     descripcion: cartera.descripcion ?? '',
+    // crudos para precargar el formulario de edicion 
+    presupuestoInicial : cartera.presupuestoInicial ?? 0,
+    fechaInicio: cartera.fechaInicio ?? '',
+    fechaFin: cartera.fechaFin ?? '',
     periodo:
       fechaInicio && fechaFin
         ? `${formatearFecha(fechaInicio)} → ${formatearFecha(fechaFin)}`
         : undefined,
+  }
+}
+
+function aVistaColaborador(persona) {
+  return {
+    idUsuario: persona.idUsuario,
+    nombre: persona.nombre,
+    iniciales: persona.iniciales,
+    rol: ROL_EN_PANTALLA[persona.rol] ?? persona.rol,
   }
 }
 
@@ -54,7 +67,7 @@ function aVistaDetalle(cartera) {
     presupuestoInicial: cartera.presupuestoInicial ?? 0,
     administrador: cartera.administrador ?? '',
     inicialesAdministrador: cartera.inicialesAdministrador ?? '',
-    colaboradores: cartera.colaboradores ?? [],
+    colaboradores: (cartera.colaboradores ?? []).map(aVistaColaborador),
     resumen: cartera.resumen ?? {
       presupuestoInicial: cartera.presupuestoInicial ?? 0,
       totalIngresos: 0,
@@ -169,5 +182,46 @@ export async function generarInvitacion(idCartera) {
 // Cierra una cartera Viaje/Evento y devuelve la cartera con su balance.
 export async function finalizarCartera(idCartera) {
   const { data } = await api.post(`/carteras/${idCartera}/finalizar`, {})
+  return data
+}
+
+// Edita una cartera existente. Arma el cuerpo igual que crearCartera,
+// pero aqui si se manda descripcion vacia para poder borrarla.
+export async function editarCartera(
+  idCartera,
+  {nombre, categoria, descripcion, presupuesto, fechaInicio, fechaFin}
+) {
+  const conPeriodo = admitePeriodo(categoria)
+
+  const { data } = await api.put(`/carteras/${idCartera}`,{
+    nombre: nombre.trim(),
+    // el tipo es de solo lectura: no se manda para no permitir cambiarlo
+    descripcion: descripcion.trim(),
+    // Hogar no maneja presupuesto ni fechas: se limpian con 0 y null
+    presupuestoInicial: conPeriodo ? Number(presupuesto || 0) : 0,
+    fechaInicio: conPeriodo ? fechaInicio || null : null,
+    fechaFin: conPeriodo ? fechaFin || null : null,
+  })
+
+  return data
+}
+
+// Inactiva la cartera (borrado logico a ARCHIVADA); no elimina datos.
+export async function inactivarCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/inactivar`, {})
+  return data
+}
+
+// Da de baja (borrado logico) a un colaborador de la cartera.
+export async function eliminarColaborador(idCartera, idUsuario) {
+  const { data } = await api.delete(
+    `/carteras/${idCartera}/miembros/${idUsuario}`,
+  )
+  return data
+}
+
+// Da de baja al usuario actual como colaborador de la cartera.
+export async function salirCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/salir`, {})
   return data
 }

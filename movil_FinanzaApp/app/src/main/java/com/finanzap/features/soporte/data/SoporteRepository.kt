@@ -18,5 +18,13 @@ interface SoporteRepository {
         prioridad: String
     ): Result<Ticket>
 
-    suspend fun responderTicket(idTicket: Int, mensaje: String): Result<RespuestaTicket>
+    suspend fun actualizarTicket(
+        idTicket: Int,
+        asunto: String,
+        descripcion: String,
+        categoria: String,
+        prioridad: String
+    ): Result<Ticket>
+
+    suspend fun eliminarTicket(idTicket: Int): Result<Unit>
 }

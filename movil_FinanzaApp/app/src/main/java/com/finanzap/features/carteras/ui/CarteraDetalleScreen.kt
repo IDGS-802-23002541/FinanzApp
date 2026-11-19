@@ -228,6 +228,9 @@ private fun DetalleCartera(
     } else {
         0
     }
+    // Hogar no maneja presupuesto ni fechas; tampoco pagos recurrentes en viajes/eventos.
+    val esHogar = cartera.tipo == TipoCartera.HOGAR
+    val muestraPagos = cartera.tipo == TipoCartera.HOGAR || cartera.tipo == TipoCartera.OTRO
 
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -320,53 +323,99 @@ private fun DetalleCartera(
         }
     }
 
+    // El presupuesto y su avance solo aplican a Viaje/Evento/Otro.
+    if (!esHogar) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(R.string.detalle_presupuesto),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = formatearMoneda(presupuesto),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(R.string.carteras_avance),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "$avance%",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+        LinearProgressIndicator(
+            progress = { avance / 100f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp),
+            color = if (saldo < 0) {
+                MaterialTheme.colorScheme.secondary
+            } else {
+                MaterialTheme.colorScheme.primary
+            },
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            strokeCap = StrokeCap.Round
+        )
+    }
+
     Spacer(modifier = Modifier.height(16.dp))
 
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.detalle_presupuesto),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+    // Acciones principales arriba, sin obligar a bajar hasta el final.
+    if (cartera.estado == "ACTIVA") {
+        BotonPrincipal(
+            texto = stringResource(R.string.carteras_registrar_gasto),
+            onClick = { onRegistrarGasto(cartera.id, cartera.nombre) }
         )
-        Text(
-            text = formatearMoneda(presupuesto),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Spacer(modifier = Modifier.height(8.dp))
     }
 
-    Spacer(modifier = Modifier.height(12.dp))
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.carteras_avance),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = "$avance%",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-
-    Spacer(modifier = Modifier.height(6.dp))
-    LinearProgressIndicator(
-        progress = { avance / 100f },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(8.dp),
-        color = if (saldo < 0) {
-            MaterialTheme.colorScheme.secondary
-        } else {
-            MaterialTheme.colorScheme.primary
+    OutlinedButton(
+        onClick = {
+            onVerTransacciones(
+                cartera.id,
+                cartera.nombre,
+                cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
+            )
         },
-        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        strokeCap = StrokeCap.Round
-    )
+        shape = RoundedCornerShape(Dimensiones.RadioCampo),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.transacciones_ver))
+    }
+
+    if (muestraPagos) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = {
+                onVerPagos(
+                    cartera.id,
+                    cartera.nombre,
+                    cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
+                )
+            },
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.carteras_ver_pagos))
+        }
+    }
 
     Spacer(modifier = Modifier.height(20.dp))
 
@@ -386,11 +435,12 @@ private fun DetalleCartera(
             .filter { it.periodoId == periodoSeleccionadoId }
     }
 
-    GraficaPeriodos(periodosGrafica)
+    // Las categorías suben antes de la gráfica mensual.
+    GraficaCategorias(series?.gastosPorCategoria.orEmpty())
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    GraficaCategorias(series?.gastosPorCategoria.orEmpty())
+    GraficaPeriodos(periodosGrafica)
 
     if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA") {
         Spacer(modifier = Modifier.height(24.dp))
@@ -401,48 +451,6 @@ private fun DetalleCartera(
             error = errorInvitacion,
             onGenerar = onGenerarInvitacion
         )
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    if (cartera.estado == "ACTIVA") {
-        BotonPrincipal(
-            texto = stringResource(R.string.carteras_registrar_gasto),
-            onClick = { onRegistrarGasto(cartera.id, cartera.nombre) }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    OutlinedButton(
-        onClick = {
-            onVerTransacciones(
-                cartera.id,
-                cartera.nombre,
-                cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
-            )
-        },
-        shape = RoundedCornerShape(Dimensiones.RadioCampo),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(stringResource(R.string.transacciones_ver))
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    OutlinedButton(
-        onClick = {
-            onVerPagos(
-                cartera.id,
-                cartera.nombre,
-                cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
-            )
-        },
-        shape = RoundedCornerShape(Dimensiones.RadioCampo),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(stringResource(R.string.carteras_ver_pagos))
     }
 
     if (balance != null) {

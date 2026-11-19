@@ -629,38 +629,41 @@ private fun TarjetaCompartida(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            // Hogar no maneja presupuesto, así que no muestra avance.
+            if (cartera.tipo != TipoCartera.HOGAR) {
+                Spacer(modifier = Modifier.height(14.dp))
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.carteras_avance),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "${cartera.avancePresupuesto}%",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.carteras_avance),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "${cartera.avancePresupuesto}%",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                LinearProgressIndicator(
+                    progress = { cartera.avancePresupuesto / 100f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = if (cartera.miSaldo < 0) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    strokeCap = StrokeCap.Round,
+                    drawStopIndicator = {}
                 )
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            LinearProgressIndicator(
-                progress = { cartera.avancePresupuesto / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = if (cartera.miSaldo < 0) {
-                    MaterialTheme.colorScheme.secondary
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                strokeCap = StrokeCap.Round,
-                drawStopIndicator = {}
-            )
 
             Spacer(modifier = Modifier.height(14.dp))
 

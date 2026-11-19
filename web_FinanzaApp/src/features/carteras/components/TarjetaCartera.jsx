@@ -7,7 +7,6 @@ import {
   IconoLapiz,
   IconoOtro,
   IconoPapelera,
-  IconoArchivo,
   IconoPin,
 } from '../../../components/ui/Iconos.jsx'
 
@@ -78,8 +77,12 @@ function TarjetaCartera({
   estatus,
   periodo,
   onAbrir,
+  onEditar,
+  onInactivar,
 }) {
   const { fondo, icono, Icono } = APARIENCIA_CATEGORIA[categoria]
+  // Solo el propietario administra una cartera activa (CA5 de HU-04.5).
+  const puedeAdministrar = rol === 'Propietario' && estatus === 'Activa'
 
   return (
     <Box
@@ -227,44 +230,37 @@ function TarjetaCartera({
             Abrir cartera
           </Button>
 
-          <IconButton
-            aria-label="Editar cartera"
-            sx={{
-              width: 36,
-              height: 22,
-              border: '1px solid var(--color-borde-fuerte)',
-              borderRadius: '12px',
-              color: 'var(--color-texto-secundario)',
-            }}
-          >
-            <IconoLapiz sx={{ fontSize: 14 }} />
-          </IconButton>
+          {puedeAdministrar && (
+            <>
+              <IconButton
+                aria-label="Editar cartera"
+                onClick={onEditar}
+                sx={{
+                  width: 36,
+                  height: 22,
+                  border: '1px solid var(--color-borde-fuerte)',
+                  borderRadius: '12px',
+                  color: 'var(--color-texto-secundario)',
+                }}
+              >
+                <IconoLapiz sx={{ fontSize: 14 }} />
+              </IconButton>
 
-          <IconButton
-            aria-label="Archivar cartera"
-            sx={{
-              width: 36,
-              height: 22,
-              border: '1px solid var(--color-borde-fuerte)',
-              borderRadius: '12px',
-              color: 'var(--color-texto-secundario)',
-            }}
-          >
-            <IconoArchivo sx={{ fontSize: 14 }} />
-          </IconButton>
-
-          <IconButton
-            aria-label="Eliminar cartera"
-            sx={{
-              width: 36,
-              height: 22,
-              border: '1px solid var(--color-acento)',
-              borderRadius: '12px',
-              color: 'var(--color-alerta)',
-            }}
-          >
-            <IconoPapelera sx={{ fontSize: 14 }} />
-          </IconButton>
+              <IconButton
+                aria-label="Eliminar cartera"
+                onClick={onInactivar}
+                sx={{
+                  width: 36,
+                  height: 22,
+                  border: '1px solid var(--color-acento)',
+                  borderRadius: '12px',
+                  color: 'var(--color-alerta)',
+                }}
+              >
+                <IconoPapelera sx={{ fontSize: 14 }} />
+              </IconButton>
+            </>
+          )}
         </Box>
     </Box>
   )

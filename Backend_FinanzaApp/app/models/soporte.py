@@ -31,7 +31,8 @@ class Ticket(db.Model):
         ),
         db.CheckConstraint(
             "estado IN "
-            "('ABIERTO', 'EN_PROCESO', 'ESPERA', 'RESUELTO', 'CERRADO')",
+            "('ABIERTO', 'EN_PROCESO', 'ESPERA', 'RESUELTO', 'CERRADO', "
+            "'ELIMINADO')",
             name="CK_TICKET_estado",
         ),
         db.CheckConstraint(
