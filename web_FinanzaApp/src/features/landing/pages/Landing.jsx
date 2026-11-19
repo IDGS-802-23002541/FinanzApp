@@ -1,8 +1,19 @@
-import { Box, Link, Stack, Typography } from '@mui/material'
-import { Link as RouterLink } from 'react-router-dom'
+import { Box, Button, Link, Stack, Tooltip, Typography } from '@mui/material'
+import { Link as RouterLink, Navigate } from 'react-router-dom'
 import FormularioComentarios from '../components/FormularioComentarios.jsx'
+import { useAuth } from '../../../hooks/useAuth.js'
+import { PANEL_POR_ROL } from '../../../utils/constantes.js'
+
+const APK_URL = import.meta.env.VITE_APK_URL ?? ''
 
 function Landing() {
+  const { usuario } = useAuth()
+
+  // CA4: con sesión activa se va directo al inicio del rol.
+  if (usuario) {
+    return <Navigate to={PANEL_POR_ROL[usuario.rol] ?? '/'} replace />
+  }
+
   return (
     <Box
       sx={{
@@ -43,9 +54,18 @@ function Landing() {
             <Typography sx={{ fontWeight: 800 }}>FinanzApp</Typography>
           </Stack>
 
-          <Link component={RouterLink} to="/login" sx={{ fontWeight: 700 }}>
-            Iniciar sesión
-          </Link>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Link
+              component={RouterLink}
+              to="/login"
+              sx={{ fontWeight: 700 }}
+            >
+              Iniciar sesión
+            </Link>
+            <Button component={RouterLink} to="/registro" variant="contained">
+              Registrarme
+            </Button>
+          </Stack>
         </Stack>
 
         <Box
@@ -79,6 +99,38 @@ function Landing() {
               Organiza tus carteras de hogar, viajes y eventos, y comparte los
               gastos sin perder el control.
             </Typography>
+
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              sx={{ mt: 3 }}
+            >
+              <Button
+                component={RouterLink}
+                to="/registro"
+                variant="contained"
+              >
+                Crear cuenta gratis
+              </Button>
+              {APK_URL ? (
+                <Button
+                  component="a"
+                  href={APK_URL}
+                  variant="outlined"
+                  download
+                >
+                  Descargar app
+                </Button>
+              ) : (
+                <Tooltip title="La descarga estará disponible pronto.">
+                  <span>
+                    <Button variant="outlined" disabled>
+                      Descargar app
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
+            </Stack>
           </Box>
 
           <FormularioComentarios />
