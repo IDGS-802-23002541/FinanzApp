@@ -77,8 +77,14 @@ function DetalleCartera() {
     return <Alert severity="info">Cartera no disponible.</Alert>
   }
 
+  // Viaje/Evento son finitos: no manejan pagos recurrentes.
+  const sinPagos = cartera.categoria === 'Viaje' || cartera.categoria === 'Evento'
+  const secciones = SECCIONES.filter(
+    (s) => s.valor !== 'pagos' || !sinPagos,
+  )
+
   const segmento = location.pathname.split('/').pop()
-  const seccion = SECCIONES.some((s) => s.valor === segmento)
+  const seccion = secciones.some((s) => s.valor === segmento)
     ? segmento
     : 'resumen'
   const recargar = () => setRecarga((n) => n + 1)
@@ -133,6 +139,16 @@ function DetalleCartera() {
               fontWeight: 700,
             }}
           />
+          {cartera.administrador && (
+            <Typography
+              sx={{
+                fontSize: '0.8125rem',
+                color: 'var(--color-texto-terciario)',
+              }}
+            >
+              Administrada por {cartera.administrador}
+            </Typography>
+          )}
         </Box>
 
         <Button
@@ -152,7 +168,7 @@ function DetalleCartera() {
         allowScrollButtonsMobile
         sx={{ borderBottom: '1px solid var(--color-borde)' }}
       >
-        {SECCIONES.map((item) => (
+        {secciones.map((item) => (
           <Tab key={item.valor} value={item.valor} label={item.etiqueta} />
         ))}
       </Tabs>
