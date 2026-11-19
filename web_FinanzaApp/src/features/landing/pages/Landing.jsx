@@ -42,7 +42,7 @@ const BENEFICIOS = [
     detalle: 'Filtra por periodo y compara tus meses.',
     fondo: 'var(--color-superficie-suave)',
     color: 'var(--color-primario)',
-    borde: 'var(--color-acento)',
+    borde: 'var(--color-primario)',
   },
   {
     titulo: 'Cierra con balance',
@@ -503,7 +503,7 @@ function Landing() {
           height: 4,
           borderRadius: '999px',
           background:
-            'linear-gradient(90deg, var(--color-secundario), var(--color-acento))',
+            'linear-gradient(90deg, var(--color-primario), var(--color-acento))',
         },
       }}
     >
@@ -866,10 +866,14 @@ function Landing() {
                   height: '100%',
                   borderRadius: '20px',
                   border: '1px solid var(--color-borde)',
-                  backgroundColor:
+                  borderTop:
+                    indice === 0
+                      ? '5px solid var(--color-primario)'
+                      : '5px solid var(--color-secundario)',
+                  background:
                     indice === 1
-                      ? 'var(--color-superficie-suave)'
-                      : 'var(--color-superficie)',
+                      ? 'linear-gradient(160deg, var(--color-seleccion) 0%, var(--color-superficie) 75%)'
+                      : 'linear-gradient(160deg, var(--color-superficie-suave) 0%, var(--color-superficie) 75%)',
                 }}
               >
                 <Stack
@@ -939,14 +943,27 @@ function Landing() {
           ))}
         </Box>
 
-        <Box component="section" sx={{ mt: { xs: 8, md: 12 } }}>
+        <Box
+          component="section"
+          sx={{
+            mt: { xs: 8, md: 12 },
+            p: { xs: 3, md: 4.5 },
+            borderRadius: '24px',
+            background: 'var(--gradiente-marca)',
+            color: 'var(--paleta-blanco)',
+          }}
+        >
           <Typography
             component="h2"
-            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
+            sx={{
+              fontSize: { xs: '1.6rem', md: '2.15rem' },
+              fontWeight: 800,
+              color: 'var(--paleta-blanco)',
+            }}
           >
             Así de fácil es empezar
           </Typography>
-          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+          <Typography sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.8)' }}>
             Tres pasos y tu cartera queda lista.
           </Typography>
 
@@ -1079,7 +1096,7 @@ function Landing() {
                     <Typography
                       sx={{
                         fontWeight: 800,
-                        color: 'var(--color-secundario)',
+                        color: 'var(--color-primario)',
                         fontSize: '1.25rem',
                         lineHeight: 1,
                       }}
@@ -1109,7 +1126,8 @@ function Landing() {
             mt: { xs: 8, md: 12 },
             p: { xs: 2.5, md: 4 },
             borderRadius: '24px',
-            backgroundColor: 'var(--color-superficie-suave)',
+            background:
+              'linear-gradient(160deg, var(--color-superficie-suave) 0%, var(--color-seleccion) 100%)',
             border: '1px solid var(--color-borde)',
           }}
         >
