@@ -1,4 +1,5 @@
 import math
+from datetime import timedelta
 
 from flask_jwt_extended import current_user
 from sqlalchemy import func
@@ -8,7 +9,7 @@ from app.extensions import db
 from app.models import AsignacionTicket, RespuestaTicket, Ticket, Usuario
 from app.services import notificacion_service
 from app.services.comentario_service import ROLES_BUZON
-from app.utils import seguridad
+from app.utils import seguridad, validacion
 from app.utils.serializers import iniciales
 
 CATEGORIAS = {"GENERAL", "CUENTA", "CARTERA", "PAGOS", "ERROR", "OTRO"}
@@ -40,10 +41,43 @@ def crear_ticket(datos):
     }, 201
 
 
-def listar_tickets(estado=None, pagina="1", por_pagina="20"):
+def listar_tickets(
+    estado=None,
+    categoria=None,
+    responsable=None,
+    desde=None,
+    hasta=None,
+    pagina="1",
+    por_pagina="20",
+):
     estado = (estado or "").strip().upper()
     if estado and estado not in ESTADOS:
         return {"ok": False, "mensaje": "El filtro estado no es válido."}, 400
+
+    categoria = (categoria or "").strip().upper()
+    if categoria and categoria not in CATEGORIAS:
+        return {"ok": False, "mensaje": "El filtro categoria no es válido."}, 400
+
+    if responsable in (None, ""):
+        responsable = None
+    else:
+        responsable, error = _entero("responsable", responsable, 1)
+        if error:
+            return {"ok": False, "mensaje": error}, 400
+
+    try:
+        desde = validacion.fecha_iso(desde)
+        hasta = validacion.fecha_iso(hasta)
+    except ValueError:
+        return {
+            "ok": False,
+            "mensaje": "Las fechas deben tener formato aaaa-mm-dd.",
+        }, 400
+    if desde and hasta and desde > hasta:
+        return {
+            "ok": False,
+            "mensaje": "El filtro desde no puede ser posterior a hasta.",
+        }, 400
 
     pagina, error = _entero("pagina", pagina, 1)
     if error:
@@ -57,6 +91,7 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
     filtros.append(Ticket.estado != "ELIMINADO")
     if estado:
         filtros.append(Ticket.estado == estado)
+    filtros.extend(_filtros_tickets(categoria, responsable, desde, hasta))
 
     try:
         total = db.session.execute(
@@ -427,6 +462,26 @@ def _filtros_visibilidad(usuario):
     if usuario.rolGlobal in ROLES_BUZON:
         return []
     return [Ticket.usuarioId == usuario.idUsuario]
+
+
+def _filtros_tickets(categoria, responsable, desde, hasta):
+    filtros = []
+    if categoria:
+        filtros.append(Ticket.categoria == categoria)
+    if responsable:
+        filtros.append(
+            Ticket.idTicket.in_(
+                db.select(AsignacionTicket.ticketId).where(
+                    AsignacionTicket.esActual == db.true(),
+                    AsignacionTicket.trabajadorId == responsable,
+                )
+            )
+        )
+    if desde:
+        filtros.append(Ticket.fechaCreacion >= desde)
+    if hasta:
+        filtros.append(Ticket.fechaCreacion < hasta + timedelta(days=1))
+    return filtros
 
 
 def _buscar_ticket(id_ticket):

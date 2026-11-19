@@ -374,3 +374,42 @@ def test_staff_responde_y_notifica_al_cliente(monkeypatch):
     assert payload["ok"] is True
     assert enviadas[0][0] == 7
     assert enviadas[0][1] == "SISTEMA"
+
+
+def test_listar_rechaza_categoria_invalida():
+    payload, status = soporte_service.listar_tickets(categoria="INVENCIBLE")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_listar_rechaza_responsable_no_numerico():
+    payload, status = soporte_service.listar_tickets(responsable="ana")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_listar_rechaza_fecha_invalida():
+    payload, status = soporte_service.listar_tickets(desde="2026/01/01")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_listar_rechaza_rango_de_fechas_invertido():
+    payload, status = soporte_service.listar_tickets(
+        desde="2026-02-01", hasta="2026-01-01"
+    )
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_filtros_tickets_combinan_categoria_responsable_y_fecha():
+    from datetime import date
+
+    filtros = soporte_service._filtros_tickets(
+        "PAGOS", 9, date(2026, 1, 1), date(2026, 1, 31)
+    )
+    assert len(filtros) == 4
+
+
+def test_filtros_tickets_vacios_sin_parametros():
+    assert soporte_service._filtros_tickets(None, None, None, None) == []

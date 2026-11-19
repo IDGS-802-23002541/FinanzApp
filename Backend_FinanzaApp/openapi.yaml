@@ -19,7 +19,95 @@ tags:
     description: Alta, consulta y marcado de pagos recurrentes
   - name: Soporte
     description: Reportes de ayuda, respuestas y gestión de tickets
+  - name: Admin
+    description: Métricas del inicio y alta de trabajadores (solo ADMIN)
 paths:
+  /admin/metricas:
+    get:
+      tags:
+        - Admin
+      summary: Métricas del inicio de administración
+      description: >-
+        Conteos agregados de clientes (total, activos e inactivos), trabajadores
+        activos y tickets por estatus. Solo un usuario con rol ADMIN puede
+        consultarlo; responde 403 para cualquier otro rol.
+      operationId: metricasAdmin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Métricas agregadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricasAdmin'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudieron obtener las métricas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /admin/trabajadores:
+    post:
+      tags:
+        - Admin
+      summary: Crear un trabajador
+      description: >-
+        Crea un usuario con rol TRABAJADOR, estado ACTIVO y una contraseña
+        temporal que se devuelve una sola vez. El trabajador debe cambiarla al
+        iniciar sesión (debeCambiarContrasenia). Solo ADMIN.
+      operationId: crearTrabajador
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrabajadorCrearRequest'
+      responses:
+        '201':
+          description: Trabajador creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrabajadorCreado'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El correo ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /auth/registro:
     post:
       tags:
@@ -2489,7 +2577,8 @@ paths:
       summary: Listar reportes de ayuda
       description: >-
         Un cliente ve sus propios tickets y un usuario con rol ADMIN o
-        TRABAJADOR ve todos. Incluye filtro por estado y paginación.
+        TRABAJADOR ve todos. Los filtros de estado, categoría, responsable y
+        fecha son combinables, y el listado se pagina.
       operationId: listarTickets
       security:
         - bearerAuth: []
@@ -2504,6 +2593,34 @@ paths:
               - ESPERA
               - RESUELTO
               - CERRADO
+        - in: query
+          name: categoria
+          schema:
+            type: string
+            enum:
+              - GENERAL
+              - CUENTA
+              - CARTERA
+              - PAGOS
+              - ERROR
+              - OTRO
+        - in: query
+          name: responsable
+          description: idUsuario del trabajador asignado actualmente
+          schema:
+            type: integer
+        - in: query
+          name: desde
+          description: Fecha mínima de creación (inclusive)
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: hasta
+          description: Fecha máxima de creación (inclusive)
+          schema:
+            type: string
+            format: date
         - in: query
           name: pagina
           schema:
@@ -4460,3 +4577,96 @@ components:
         mensaje:
           type: string
           example: Ticket asignado correctamente.
+    MetricasAdmin:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            clientes:
+              type: object
+              properties:
+                total:
+                  type: integer
+                  example: 24
+                activos:
+                  type: integer
+                  example: 20
+                inactivos:
+                  type: integer
+                  example: 4
+            trabajadores:
+              type: object
+              properties:
+                activos:
+                  type: integer
+                  example: 3
+            tickets:
+              type: object
+              properties:
+                abiertos:
+                  type: integer
+                  example: 5
+                enProceso:
+                  type: integer
+                  example: 2
+                enEspera:
+                  type: integer
+                  example: 1
+                resueltos:
+                  type: integer
+                  example: 8
+                cerrados:
+                  type: integer
+                  example: 6
+                total:
+                  type: integer
+                  example: 22
+        mensaje:
+          type: string
+          example: Métricas obtenidas correctamente.
+    TrabajadorCrearRequest:
+      type: object
+      required:
+        - nombreUsuario
+        - apaterno
+        - correo
+      properties:
+        nombreUsuario:
+          type: string
+          maxLength: 80
+          example: Ana
+        apaterno:
+          type: string
+          maxLength: 80
+          example: Ruiz
+        amaterno:
+          type: string
+          maxLength: 80
+          nullable: true
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: ana.ruiz@finanzapp.com
+    TrabajadorCreado:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            usuario:
+              $ref: '#/components/schemas/Usuario'
+            contraseniaTemporal:
+              type: string
+              description: Se devuelve una sola vez; compártela con el trabajador.
+              example: Fin482913Tmp
+        mensaje:
+          type: string
+          example: Trabajador creado. Comparte la contraseña temporal.

@@ -13,16 +13,17 @@ class Usuario(db.Model):
     amaterno = db.Column(db.Unicode(80))
     correo = db.Column(db.Unicode(254), nullable=False)
     contrasenia = db.Column(db.String(255), nullable=False)
-    rolGlobal = db.Column(
-        db.String(15), nullable=False, server_default="CLIENTE"
-    )
+    rolGlobal = db.Column(db.String(15), nullable=False, server_default="CLIENTE")
     fechaRegistro = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
     )
     fechaActualizacion = db.Column(DATETIME2)
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVO")
-    # baja logica real, /cuenta lo llena al eliminar. esto es distinto de fechaActualizacion 
-    fechaBaja=db.Column(DATETIME2)
+    debeCambiarContrasenia = db.Column(
+        db.Boolean, nullable=False, server_default=db.text("0")
+    )
+    # baja logica real, /cuenta lo llena al eliminar. esto es distinto de fechaActualizacion
+    fechaBaja = db.Column(DATETIME2)
 
 
 class PreferenciaUsuario(db.Model):
@@ -69,9 +70,7 @@ class SesionUsuario(db.Model):
             "fechaExpiracion",
             mssql_where=db.text("fechaRevocacion IS NULL"),
         ),
-        db.Index(
-            "IX_SESIONES_USUARIO_usuario", "usuarioId", "fechaExpiracion"
-        ),
+        db.Index("IX_SESIONES_USUARIO_usuario", "usuarioId", "fechaExpiracion"),
     )
 
     idSesion = db.Column(db.BigInteger, primary_key=True)
@@ -95,9 +94,7 @@ class TokenRecuperacion(db.Model):
     __tablename__ = "TOKENS_RECUPERACION"
     __table_args__ = (
         db.UniqueConstraint("hashToken", name="UQ_TOKENS_RECUPERACION_hash"),
-        db.Index(
-            "IX_TOKENS_RECUPERACION_usuario", "usuarioId", "fechaExpiracion"
-        ),
+        db.Index("IX_TOKENS_RECUPERACION_usuario", "usuarioId", "fechaExpiracion"),
     )
 
     idToken = db.Column(db.BigInteger, primary_key=True)
