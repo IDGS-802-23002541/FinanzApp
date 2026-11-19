@@ -51,6 +51,15 @@ function aVistaCartera(cartera) {
   }
 }
 
+function aVistaColaborador(persona) {
+  return {
+    idUsuario: persona.idUsuario,
+    nombre: persona.nombre,
+    iniciales: persona.iniciales,
+    rol: ROL_EN_PANTALLA[persona.rol] ?? persona.rol,
+  }
+}
+
 // El detalle necesita resumen, series y colaboradores, la lista no los usa
 function aVistaDetalle(cartera) {
   return {
@@ -58,7 +67,7 @@ function aVistaDetalle(cartera) {
     presupuestoInicial: cartera.presupuestoInicial ?? 0,
     administrador: cartera.administrador ?? '',
     inicialesAdministrador: cartera.inicialesAdministrador ?? '',
-    colaboradores: cartera.colaboradores ?? [],
+    colaboradores: (cartera.colaboradores ?? []).map(aVistaColaborador),
     resumen: cartera.resumen ?? {
       presupuestoInicial: cartera.presupuestoInicial ?? 0,
       totalIngresos: 0,
@@ -200,5 +209,13 @@ export async function editarCartera(
 // Inactiva la cartera (borrado logico a ARCHIVADA); no elimina datos.
 export async function inactivarCartera(idCartera) {
   const { data } = await api.post(`/carteras/${idCartera}/inactivar`, {})
+  return data
+}
+
+// Da de baja (borrado logico) a un colaborador de la cartera.
+export async function eliminarColaborador(idCartera, idUsuario) {
+  const { data } = await api.delete(
+    `/carteras/${idCartera}/miembros/${idUsuario}`,
+  )
   return data
 }

@@ -11,7 +11,7 @@ import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
 import InvitacionQR from '../features/carteras/pages/InvitacionQR.jsx'
 import CierreBalance from '../features/carteras/pages/CierreBalance.jsx'
-import TabPendiente from '../features/carteras/pages/TabPendiente.jsx'
+import Contribuyentes from '../features/carteras/pages/Contribuyentes.jsx'
 import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
 import TransaccionesCartera from '../features/transacciones/pages/TransaccionesCartera.jsx'
 import Reportes from '../features/reportes/pages/Reportes.jsx'
@@ -49,10 +49,7 @@ export const router = createBrowserRouter([
               { index: true, element: <Navigate to="resumen" replace /> },
               { path: 'resumen', element: <DetalleResumen /> },
               { path: 'transacciones', element: <TransaccionesCartera /> },
-              {
-                path: 'contribuyentes',
-                element: <TabPendiente titulo="Contribuyentes" />,
-              },
+              { path: 'contribuyentes', element: <Contribuyentes /> },
               { path: 'pagos', element: <PagosCartera /> },
               { path: 'invitacion', element: <InvitacionQR /> },
               { path: 'cierre', element: <CierreBalance /> },
