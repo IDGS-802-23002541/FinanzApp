@@ -120,21 +120,21 @@ const COMPARATIVA = [
 const EJEMPLOS = [
   {
     titulo: 'Cartera personal',
-    Icono: IconoCartera,
+    ilustracion: 'hogar',
     descripcion:
       'Controla la despensa, los servicios y tu presupuesto mensual en un solo lugar.',
     ejemplos: ['Renta y servicios', 'Súper y despensa', 'Ahorro del mes'],
   },
   {
     titulo: 'Cartera compartida',
-    Icono: IconoPersonas,
+    ilustracion: 'compartida',
     descripcion:
       'Organiza los gastos de casa o de la oficina y ve quién aportó y quién gastó.',
     ejemplos: ['Gastos del hogar', 'Fondo común', 'Liquidación por persona'],
   },
   {
     titulo: 'Evento o viaje',
-    Icono: IconoCalendario,
+    ilustracion: 'viaje',
     descripcion:
       'Junta los gastos de una fecha especial y cierra la cartera con su balance final.',
     ejemplos: ['Viaje con amigos', 'Cumpleaños', 'Posada o boda'],
@@ -478,6 +478,115 @@ function MockTelefono() {
   )
 }
 
+function IlustracionEjemplo({ tipo }) {
+  const comun = {
+    viewBox: '0 0 220 110',
+    sx: { width: '100%', height: 96, display: 'block' },
+  }
+
+  if (tipo === 'hogar') {
+    return (
+      <Box
+        component="svg"
+        {...comun}
+        role="img"
+        aria-label="Ilustración de una cartera personal"
+      >
+        <circle cx="184" cy="28" r="20" fill="var(--color-acento)" opacity="0.85" />
+        <path
+          d="M34 82V54l46-30 46 30v28"
+          fill="var(--color-superficie-suave)"
+          stroke="var(--color-primario)"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+        <rect x="58" y="62" width="18" height="20" rx="3" fill="var(--color-secundario)" />
+        <rect x="86" y="56" width="20" height="26" rx="3" fill="var(--color-acento)" />
+        <path
+          d="M24 84h132"
+          stroke="var(--color-borde-fuerte)"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <circle cx="162" cy="74" r="12" fill="var(--color-primario)" />
+        <path
+          d="M156 74h12M162 68v12"
+          stroke="var(--color-sobre-primario)"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </Box>
+    )
+  }
+
+  if (tipo === 'compartida') {
+    return (
+      <Box
+        component="svg"
+        {...comun}
+        role="img"
+        aria-label="Ilustración de una cartera compartida"
+      >
+        <circle cx="72" cy="48" r="18" fill="var(--color-superficie-suave)" />
+        <path
+          d="M48 90c0-14 11-22 24-22s24 8 24 22"
+          fill="var(--color-superficie-suave)"
+        />
+        <circle cx="148" cy="48" r="18" fill="var(--color-seleccion)" />
+        <path
+          d="M124 90c0-14 11-22 24-22s24 8 24 22"
+          fill="var(--color-seleccion)"
+        />
+        <circle cx="72" cy="44" r="9" fill="var(--color-primario)" />
+        <circle cx="148" cy="44" r="9" fill="var(--color-secundario)" />
+        <path
+          d="M96 58h28"
+          stroke="var(--color-acento)"
+          strokeWidth="4"
+          strokeDasharray="5 6"
+          strokeLinecap="round"
+        />
+        <rect x="166" y="18" width="16" height="16" rx="3" fill="var(--color-primario)" />
+        <rect x="186" y="18" width="10" height="10" rx="2" fill="var(--color-acento)" />
+        <rect x="166" y="38" width="10" height="10" rx="2" fill="var(--color-acento)" />
+      </Box>
+    )
+  }
+
+  return (
+    <Box
+      component="svg"
+      {...comun}
+      role="img"
+      aria-label="Ilustración de una cartera de viaje"
+    >
+      <circle cx="178" cy="28" r="18" fill="var(--color-acento)" />
+      <path d="M12 86 58 38l30 30 18-16 52 34Z" fill="var(--color-superficie-suave)" />
+      <path
+        d="M58 38 88 68 70 86H18Z"
+        fill="var(--color-primario)"
+        opacity="0.85"
+      />
+      <path
+        d="M12 94c12-8 24-8 36 0s24 8 36 0 24-8 36 0 24 8 36 0"
+        fill="none"
+        stroke="var(--color-secundario)"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M112 30c14-10 30-10 44 2"
+        fill="none"
+        stroke="var(--color-primario)"
+        strokeWidth="3"
+        strokeDasharray="4 6"
+        strokeLinecap="round"
+      />
+      <path d="m154 26 10 6-12 3 2-9Z" fill="var(--color-secundario)" />
+    </Box>
+  )
+}
+
 function Landing() {
   const { usuario } = useAuth()
 
@@ -489,17 +598,28 @@ function Landing() {
   return (
     <Box
       sx={{
+        position: 'relative',
         minHeight: '100vh',
         backgroundColor: 'var(--color-fondo)',
         color: 'var(--color-texto)',
         backgroundImage: [
-          'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--color-acento) 18%, transparent), transparent 38%)',
-          'radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--color-primario) 12%, transparent), transparent 42%)',
-          'radial-gradient(circle at 50% 92%, color-mix(in srgb, var(--color-secundario) 12%, transparent), transparent 45%)',
-          'linear-gradient(color-mix(in srgb, var(--color-borde) 45%, transparent) 1px, transparent 1px)',
-          'linear-gradient(90deg, color-mix(in srgb, var(--color-borde) 45%, transparent) 1px, transparent 1px)',
+          'radial-gradient(circle at 10% 6%, color-mix(in srgb, var(--color-acento) 34%, transparent), transparent 42%)',
+          'radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--color-primario) 24%, transparent), transparent 46%)',
+          'radial-gradient(circle at 48% 94%, color-mix(in srgb, var(--color-secundario) 26%, transparent), transparent 50%)',
+          'linear-gradient(color-mix(in srgb, var(--color-borde) 60%, transparent) 1px, transparent 1px)',
+          'linear-gradient(90deg, color-mix(in srgb, var(--color-borde) 60%, transparent) 1px, transparent 1px)',
         ].join(', '),
         backgroundSize: 'auto, auto, auto, 48px 48px, 48px 48px',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")",
+          opacity: 0.07,
+          pointerEvents: 'none',
+          zIndex: 0,
+        },
         '& section': { animation: 'aparecer 0.6s ease-out both' },
         '& h2': { position: 'relative', display: 'inline-block', pb: 1.25 },
         '& h2::after': {
@@ -862,6 +982,8 @@ function Landing() {
 
       <Box
         sx={{
+          position: 'relative',
+          zIndex: 1,
           maxWidth: 1120,
           mx: 'auto',
           px: { xs: 2.5, md: 4 },
@@ -943,7 +1065,34 @@ function Landing() {
           ))}
         </Box>
 
-        <Box component="section" id="producto" sx={{ mt: { xs: 8, md: 12 } }}>
+        <Box
+          component="section"
+          id="producto"
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mt: { xs: 8, md: 12 },
+            p: { xs: 3, md: 4 },
+            borderRadius: '28px',
+            background:
+              'linear-gradient(150deg, var(--color-superficie-suave) 0%, var(--color-seleccion) 100%)',
+            border: '1px solid var(--color-borde)',
+          }}
+        >
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute',
+              top: -70,
+              right: -60,
+              width: 240,
+              height: 240,
+              borderRadius: '50%',
+              border: '26px solid var(--color-acento)',
+              opacity: 0.25,
+              pointerEvents: 'none',
+            }}
+          />
           <Typography
             component="h2"
             sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
@@ -1114,14 +1263,45 @@ function Landing() {
           </Box>
         </Box>
 
-        <Box component="section" id="ejemplos" sx={{ mt: { xs: 8, md: 12 } }}>
+        <Box
+          component="section"
+          id="ejemplos"
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mt: { xs: 8, md: 12 },
+            p: { xs: 3, md: 4 },
+            borderRadius: '28px',
+            background:
+              'linear-gradient(140deg, var(--color-secundario) 0%, var(--color-primario) 100%)',
+            color: 'var(--paleta-blanco)',
+          }}
+        >
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute',
+              bottom: -90,
+              left: -70,
+              width: 260,
+              height: 260,
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-acento)',
+              opacity: 0.22,
+              pointerEvents: 'none',
+            }}
+          />
           <Typography
             component="h2"
-            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
+            sx={{
+              fontSize: { xs: '1.6rem', md: '2.15rem' },
+              fontWeight: 800,
+              color: 'var(--paleta-blanco)',
+            }}
           >
             Una cartera para cada plan
           </Typography>
-          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+          <Typography sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.82)' }}>
             Elige el tipo de cartera según lo que quieras organizar.
           </Typography>
 
@@ -1133,21 +1313,17 @@ function Landing() {
               mt: 3,
             }}
           >
-            {EJEMPLOS.map(({ titulo, Icono, descripcion, ejemplos }) => (
+            {EJEMPLOS.map(({ titulo, ilustracion, descripcion, ejemplos }) => (
               <Tarjeta key={titulo}>
                 <Box
                   sx={{
-                    width: 48,
-                    height: 48,
                     borderRadius: '14px',
-                    backgroundColor: 'var(--color-seleccion)',
-                    color: 'var(--color-seleccion-texto)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    background:
+                      'linear-gradient(150deg, var(--color-seleccion) 0%, var(--color-superficie-suave) 100%)',
+                    p: 1,
                   }}
                 >
-                  <Icono sx={{ fontSize: 24 }} />
+                  <IlustracionEjemplo tipo={ilustracion} />
                 </Box>
                 <Typography sx={{ mt: 2, fontWeight: 800 }}>{titulo}</Typography>
                 <Typography
