@@ -4297,6 +4297,17 @@ components:
         ticketId:
           type: integer
           example: 2
+        usuarioId:
+          type: integer
+          example: 9
+        autor:
+          type: string
+          nullable: true
+          example: Diego Borja
+        iniciales:
+          type: string
+          nullable: true
+          example: DB
         mensaje:
           type: string
           example: Ya lo revisamos y corregimos.

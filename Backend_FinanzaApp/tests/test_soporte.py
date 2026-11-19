@@ -13,6 +13,8 @@ class UsuarioFalso:
     def __init__(self, rol_global, id_usuario):
         self.rolGlobal = rol_global
         self.idUsuario = id_usuario
+        self.nombreUsuario = "Usuario"
+        self.apaterno = "Prueba"
 
 
 class TicketFalso:
@@ -314,3 +316,61 @@ def test_cliente_no_puede_responder(monkeypatch):
 
     assert status == 403
     assert payload["ok"] is False
+
+
+class AutorFalso:
+    idUsuario = 9
+    nombreUsuario = "Diego"
+    apaterno = "Borja"
+
+
+class RespuestaFalsa:
+    idRespuesta = 3
+    ticketId = 1
+    usuarioId = 9
+    mensaje = "Ya lo revisamos"
+    fechaCreacion = datetime(2026, 2, 3, 10, 0)
+
+
+class SesionFalsa:
+    def add(self, _objeto):
+        pass
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+
+def test_serializar_respuesta_incluye_autor():
+    datos = soporte_service._serializar_respuesta(
+        RespuestaFalsa(), AutorFalso()
+    )
+
+    assert datos["usuarioId"] == 9
+    assert datos["autor"] == "Diego Borja"
+    assert datos["iniciales"] == "DB"
+    assert datos["fechaCreacion"] == "2026-02-03T10:00:00"
+
+
+def test_staff_responde_y_notifica_al_cliente(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    _ticket_para_busqueda(monkeypatch)
+    monkeypatch.setattr(soporte_service.db, "session", SesionFalsa())
+
+    enviadas = []
+    monkeypatch.setattr(
+        soporte_service.notificacion_service,
+        "notificar",
+        lambda *args: enviadas.append(args) or True,
+    )
+
+    payload, status = soporte_service.crear_respuesta(
+        1, {"mensaje": "Listo, ya lo revisamos"}
+    )
+
+    assert status == 201
+    assert payload["ok"] is True
+    assert enviadas[0][0] == 7
+    assert enviadas[0][1] == "SISTEMA"
