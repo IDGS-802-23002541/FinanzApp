@@ -30,22 +30,28 @@ const BENEFICIOS = [
     titulo: 'Invita con QR',
     Icono: IconoPersonas,
     texto: 'Suma a quien quieras con una clave de 8 caracteres.',
+    detalle: 'Ideal para familias y grupos de amigos.',
     fondo: 'var(--color-seleccion)',
     color: 'var(--color-seleccion-texto)',
+    borde: 'var(--color-secundario)',
   },
   {
     titulo: 'Ve tus gastos claros',
     Icono: IconoEstrella,
     texto: 'Gráficas por mes y por categoría, sin hojas de cálculo.',
+    detalle: 'Filtra por periodo y compara tus meses.',
     fondo: 'var(--color-superficie-suave)',
     color: 'var(--color-primario)',
+    borde: 'var(--color-acento)',
   },
   {
     titulo: 'Cierra con balance',
     Icono: IconoCalendario,
     texto: 'Al terminar el viaje o evento, obtén el balance por persona.',
+    detalle: 'Con liquidación sugerida para cada quien.',
     fondo: 'var(--color-seleccion)',
     color: 'var(--color-seleccion-texto)',
+    borde: 'var(--color-secundario)',
   },
 ]
 
@@ -151,6 +157,11 @@ function Tarjeta({ children }) {
         border: '1px solid var(--color-borde)',
         borderRadius: '20px',
         boxShadow: '0 8px 24px rgba(23, 59, 69, 0.06)',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+        '&:hover': {
+          transform: 'translateY(-6px)',
+          boxShadow: '0 18px 38px rgba(23, 59, 69, 0.16)',
+        },
       }}
     >
       {children}
@@ -332,6 +343,7 @@ function MockNavegador() {
         border: '1px solid var(--color-borde)',
         backgroundColor: 'var(--color-superficie)',
         overflow: 'hidden',
+        animation: 'flotarSuave 6s ease-in-out infinite',
       }}
     >
       <Box
@@ -406,6 +418,7 @@ function MockTelefono() {
         backgroundColor: 'var(--color-superficie)',
         p: 1.5,
         boxShadow: '0 12px 28px rgba(23, 59, 69, 0.14)',
+        animation: 'flotarSuave 6s ease-in-out infinite',
       }}
     >
       <Box
@@ -479,6 +492,19 @@ function Landing() {
         minHeight: '100vh',
         backgroundColor: 'var(--color-fondo)',
         color: 'var(--color-texto)',
+        '& section': { animation: 'aparecer 0.6s ease-out both' },
+        '& h2': { position: 'relative', display: 'inline-block', pb: 1.25 },
+        '& h2::after': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          bottom: 0,
+          width: 64,
+          height: 4,
+          borderRadius: '999px',
+          background:
+            'linear-gradient(90deg, var(--color-secundario), var(--color-acento))',
+        },
       }}
     >
       <Box
@@ -502,6 +528,7 @@ function Landing() {
             borderRadius: '50%',
             border: '1px solid rgba(255, 255, 255, 0.16)',
             pointerEvents: 'none',
+            animation: 'flotar 9s ease-in-out infinite',
           }}
         />
         <Box
@@ -514,8 +541,9 @@ function Landing() {
             height: 420,
             borderRadius: '50%',
             backgroundColor: 'var(--color-acento)',
-            opacity: 0.16,
+            opacity: 0.18,
             pointerEvents: 'none',
+            animation: 'pulso 8s ease-in-out infinite',
           }}
         />
 
@@ -627,7 +655,19 @@ function Landing() {
                   letterSpacing: '-0.03em',
                 }}
               >
-                Las cuentas claras también se ven bien
+                Las cuentas claras también{' '}
+                <Box
+                  component="span"
+                  sx={{
+                    background:
+                      'linear-gradient(90deg, var(--color-acento), var(--color-secundario))',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                >
+                  se ven bien
+                </Box>
               </Typography>
               <Typography
                 sx={{
@@ -731,29 +771,71 @@ function Landing() {
             gap: 2.5,
           }}
         >
-          {BENEFICIOS.map(({ titulo, Icono, texto, fondo, color }) => (
-            <Tarjeta key={titulo}>
+          {BENEFICIOS.map(({ titulo, Icono, texto, detalle, fondo, color, borde }) => (
+            <Box
+              key={titulo}
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                minHeight: 240,
+                p: 3,
+                borderRadius: '20px',
+                border: '1px solid var(--color-borde)',
+                background: `linear-gradient(150deg, ${fondo} 0%, var(--color-superficie) 78%)`,
+                boxShadow: '0 8px 24px rgba(23, 59, 69, 0.08)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 6,
+                  background: `linear-gradient(90deg, ${borde}, var(--color-acento))`,
+                },
+                '&:hover': {
+                  transform: 'translateY(-8px)',
+                  boxShadow: '0 20px 40px rgba(23, 59, 69, 0.2)',
+                },
+              }}
+            >
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
-                  backgroundColor: fondo,
-                  color,
+                  width: 52,
+                  height: 52,
+                  borderRadius: '16px',
+                  color: 'var(--color-sobre-primario)',
+                  background:
+                    'linear-gradient(135deg, var(--color-secundario), var(--color-primario))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  boxShadow: '0 8px 18px rgba(198, 93, 69, 0.32)',
                 }}
               >
-                <Icono sx={{ fontSize: 22 }} />
+                <Icono sx={{ fontSize: 26 }} />
               </Box>
-              <Typography sx={{ mt: 2, fontWeight: 800 }}>{titulo}</Typography>
+              <Typography sx={{ mt: 2.5, fontWeight: 800, fontSize: '1.15rem' }}>
+                {titulo}
+              </Typography>
               <Typography
-                sx={{ mt: 0.75, color: 'var(--color-texto-secundario)' }}
+                sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}
               >
                 {texto}
               </Typography>
-            </Tarjeta>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 2,
+                  pt: 1.5,
+                  borderTop: '1px dashed var(--color-borde-fuerte)',
+                  color,
+                  fontWeight: 700,
+                }}
+              >
+                {detalle}
+              </Typography>
+            </Box>
           ))}
         </Box>
 
