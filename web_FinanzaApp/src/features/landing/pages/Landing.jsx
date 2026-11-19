@@ -1,4 +1,15 @@
-import { Box, Button, Chip, Link, Stack, Tooltip, Typography } from '@mui/material'
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  Chip,
+  Link,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import { Link as RouterLink, Navigate } from 'react-router-dom'
 import FormularioComentarios from '../components/FormularioComentarios.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
@@ -19,16 +30,63 @@ const BENEFICIOS = [
     titulo: 'Invita con QR',
     Icono: IconoPersonas,
     texto: 'Suma a quien quieras con una clave de 8 caracteres.',
+    fondo: 'var(--color-seleccion)',
+    color: 'var(--color-seleccion-texto)',
   },
   {
     titulo: 'Ve tus gastos claros',
     Icono: IconoEstrella,
     texto: 'Gráficas por mes y por categoría, sin hojas de cálculo.',
+    fondo: 'var(--color-superficie-suave)',
+    color: 'var(--color-primario)',
   },
   {
     titulo: 'Cierra con balance',
     Icono: IconoCalendario,
     texto: 'Al terminar el viaje o evento, obtén el balance por persona.',
+    fondo: 'var(--color-seleccion)',
+    color: 'var(--color-seleccion-texto)',
+  },
+]
+
+const PASOS = [
+  {
+    numero: '1',
+    titulo: 'Crea tu cartera',
+    texto: 'Elige si es de hogar, viaje o evento y define su presupuesto.',
+  },
+  {
+    numero: '2',
+    titulo: 'Invita y registra',
+    texto: 'Comparte el QR y anoten ingresos y gastos desde web o móvil.',
+  },
+  {
+    numero: '3',
+    titulo: 'Cierra y reparte',
+    texto: 'Consulta el balance por persona y liquida sin discusiones.',
+  },
+]
+
+const PREGUNTAS = [
+  {
+    pregunta: '¿Necesito instalar la app para usarla?',
+    respuesta:
+      'No. Puedes administrar tus carteras desde la versión web en cualquier navegador. La app móvil sirve para registrar gastos más rápido y recibir notificaciones.',
+  },
+  {
+    pregunta: '¿Cómo se unen otras personas a mi cartera?',
+    respuesta:
+      'El propietario genera una invitación con código QR y una clave de 8 caracteres. Quien la reciba puede unirse y empezar a registrar movimientos.',
+  },
+  {
+    pregunta: '¿Puedo usar FinanzApp para un viaje o un evento?',
+    respuesta:
+      'Sí. Las carteras de tipo Viaje y Evento tienen periodo y cierre: al finalizar se calcula el balance y el total por participante.',
+  },
+  {
+    pregunta: '¿Qué pasa si elimino a un colaborador?',
+    respuesta:
+      'Pierde el acceso a la cartera, pero sus transacciones se conservan con su autor. Además, el propietario puede volver a invitarlo después.',
   },
 ]
 
@@ -233,6 +291,168 @@ function SimulacionCartera() {
                   movimiento.tipo === 'INGRESO'
                     ? 'var(--color-exito)'
                     : 'var(--color-texto)',
+              }}
+            >
+              {movimiento.tipo === 'INGRESO' ? '+' : '−'}
+              {formatearMonto(Math.abs(movimiento.monto))}
+            </Typography>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  )
+}
+
+function PuntosVentana() {
+  return (
+    <Stack direction="row" spacing={0.75}>
+      {[1, 2, 3].map((punto) => (
+        <Box
+          key={punto}
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-borde-fuerte)',
+          }}
+        />
+      ))}
+    </Stack>
+  )
+}
+
+function MockNavegador() {
+  const barras = [38, 62, 48, 80, 56, 92]
+
+  return (
+    <Box
+      sx={{
+        mt: 3,
+        borderRadius: '14px',
+        border: '1px solid var(--color-borde)',
+        backgroundColor: 'var(--color-superficie)',
+        overflow: 'hidden',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 1.5,
+          py: 1,
+          backgroundColor: 'var(--color-superficie-suave)',
+        }}
+      >
+        <PuntosVentana />
+        <Box
+          sx={{
+            flex: 1,
+            height: 16,
+            borderRadius: '999px',
+            backgroundColor: 'var(--color-superficie)',
+          }}
+        />
+      </Box>
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 92 }}>
+          {barras.map((altura, indice) => (
+            <Box
+              key={indice}
+              sx={{
+                flex: 1,
+                height: `${altura}%`,
+                borderRadius: '6px 6px 2px 2px',
+                background:
+                  indice % 2 === 0
+                    ? 'var(--color-primario)'
+                    : 'var(--color-acento)',
+              }}
+            />
+          ))}
+        </Box>
+        <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+          <Box
+            sx={{
+              flex: 1,
+              height: 8,
+              borderRadius: '999px',
+              backgroundColor: 'var(--color-superficie-suave)',
+            }}
+          />
+          <Box
+            sx={{
+              width: 40,
+              height: 8,
+              borderRadius: '999px',
+              backgroundColor: 'var(--color-seleccion)',
+            }}
+          />
+        </Stack>
+      </Box>
+    </Box>
+  )
+}
+
+function MockTelefono() {
+  return (
+    <Box
+      sx={{
+        mt: 3,
+        mx: 'auto',
+        width: 176,
+        borderRadius: '28px',
+        border: '6px solid var(--color-primario)',
+        backgroundColor: 'var(--color-superficie)',
+        p: 1.5,
+        boxShadow: '0 12px 28px rgba(23, 59, 69, 0.14)',
+      }}
+    >
+      <Box
+        sx={{
+          width: 48,
+          height: 6,
+          borderRadius: '999px',
+          backgroundColor: 'var(--color-borde)',
+          mx: 'auto',
+          mb: 1.5,
+        }}
+      />
+      <Box
+        sx={{
+          p: 1.25,
+          borderRadius: '12px',
+          backgroundColor: 'var(--color-seleccion)',
+          color: 'var(--color-seleccion-texto)',
+        }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 700 }}>
+          Disponible
+        </Typography>
+        <Typography sx={{ fontWeight: 800 }}>{formatearMonto(4250)}</Typography>
+      </Box>
+      <Stack spacing={1} sx={{ mt: 1.5 }}>
+        {MOVIMIENTOS.map((movimiento) => (
+          <Box
+            key={movimiento.nombre}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <Typography variant="caption" noWrap sx={{ fontWeight: 600 }}>
+              {movimiento.nombre}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                color:
+                  movimiento.tipo === 'INGRESO'
+                    ? 'var(--color-exito)'
+                    : 'var(--color-texto-secundario)',
               }}
             >
               {movimiento.tipo === 'INGRESO' ? '+' : '−'}
@@ -511,15 +731,15 @@ function Landing() {
             gap: 2.5,
           }}
         >
-          {BENEFICIOS.map(({ titulo, Icono, texto }) => (
+          {BENEFICIOS.map(({ titulo, Icono, texto, fondo, color }) => (
             <Tarjeta key={titulo}>
               <Box
                 sx={{
                   width: 44,
                   height: 44,
                   borderRadius: '12px',
-                  backgroundColor: 'var(--color-superficie-suave)',
-                  color: 'var(--color-primario)',
+                  backgroundColor: fondo,
+                  color,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -595,7 +815,98 @@ function Landing() {
                       : 'var(--color-primario)'
                   }
                 />
+                {indice === 0 ? <MockNavegador /> : <MockTelefono />}
               </Box>
+            ))}
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            mt: { xs: 8, md: 10 },
+            p: { xs: 3, md: 4 },
+            borderRadius: '24px',
+            background: 'var(--gradiente-marca)',
+            color: 'var(--paleta-blanco)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 3,
+            textAlign: 'center',
+          }}
+        >
+          {[
+            { valor: '3', texto: 'tipos de cartera' },
+            { valor: '8', texto: 'caracteres en la clave de invitación' },
+            { valor: '100%', texto: 'en línea, sin hojas de cálculo' },
+          ].map((dato) => (
+            <Box key={dato.texto}>
+              <Typography
+                sx={{
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  fontWeight: 800,
+                  color: 'var(--color-acento)',
+                  lineHeight: 1.1,
+                }}
+              >
+                {dato.valor}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.75, opacity: 0.85 }}>
+                {dato.texto}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        <Box component="section" sx={{ mt: { xs: 8, md: 12 } }}>
+          <Typography
+            component="h2"
+            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
+          >
+            Así de fácil es empezar
+          </Typography>
+          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+            Tres pasos y tu cartera queda lista.
+          </Typography>
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gap: 2.5,
+              mt: 3,
+            }}
+          >
+            {PASOS.map((paso, indice) => (
+              <Tarjeta key={paso.numero}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      backgroundColor:
+                        indice === 1
+                          ? 'var(--color-acento)'
+                          : 'var(--color-primario)',
+                      color: 'var(--color-sobre-primario)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '1.1rem',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {paso.numero}
+                  </Box>
+                  <Typography sx={{ fontWeight: 800 }}>{paso.titulo}</Typography>
+                </Stack>
+                <Typography
+                  sx={{ mt: 1.5, color: 'var(--color-texto-secundario)' }}
+                >
+                  {paso.texto}
+                </Typography>
+              </Tarjeta>
             ))}
           </Box>
         </Box>
@@ -657,6 +968,58 @@ function Landing() {
           </Box>
         </Box>
 
+        <Box component="section" sx={{ mt: { xs: 8, md: 12 } }}>
+          <Typography
+            component="h2"
+            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
+          >
+            Preguntas frecuentes
+          </Typography>
+          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+            Lo que más nos preguntan antes de empezar.
+          </Typography>
+
+          <Stack spacing={1.5} sx={{ mt: 3 }}>
+            {PREGUNTAS.map((item) => (
+              <Accordion
+                key={item.pregunta}
+                elevation={0}
+                disableGutters
+                sx={{
+                  border: '1px solid var(--color-borde)',
+                  borderRadius: '14px !important',
+                  backgroundColor: 'var(--color-superficie)',
+                  '&::before': { display: 'none' },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={
+                    <Typography
+                      sx={{
+                        fontWeight: 800,
+                        color: 'var(--color-secundario)',
+                        fontSize: '1.25rem',
+                        lineHeight: 1,
+                      }}
+                    >
+                      +
+                    </Typography>
+                  }
+                >
+                  <Typography sx={{ fontWeight: 700 }}>
+                    {item.pregunta}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography sx={{ color: 'var(--color-texto-secundario)' }}>
+                    {item.respuesta}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </Box>
+
         <Box
           component="section"
           id="contacto"
@@ -697,6 +1060,47 @@ function Landing() {
             </Box>
             <FormularioComentarios />
           </Box>
+        </Box>
+
+        <Box
+          component="section"
+          sx={{
+            mt: { xs: 8, md: 10 },
+            p: { xs: 3, md: 5 },
+            borderRadius: '24px',
+            background:
+              'linear-gradient(120deg, var(--color-secundario) 0%, var(--color-primario) 100%)',
+            color: 'var(--paleta-blanco)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 3,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box>
+            <Typography
+              component="h2"
+              sx={{ fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 800 }}
+            >
+              Empieza a organizar tus cuentas hoy
+            </Typography>
+            <Typography sx={{ mt: 1, opacity: 0.85 }}>
+              Crear tu primera cartera toma menos de un minuto.
+            </Typography>
+          </Box>
+          <Button
+            component={RouterLink}
+            to="/registro"
+            sx={{
+              backgroundColor: 'var(--paleta-blanco)',
+              color: 'var(--paleta-petroleo)',
+              fontWeight: 700,
+              '&:hover': { backgroundColor: 'var(--color-acento)' },
+            }}
+          >
+            Crear cuenta gratis
+          </Button>
         </Box>
 
         <Box
