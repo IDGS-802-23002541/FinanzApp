@@ -14,13 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,11 +82,11 @@ fun SoporteScreen(
         onDescripcionChange = viewModel::onDescripcionChange,
         onCategoriaChange = viewModel::onCategoriaChange,
         onPrioridadChange = viewModel::onPrioridadChange,
-        onCrearTicket = viewModel::crearTicket,
-        onAbrirRespuesta = viewModel::abrirRespuesta,
-        onCerrarRespuesta = viewModel::cerrarRespuesta,
-        onMensajeRespuestaChange = viewModel::onMensajeRespuestaChange,
-        onEnviarRespuesta = viewModel::enviarRespuesta
+        onGuardar = viewModel::guardarFormulario,
+        onEditar = viewModel::abrirEdicion,
+        onPedirEliminar = viewModel::pedirEliminar,
+        onConfirmarEliminar = viewModel::confirmarEliminar,
+        onCancelarEliminar = viewModel::cancelarEliminar
     )
 }
 
@@ -100,16 +103,22 @@ fun SoporteContenido(
     onDescripcionChange: (String) -> Unit,
     onCategoriaChange: (String) -> Unit,
     onPrioridadChange: (String) -> Unit,
-    onCrearTicket: () -> Unit,
-    onAbrirRespuesta: (Int) -> Unit,
-    onCerrarRespuesta: () -> Unit,
-    onMensajeRespuestaChange: (String) -> Unit,
-    onEnviarRespuesta: () -> Unit
+    onGuardar: () -> Unit,
+    onEditar: (Ticket) -> Unit,
+    onPedirEliminar: (Int) -> Unit,
+    onConfirmarEliminar: () -> Unit,
+    onCancelarEliminar: () -> Unit
 ) {
+    val estadoLista = rememberLazyListState()
+    LaunchedEffect(state.formularioAbierto) {
+        if (state.formularioAbierto) estadoLista.animateScrollToItem(0)
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { margen ->
         LazyColumn(
+            state = estadoLista,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(margen),
@@ -132,7 +141,7 @@ fun SoporteContenido(
                         onDescripcionChange = onDescripcionChange,
                         onCategoriaChange = onCategoriaChange,
                         onPrioridadChange = onPrioridadChange,
-                        onGuardar = onCrearTicket,
+                        onGuardar = onGuardar,
                         onCancelar = onCerrarFormulario
                     )
                 }
@@ -173,14 +182,8 @@ fun SoporteContenido(
                         items(items = state.tickets, key = { it.idTicket }) { ticket ->
                             TarjetaTicket(
                                 ticket = ticket,
-                                respondiendo = state.ticketRespondiendoId == ticket.idTicket,
-                                mensajeRespuesta = state.mensajeRespuesta,
-                                errorRespuesta = state.errorRespuesta,
-                                enviando = state.respondiendo,
-                                onAbrirRespuesta = { onAbrirRespuesta(ticket.idTicket) },
-                                onCerrarRespuesta = onCerrarRespuesta,
-                                onMensajeChange = onMensajeRespuestaChange,
-                                onEnviar = onEnviarRespuesta
+                                onEditar = { onEditar(ticket) },
+                                onEliminar = { onPedirEliminar(ticket.idTicket) }
                             )
                         }
                         item {
@@ -195,6 +198,47 @@ fun SoporteContenido(
                 }
             }
         }
+
+        if (state.ticketEliminandoId != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    if (!state.eliminando) onCancelarEliminar()
+                },
+                title = { Text(stringResource(R.string.soporte_eliminar_titulo)) },
+                text = {
+                    Column {
+                        Text(stringResource(R.string.soporte_eliminar_aviso))
+                        if (state.errorEliminar != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            BannerError(mensaje = state.errorEliminar)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = onConfirmarEliminar,
+                        enabled = !state.eliminando
+                    ) {
+                        if (state.eliminando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.soporte_eliminar_confirmar))
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = onCancelarEliminar,
+                        enabled = !state.eliminando
+                    ) {
+                        Text(stringResource(R.string.comun_cancelar))
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -208,6 +252,8 @@ private fun FormularioReporte(
     onGuardar: () -> Unit,
     onCancelar: () -> Unit
 ) {
+    val esEdicion = state.ticketEditandoId != null
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimensiones.RadioCampo),
@@ -215,7 +261,13 @@ private fun FormularioReporte(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(R.string.soporte_formulario_titulo),
+                text = stringResource(
+                    if (esEdicion) {
+                        R.string.soporte_editar_titulo
+                    } else {
+                        R.string.soporte_formulario_titulo
+                    }
+                ),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -307,7 +359,13 @@ private fun FormularioReporte(
             Spacer(modifier = Modifier.height(18.dp))
 
             BotonPrincipal(
-                texto = stringResource(R.string.soporte_enviar_reporte),
+                texto = stringResource(
+                    if (esEdicion) {
+                        R.string.soporte_guardar_cambios
+                    } else {
+                        R.string.soporte_enviar_reporte
+                    }
+                ),
                 textoCargando = stringResource(R.string.soporte_enviando_reporte),
                 cargando = state.guardando,
                 onClick = onGuardar
@@ -329,14 +387,8 @@ private fun FormularioReporte(
 @Composable
 private fun TarjetaTicket(
     ticket: Ticket,
-    respondiendo: Boolean,
-    mensajeRespuesta: String,
-    errorRespuesta: String?,
-    enviando: Boolean,
-    onAbrirRespuesta: () -> Unit,
-    onCerrarRespuesta: () -> Unit,
-    onMensajeChange: (String) -> Unit,
-    onEnviar: () -> Unit
+    onEditar: () -> Unit,
+    onEliminar: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -427,38 +479,27 @@ private fun TarjetaTicket(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (respondiendo) {
-                OutlinedTextField(
-                    value = mensajeRespuesta,
-                    onValueChange = onMensajeChange,
-                    label = { Text(stringResource(R.string.soporte_respuesta_mensaje)) },
-                    isError = errorRespuesta != null,
-                    supportingText = errorRespuesta?.let { { Text(it) } },
-                    minLines = 2,
-                    maxLines = 4,
-                    enabled = !enviando,
-                    shape = RoundedCornerShape(Dimensiones.RadioCampo),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+            if (ticket.estado == "ABIERTO") {
+                Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onCerrarRespuesta, enabled = !enviando) {
-                        Text(stringResource(R.string.comun_cancelar))
+                    OutlinedButton(
+                        onClick = onEditar,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.soporte_editar))
                     }
-                    Button(onClick = onEnviar, enabled = !enviando) {
-                        Text(stringResource(R.string.soporte_enviar_respuesta))
+                    OutlinedButton(
+                        onClick = onEliminar,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.soporte_eliminar))
                     }
-                }
-            } else {
-                OutlinedButton(
-                    onClick = onAbrirRespuesta,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.soporte_responder))
                 }
             }
+
         }
     }
 }

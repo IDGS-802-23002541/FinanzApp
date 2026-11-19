@@ -250,9 +250,13 @@
     <string name="soporte_enviando_reporte">Enviando…</string>
     <string name="soporte_vacio_titulo">Sin reportes</string>
     <string name="soporte_vacio_mensaje">Cuando reportes una duda o un problema aparecerá aquí.</string>
-    <string name="soporte_responder">Responder</string>
-    <string name="soporte_respuesta_mensaje">Tu respuesta</string>
-    <string name="soporte_enviar_respuesta">Enviar respuesta</string>
+    <string name="soporte_editar_titulo">Editar reporte</string>
+    <string name="soporte_editar">Editar</string>
+    <string name="soporte_guardar_cambios">Guardar cambios</string>
+    <string name="soporte_eliminar">Eliminar</string>
+    <string name="soporte_eliminar_titulo">Eliminar reporte</string>
+    <string name="soporte_eliminar_aviso">El reporte dejará de aparecer en tu lista, pero se conserva su historial y sus respuestas.</string>
+    <string name="soporte_eliminar_confirmar">Eliminar reporte</string>
     <string name="soporte_respuestas">Respuestas</string>
     <string name="soporte_asignado">Atendido por el equipo de soporte</string>
     <string name="soporte_pagina">Página %1$d de %2$d</string>

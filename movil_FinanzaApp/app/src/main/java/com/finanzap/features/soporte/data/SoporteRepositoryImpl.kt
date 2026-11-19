@@ -40,16 +40,34 @@ class SoporteRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
 
-    override suspend fun responderTicket(
+    override suspend fun actualizarTicket(
         idTicket: Int,
-        mensaje: String
-    ): Result<RespuestaTicket> =
+        asunto: String,
+        descripcion: String,
+        categoria: String,
+        prioridad: String
+    ): Result<Ticket> =
         try {
-            val respuesta = soporteApi.crearRespuesta(
+            val respuesta = soporteApi.actualizarTicket(
                 idTicket = idTicket,
-                peticion = ResponderTicketRequest(mensaje = mensaje)
+                peticion = EditarTicketRequest(
+                    asunto = asunto,
+                    descripcion = descripcion,
+                    categoria = categoria,
+                    prioridad = prioridad
+                )
             )
-            Result.success(respuesta.data.respuesta)
+            Result.success(respuesta.data.ticket)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun eliminarTicket(idTicket: Int): Result<Unit> =
+        try {
+            soporteApi.eliminarTicket(idTicket)
+            Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
