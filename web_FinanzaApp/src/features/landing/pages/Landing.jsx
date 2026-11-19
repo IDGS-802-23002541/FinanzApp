@@ -759,7 +759,83 @@ function Landing() {
               </Stack>
             </Box>
 
-            <SimulacionCartera />
+            <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              <Box
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute',
+                  inset: '-12%',
+                  borderRadius: '50%',
+                  background:
+                    'radial-gradient(circle, color-mix(in srgb, var(--color-acento) 55%, transparent) 0%, transparent 68%)',
+                  filter: 'blur(18px)',
+                  animation: 'pulso 7s ease-in-out infinite',
+                  pointerEvents: 'none',
+                }}
+              />
+              <SimulacionCartera />
+
+              <Box
+                sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  position: 'absolute',
+                  top: { sm: -18, md: -28 },
+                  left: { sm: -20, md: -36 },
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.75,
+                  py: 1,
+                  borderRadius: '999px',
+                  backgroundColor: 'var(--color-superficie)',
+                  color: 'var(--color-texto)',
+                  boxShadow: '0 12px 26px rgba(23, 59, 69, 0.24)',
+                  animation: 'flotar 5.5s ease-in-out infinite',
+                  zIndex: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--color-primario)',
+                    color: 'var(--color-sobre-primario)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconoCheck sx={{ fontSize: 13 }} />
+                </Box>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  Gasto registrado
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  position: 'absolute',
+                  bottom: { sm: -14, md: -22 },
+                  right: { sm: -14, md: -30 },
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.75,
+                  py: 1,
+                  borderRadius: '999px',
+                  backgroundColor: 'var(--color-acento)',
+                  color: 'var(--paleta-petroleo)',
+                  boxShadow: '0 12px 26px rgba(23, 59, 69, 0.24)',
+                  animation: 'flotar 7s ease-in-out infinite',
+                  animationDelay: '1.2s',
+                  zIndex: 2,
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  + Aportación recibida
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
 
