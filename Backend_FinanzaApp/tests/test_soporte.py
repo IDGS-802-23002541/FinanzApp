@@ -13,6 +13,8 @@ class UsuarioFalso:
     def __init__(self, rol_global, id_usuario):
         self.rolGlobal = rol_global
         self.idUsuario = id_usuario
+        self.nombreUsuario = "Usuario"
+        self.apaterno = "Prueba"
 
 
 class TicketFalso:
@@ -60,6 +62,8 @@ def test_rutas_soporte_registradas():
     }
     assert ("/soporte/tickets", "POST") in rutas
     assert ("/soporte/tickets", "GET") in rutas
+    assert ("/soporte/tickets/<int:idTicket>", "PUT") in rutas
+    assert ("/soporte/tickets/<int:idTicket>", "DELETE") in rutas
     assert ("/soporte/tickets/<int:idTicket>/respuestas", "POST") in rutas
     assert ("/soporte/tickets/<int:idTicket>/asignar", "POST") in rutas
     assert ("/soporte/tickets/<int:idTicket>/cerrar", "POST") in rutas
@@ -70,6 +74,8 @@ def test_rutas_soporte_requieren_token():
     respuestas = [
         cliente.post("/soporte/tickets", json={}),
         cliente.get("/soporte/tickets"),
+        cliente.put("/soporte/tickets/1", json={}),
+        cliente.delete("/soporte/tickets/1"),
         cliente.post("/soporte/tickets/1/respuestas", json={}),
         cliente.post("/soporte/tickets/1/asignar", json={}),
         cliente.post("/soporte/tickets/1/cerrar", json={}),
@@ -204,3 +210,167 @@ def test_serializacion_de_ticket_cumple_contrato():
     assert datos["asignacionActual"] is None
     assert datos["fechaCreacion"] == "2026-01-01T00:00:00"
     assert datos["fechaCierre"] is None
+
+
+def _ticket_para_busqueda(monkeypatch, **cambios):
+    ticket = TicketFalso()
+    for campo, valor in cambios.items():
+        setattr(ticket, campo, valor)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (ticket, None)
+    )
+    return ticket
+
+
+def test_editar_ticket_rechaza_cuerpo_vacio(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    _ticket_para_busqueda(monkeypatch)
+
+    payload, status = soporte_service.editar_ticket(1, {})
+
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_editar_ticket_rechaza_ajeno(monkeypatch):
+    _como(monkeypatch, "CLIENTE", id_usuario=8)
+    _ticket_para_busqueda(monkeypatch)
+
+    payload, status = soporte_service.editar_ticket(1, {"asunto": "Nuevo"})
+
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_editar_ticket_rechaza_no_pendiente(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    _ticket_para_busqueda(monkeypatch, estado="EN_PROCESO")
+
+    payload, status = soporte_service.editar_ticket(1, {"asunto": "Nuevo"})
+
+    assert status == 409
+    assert payload["ok"] is False
+
+
+def test_eliminar_ticket_rechaza_ajeno(monkeypatch):
+    _como(monkeypatch, "CLIENTE", id_usuario=8)
+    _ticket_para_busqueda(monkeypatch)
+
+    payload, status = soporte_service.eliminar_ticket(1)
+
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_eliminar_ticket_rechaza_no_pendiente(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    _ticket_para_busqueda(monkeypatch, estado="CERRADO")
+
+    payload, status = soporte_service.eliminar_ticket(1)
+
+    assert status == 409
+    assert payload["ok"] is False
+
+
+def test_validar_edicion_acepta_campos_validos():
+    cambios, error = soporte_service._validar_edicion(
+        {
+            "asunto": "  Otro asunto  ",
+            "descripcion": "Mas detalle",
+            "categoria": "cartera",
+            "prioridad": "alta",
+        }
+    )
+
+    assert error is None
+    assert cambios == {
+        "asunto": "Otro asunto",
+        "descripcion": "Mas detalle",
+        "categoria": "CARTERA",
+        "prioridad": "ALTA",
+    }
+
+
+def test_validar_edicion_rechaza_vacio():
+    cambios, error = soporte_service._validar_edicion({})
+
+    assert cambios is None
+    assert error == "No se enviaron campos para actualizar."
+
+
+def test_validar_edicion_rechaza_categoria_invalida():
+    cambios, error = soporte_service._validar_edicion(
+        {"categoria": "INVENCIBLE"}
+    )
+
+    assert cambios is None
+    assert error == "La categoría no es válida."
+
+
+def test_cliente_no_puede_responder(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+
+    payload, status = soporte_service.crear_respuesta(
+        1, {"mensaje": "Sigo con el problema"}
+    )
+
+    assert status == 403
+    assert payload["ok"] is False
+
+
+class AutorFalso:
+    idUsuario = 9
+    nombreUsuario = "Diego"
+    apaterno = "Borja"
+
+
+class RespuestaFalsa:
+    idRespuesta = 3
+    ticketId = 1
+    usuarioId = 9
+    mensaje = "Ya lo revisamos"
+    fechaCreacion = datetime(2026, 2, 3, 10, 0)
+
+
+class SesionFalsa:
+    def add(self, _objeto):
+        pass
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+
+def test_serializar_respuesta_incluye_autor():
+    datos = soporte_service._serializar_respuesta(
+        RespuestaFalsa(), AutorFalso()
+    )
+
+    assert datos["usuarioId"] == 9
+    assert datos["autor"] == "Diego Borja"
+    assert datos["iniciales"] == "DB"
+    assert datos["fechaCreacion"] == "2026-02-03T10:00:00"
+
+
+def test_staff_responde_y_notifica_al_cliente(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    _ticket_para_busqueda(monkeypatch)
+    monkeypatch.setattr(soporte_service.db, "session", SesionFalsa())
+
+    enviadas = []
+    monkeypatch.setattr(
+        soporte_service.notificacion_service,
+        "notificar",
+        lambda *args: enviadas.append(args) or True,
+    )
+
+    payload, status = soporte_service.crear_respuesta(
+        1, {"mensaje": "Listo, ya lo revisamos"}
+    )
+
+    assert status == 201
+    assert payload["ok"] is True
+    assert enviadas[0][0] == 7
+    assert enviadas[0][1] == "SISTEMA"

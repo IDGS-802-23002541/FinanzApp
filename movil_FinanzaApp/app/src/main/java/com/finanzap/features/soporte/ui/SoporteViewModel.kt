@@ -39,6 +39,7 @@ class SoporteViewModel @Inject constructor(
         _state.update {
             it.copy(
                 formularioAbierto = true,
+                ticketEditandoId = null,
                 asunto = "",
                 descripcion = "",
                 categoria = "GENERAL",
@@ -50,8 +51,30 @@ class SoporteViewModel @Inject constructor(
         }
     }
 
+    fun abrirEdicion(ticket: Ticket) {
+        _state.update {
+            it.copy(
+                formularioAbierto = true,
+                ticketEditandoId = ticket.idTicket,
+                asunto = ticket.asunto,
+                descripcion = ticket.descripcion,
+                categoria = ticket.categoria,
+                prioridad = ticket.prioridad,
+                errorAsunto = null,
+                errorDescripcion = null,
+                errorFormulario = null
+            )
+        }
+    }
+
     fun cerrarFormulario() {
-        _state.update { it.copy(formularioAbierto = false, errorFormulario = null) }
+        _state.update {
+            it.copy(
+                formularioAbierto = false,
+                ticketEditandoId = null,
+                errorFormulario = null
+            )
+        }
     }
 
     fun onAsuntoChange(asunto: String) {
@@ -72,22 +95,24 @@ class SoporteViewModel @Inject constructor(
         _state.update { it.copy(prioridad = prioridad) }
     }
 
+    fun guardarFormulario() {
+        if (_state.value.ticketEditandoId != null) {
+            guardarEdicion()
+        } else {
+            crearTicket()
+        }
+    }
+
     fun crearTicket() {
         val actual = _state.value
         if (actual.guardando) return
 
         val asunto = actual.asunto.trim()
         val descripcion = actual.descripcion.trim()
-        val errorAsunto = when {
-            asunto.isBlank() -> "Escribe el asunto."
-            asunto.length > 150 -> "El asunto admite hasta 150 caracteres."
-            else -> null
-        }
-        val errorDescripcion = when {
-            descripcion.isBlank() -> "Escribe la descripción."
-            descripcion.length > 3000 -> "La descripción admite hasta 3000 caracteres."
-            else -> null
-        }
+        val (errorAsunto, errorDescripcion) = validarFormulario(
+            asunto,
+            descripcion
+        )
         if (errorAsunto != null || errorDescripcion != null) {
             _state.update {
                 it.copy(errorAsunto = errorAsunto, errorDescripcion = errorDescripcion)
@@ -121,52 +146,42 @@ class SoporteViewModel @Inject constructor(
         }
     }
 
-    fun abrirRespuesta(idTicket: Int) {
-        _state.update {
-            it.copy(
-                ticketRespondiendoId = idTicket,
-                mensajeRespuesta = "",
-                errorRespuesta = null
-            )
-        }
-    }
-
-    fun cerrarRespuesta() {
-        _state.update {
-            it.copy(ticketRespondiendoId = null, mensajeRespuesta = "", errorRespuesta = null)
-        }
-    }
-
-    fun onMensajeRespuestaChange(mensaje: String) {
-        _state.update { it.copy(mensajeRespuesta = mensaje, errorRespuesta = null) }
-    }
-
-    fun enviarRespuesta() {
+    private fun guardarEdicion() {
         val actual = _state.value
-        val idTicket = actual.ticketRespondiendoId ?: return
-        if (actual.respondiendo) return
+        val idTicket = actual.ticketEditandoId ?: return
+        if (actual.guardando) return
 
-        val mensaje = actual.mensajeRespuesta.trim()
-        if (mensaje.isBlank()) {
-            _state.update { it.copy(errorRespuesta = "Escribe el mensaje.") }
-            return
-        }
-        if (mensaje.length > 3000) {
+        val asunto = actual.asunto.trim()
+        val descripcion = actual.descripcion.trim()
+        val (errorAsunto, errorDescripcion) = validarFormulario(
+            asunto,
+            descripcion
+        )
+        if (errorAsunto != null || errorDescripcion != null) {
             _state.update {
-                it.copy(errorRespuesta = "El mensaje admite hasta 3000 caracteres.")
+                it.copy(
+                    errorAsunto = errorAsunto,
+                    errorDescripcion = errorDescripcion
+                )
             }
             return
         }
 
-        _state.update { it.copy(respondiendo = true, errorRespuesta = null) }
+        _state.update { it.copy(guardando = true, errorFormulario = null) }
         viewModelScope.launch {
-            soporteRepository.responderTicket(idTicket, mensaje)
+            soporteRepository.actualizarTicket(
+                idTicket = idTicket,
+                asunto = asunto,
+                descripcion = descripcion,
+                categoria = actual.categoria,
+                prioridad = actual.prioridad
+            )
                 .onSuccess {
                     _state.update {
                         it.copy(
-                            respondiendo = false,
-                            ticketRespondiendoId = null,
-                            mensajeRespuesta = ""
+                            guardando = false,
+                            formularioAbierto = false,
+                            ticketEditandoId = null
                         )
                     }
                     cargarPagina(_state.value.pagina)
@@ -174,15 +189,83 @@ class SoporteViewModel @Inject constructor(
                 .onFailure { error ->
                     _state.update {
                         it.copy(
-                            respondiendo = false,
-                            errorRespuesta = mensajeErrorApi(
+                            guardando = false,
+                            errorFormulario = mensajeErrorApi(
                                 error,
-                                "No se pudo enviar la respuesta."
+                                "No se pudo actualizar el reporte."
                             )
                         )
                     }
                 }
         }
+    }
+
+    fun pedirEliminar(idTicket: Int) {
+        _state.update {
+            it.copy(ticketEliminandoId = idTicket, errorEliminar = null)
+        }
+    }
+
+    fun cancelarEliminar() {
+        _state.update {
+            it.copy(ticketEliminandoId = null, errorEliminar = null)
+        }
+    }
+
+    fun confirmarEliminar() {
+        val actual = _state.value
+        val idTicket = actual.ticketEliminandoId ?: return
+        if (actual.eliminando) return
+
+        _state.update { it.copy(eliminando = true, errorEliminar = null) }
+        viewModelScope.launch {
+            soporteRepository.eliminarTicket(idTicket)
+                .onSuccess {
+                    _state.update {
+                        it.copy(
+                            eliminando = false,
+                            ticketEliminandoId = null
+                        )
+                    }
+                    val pagina = if (
+                        _state.value.tickets.size <= 1 &&
+                        _state.value.pagina > 1
+                    ) {
+                        _state.value.pagina - 1
+                    } else {
+                        _state.value.pagina
+                    }
+                    cargarPagina(pagina)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            eliminando = false,
+                            errorEliminar = mensajeErrorApi(
+                                error,
+                                "No se pudo eliminar el reporte."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun validarFormulario(
+        asunto: String,
+        descripcion: String
+    ): Pair<String?, String?> {
+        val errorAsunto = when {
+            asunto.isBlank() -> "Escribe el asunto."
+            asunto.length > 150 -> "El asunto admite hasta 150 caracteres."
+            else -> null
+        }
+        val errorDescripcion = when {
+            descripcion.isBlank() -> "Escribe la descripción."
+            descripcion.length > 3000 -> "La descripción admite hasta 3000 caracteres."
+            else -> null
+        }
+        return errorAsunto to errorDescripcion
     }
 
     private fun cargarPagina(pagina: Int) {
@@ -222,6 +305,7 @@ data class SoporteUiState(
     val pagina: Int = 1,
     val totalPaginas: Int = 0,
     val formularioAbierto: Boolean = false,
+    val ticketEditandoId: Int? = null,
     val asunto: String = "",
     val descripcion: String = "",
     val categoria: String = "GENERAL",
@@ -230,8 +314,7 @@ data class SoporteUiState(
     val errorDescripcion: String? = null,
     val errorFormulario: String? = null,
     val guardando: Boolean = false,
-    val ticketRespondiendoId: Int? = null,
-    val mensajeRespuesta: String = "",
-    val errorRespuesta: String? = null,
-    val respondiendo: Boolean = false
+    val ticketEliminandoId: Int? = null,
+    val errorEliminar: String? = null,
+    val eliminando: Boolean = false
 )

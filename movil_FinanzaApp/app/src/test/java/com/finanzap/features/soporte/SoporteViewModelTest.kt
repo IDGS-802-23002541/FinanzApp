@@ -2,7 +2,6 @@ package com.finanzap.features.soporte
 
 import com.finanzap.features.soporte.data.ListadoTickets
 import com.finanzap.features.soporte.data.PaginacionTickets
-import com.finanzap.features.soporte.data.RespuestaTicket
 import com.finanzap.features.soporte.data.SoporteRepository
 import com.finanzap.features.soporte.data.Ticket
 import com.finanzap.features.soporte.ui.SoporteViewModel
@@ -105,25 +104,74 @@ class SoporteViewModelTest {
         assertEquals(1, repositorio.tickets.size)
     }
 
-    @Test
-    fun `responder a un ticket guarda la respuesta`() = runTest {
-        val viewModel = SoporteViewModel(repositorio)
-        viewModel.abrirRespuesta(1)
-        viewModel.onMensajeRespuestaChange("Ya lo reviso, gracias")
 
-        viewModel.enviarRespuesta()
+    @Test
+    fun `editar reporte actualiza el ticket y cierra el formulario`() = runTest {
+        val viewModel = SoporteViewModel(repositorio)
+        val ticket = repositorio.tickets.first()
+        viewModel.abrirEdicion(ticket)
+        viewModel.onAsuntoChange("Asunto corregido")
+
+        viewModel.guardarFormulario()
 
         val estado = viewModel.state.value
-        assertNull(estado.ticketRespondiendoId)
-        assertFalse(estado.respondiendo)
-        assertEquals(1, estado.tickets.first().respuestas.size)
-        assertEquals("Ya lo reviso, gracias", estado.tickets.first().respuestas.first().mensaje)
+        assertFalse(estado.formularioAbierto)
+        assertNull(estado.ticketEditandoId)
+        assertEquals("Asunto corregido", estado.tickets.first().asunto)
+    }
+
+    @Test
+    fun `error al editar mantiene el formulario abierto`() = runTest {
+        repositorio.fallaActualizar = IOException("sin red")
+        val viewModel = SoporteViewModel(repositorio)
+        viewModel.abrirEdicion(repositorio.tickets.first())
+        viewModel.onAsuntoChange("Asunto corregido")
+
+        viewModel.guardarFormulario()
+
+        val estado = viewModel.state.value
+        assertTrue(estado.formularioAbierto)
+        assertEquals(1, estado.ticketEditandoId)
+        assertEquals("No se pudo conectar. Revisa tu conexión.", estado.errorFormulario)
+    }
+
+    @Test
+    fun `eliminar reporte lo quita y cierra la confirmacion`() = runTest {
+        val viewModel = SoporteViewModel(repositorio)
+        viewModel.cargar()
+        val idTicket = viewModel.state.value.tickets.first().idTicket
+        viewModel.pedirEliminar(idTicket)
+
+        viewModel.confirmarEliminar()
+
+        val estado = viewModel.state.value
+        assertNull(estado.ticketEliminandoId)
+        assertFalse(estado.eliminando)
+        assertTrue(estado.tickets.none { it.idTicket == idTicket })
+    }
+
+    @Test
+    fun `error al eliminar muestra el mensaje`() = runTest {
+        repositorio.fallaEliminar = IOException("sin red")
+        val viewModel = SoporteViewModel(repositorio)
+        viewModel.cargar()
+        val idTicket = viewModel.state.value.tickets.first().idTicket
+        viewModel.pedirEliminar(idTicket)
+
+        viewModel.confirmarEliminar()
+
+        val estado = viewModel.state.value
+        assertEquals(idTicket, estado.ticketEliminandoId)
+        assertEquals("No se pudo conectar. Revisa tu conexión.", estado.errorEliminar)
+        assertFalse(estado.eliminando)
     }
 }
 
 private class RepositorioSoporteFalso : SoporteRepository {
 
     var falla: Exception? = null
+    var fallaActualizar: Exception? = null
+    var fallaEliminar: Exception? = null
     var tickets: MutableList<Ticket> = mutableListOf(ticketEjemplo())
 
     override suspend fun listarTickets(pagina: Int, porPagina: Int): Result<ListadoTickets> {
@@ -163,25 +211,41 @@ private class RepositorioSoporteFalso : SoporteRepository {
         return Result.success(ticket)
     }
 
-    override suspend fun responderTicket(
+    override suspend fun actualizarTicket(
         idTicket: Int,
-        mensaje: String
-    ): Result<RespuestaTicket> {
-        val respuesta = RespuestaTicket(
-            idRespuesta = 5,
-            ticketId = idTicket,
-            mensaje = mensaje,
-            fechaCreacion = "2026-11-14T11:00:00"
-        )
+        asunto: String,
+        descripcion: String,
+        categoria: String,
+        prioridad: String
+    ): Result<Ticket> {
+        val error = fallaActualizar
+        if (error != null) return Result.failure(error)
+
+        var actualizado = ticketEjemplo()
         tickets.replaceAll { ticket ->
             if (ticket.idTicket == idTicket) {
-                ticket.copy(respuestas = ticket.respuestas + respuesta)
+                actualizado = ticket.copy(
+                    asunto = asunto,
+                    descripcion = descripcion,
+                    categoria = categoria,
+                    prioridad = prioridad
+                )
+                actualizado
             } else {
                 ticket
             }
         }
-        return Result.success(respuesta)
+        return Result.success(actualizado)
     }
+
+    override suspend fun eliminarTicket(idTicket: Int): Result<Unit> {
+        val error = fallaEliminar
+        if (error != null) return Result.failure(error)
+
+        tickets.removeAll { it.idTicket == idTicket }
+        return Result.success(Unit)
+    }
+
 }
 
 private fun ticketEjemplo() = Ticket(

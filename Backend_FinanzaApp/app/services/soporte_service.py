@@ -6,8 +6,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
 from app.models import AsignacionTicket, RespuestaTicket, Ticket, Usuario
+from app.services import notificacion_service
 from app.services.comentario_service import ROLES_BUZON
 from app.utils import seguridad
+from app.utils.serializers import iniciales
 
 CATEGORIAS = {"GENERAL", "CUENTA", "CARTERA", "PAGOS", "ERROR", "OTRO"}
 PRIORIDADES = {"BAJA", "MEDIA", "ALTA", "URGENTE"}
@@ -33,7 +35,7 @@ def crear_ticket(datos):
 
     return {
         "ok": True,
-        "data": {"ticket": _serializar_ticket(ticket, [], None)},
+        "data": {"ticket": _serializar_ticket(ticket, [], None, {})},
         "mensaje": "Ticket creado correctamente.",
     }, 201
 
@@ -51,6 +53,8 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
         return {"ok": False, "mensaje": error}, 400
 
     filtros = _filtros_visibilidad(current_user)
+    # La baja es logica: los reportes eliminados no se listan.
+    filtros.append(Ticket.estado != "ELIMINADO")
     if estado:
         filtros.append(Ticket.estado == estado)
 
@@ -69,7 +73,7 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
             .scalars()
             .all()
         )
-        respuestas, asignaciones = _relaciones(tickets)
+        respuestas, asignaciones, autores = _relaciones(tickets)
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudieron obtener los tickets."}, 503
@@ -82,6 +86,7 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
                     ticket,
                     respuestas.get(ticket.idTicket, []),
                     asignaciones.get(ticket.idTicket),
+                    autores,
                 )
                 for ticket in tickets
             ],
@@ -96,6 +101,83 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
     }, 200
 
 
+def editar_ticket(id_ticket, datos):
+    ticket, error = _buscar_ticket(id_ticket)
+    if error:
+        return error
+
+    if ticket.usuarioId != current_user.idUsuario:
+        return {
+            "ok": False,
+            "mensaje": "No puedes editar este ticket.",
+        }, 403
+
+    if ticket.estado != "ABIERTO":
+        return {
+            "ok": False,
+            "mensaje": "Solo puedes editar un reporte pendiente.",
+        }, 409
+
+    cambios, error = _validar_edicion(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    try:
+        for campo, valor in cambios.items():
+            setattr(ticket, campo, valor)
+        ticket.fechaActualizacion = seguridad.ahora_utc()
+        db.session.commit()
+        respuestas, asignaciones, autores = _relaciones([ticket])
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo actualizar el ticket."}, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "ticket": _serializar_ticket(
+                ticket,
+                respuestas.get(ticket.idTicket, []),
+                asignaciones.get(ticket.idTicket),
+                autores,
+            )
+        },
+        "mensaje": "Ticket actualizado correctamente.",
+    }, 200
+
+
+def eliminar_ticket(id_ticket):
+    ticket, error = _buscar_ticket(id_ticket)
+    if error:
+        return error
+
+    if ticket.usuarioId != current_user.idUsuario:
+        return {
+            "ok": False,
+            "mensaje": "No puedes eliminar este ticket.",
+        }, 403
+
+    if ticket.estado != "ABIERTO":
+        return {
+            "ok": False,
+            "mensaje": "Solo puedes eliminar un reporte pendiente.",
+        }, 409
+
+    try:
+        ticket.estado = "ELIMINADO"
+        ticket.fechaActualizacion = seguridad.ahora_utc()
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo eliminar el ticket."}, 503
+
+    return {
+        "ok": True,
+        "data": {"ticketId": ticket.idTicket},
+        "mensaje": "Ticket eliminado correctamente.",
+    }, 200
+
+
 def crear_respuesta(id_ticket, datos):
     mensaje = _texto(datos.get("mensaje"))
     if not mensaje:
@@ -106,15 +188,16 @@ def crear_respuesta(id_ticket, datos):
             "mensaje": "El mensaje no puede exceder los 3000 caracteres.",
         }, 400
 
+    # El cliente consulta sus respuestas, pero solo el personal responde.
+    if not _es_staff():
+        return {
+            "ok": False,
+            "mensaje": "Solo el personal de soporte puede responder tickets.",
+        }, 403
+
     ticket, error = _buscar_ticket(id_ticket)
     if error:
         return error
-
-    if not _es_staff() and ticket.usuarioId != current_user.idUsuario:
-        return {
-            "ok": False,
-            "mensaje": "No tienes permisos para responder este ticket.",
-        }, 403
 
     respuesta = RespuestaTicket(
         ticketId=ticket.idTicket,
@@ -124,6 +207,14 @@ def crear_respuesta(id_ticket, datos):
     )
     try:
         db.session.add(respuesta)
+        # El cliente recibe la notificacion del sistema al responder el staff.
+        if ticket.usuarioId != current_user.idUsuario:
+            notificacion_service.notificar(
+                ticket.usuarioId,
+                "SISTEMA",
+                "Respuesta a tu reporte",
+                f'Tu reporte "{ticket.asunto}" recibio una respuesta.',
+            )
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
@@ -131,7 +222,7 @@ def crear_respuesta(id_ticket, datos):
 
     return {
         "ok": True,
-        "data": {"respuesta": _serializar_respuesta(respuesta)},
+        "data": {"respuesta": _serializar_respuesta(respuesta, current_user)},
         "mensaje": "Respuesta registrada correctamente.",
     }, 201
 
@@ -231,7 +322,7 @@ def cerrar_ticket(id_ticket, datos):
 
         _cerrar_ticket(ticket, ahora)
         db.session.commit()
-        respuestas, asignaciones = _relaciones([ticket])
+        respuestas, asignaciones, autores = _relaciones([ticket])
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo cerrar el ticket."}, 503
@@ -243,6 +334,7 @@ def cerrar_ticket(id_ticket, datos):
                 ticket,
                 respuestas.get(ticket.idTicket, []),
                 asignaciones.get(ticket.idTicket),
+                autores,
             )
         },
         "mensaje": "Ticket cerrado correctamente.",
@@ -284,6 +376,49 @@ def _validar_ticket(datos):
     }, None
 
 
+def _validar_edicion(datos):
+    cambios = {}
+
+    if "asunto" in datos:
+        asunto = _texto(datos.get("asunto"))
+        if not asunto:
+            return None, "El asunto es obligatorio."
+        if len(asunto) > 150:
+            return None, "El asunto no puede exceder los 150 caracteres."
+        cambios["asunto"] = asunto
+
+    if "descripcion" in datos:
+        descripcion = _texto(datos.get("descripcion"))
+        if not descripcion:
+            return None, "La descripción es obligatoria."
+        if len(descripcion) > 3000:
+            return None, "La descripción no puede exceder los 3000 caracteres."
+        cambios["descripcion"] = descripcion
+
+    if "categoria" in datos:
+        categoria = datos.get("categoria")
+        if not isinstance(categoria, str):
+            return None, "La categoría debe ser texto."
+        categoria = categoria.strip().upper()
+        if categoria not in CATEGORIAS:
+            return None, "La categoría no es válida."
+        cambios["categoria"] = categoria
+
+    if "prioridad" in datos:
+        prioridad = datos.get("prioridad")
+        if not isinstance(prioridad, str):
+            return None, "La prioridad debe ser texto."
+        prioridad = prioridad.strip().upper()
+        if prioridad not in PRIORIDADES:
+            return None, "La prioridad no es válida."
+        cambios["prioridad"] = prioridad
+
+    if not cambios:
+        return None, "No se enviaron campos para actualizar."
+
+    return cambios, None
+
+
 def _es_staff():
     return current_user.rolGlobal in ROLES_BUZON
 
@@ -311,7 +446,7 @@ def _buscar_ticket(id_ticket):
 def _relaciones(tickets):
     ids = [ticket.idTicket for ticket in tickets]
     if not ids:
-        return {}, {}
+        return {}, {}, {}
 
     respuestas = (
         db.session.execute(
@@ -333,10 +468,22 @@ def _relaciones(tickets):
         .all()
     )
 
+    usuario_ids = {respuesta.usuarioId for respuesta in respuestas}
+    autores = {}
+    if usuario_ids:
+        autores = {
+            usuario.idUsuario: usuario
+            for usuario in db.session.execute(
+                db.select(Usuario).where(Usuario.idUsuario.in_(usuario_ids))
+            )
+            .scalars()
+            .all()
+        }
+
     por_ticket = {}
     for respuesta in respuestas:
         por_ticket.setdefault(respuesta.ticketId, []).append(respuesta)
-    return por_ticket, {a.ticketId: a for a in asignaciones}
+    return por_ticket, {a.ticketId: a for a in asignaciones}, autores
 
 
 def _aplicar_asignacion(ticket, asignacion_anterior, momento):
@@ -351,7 +498,8 @@ def _cerrar_ticket(ticket, momento):
     ticket.fechaCierre = momento
 
 
-def _serializar_ticket(ticket, respuestas, asignacion):
+def _serializar_ticket(ticket, respuestas, asignacion, autores=None):
+    autores = autores or {}
     return {
         "idTicket": ticket.idTicket,
         "asunto": ticket.asunto,
@@ -361,15 +509,25 @@ def _serializar_ticket(ticket, respuestas, asignacion):
         "estado": ticket.estado,
         "fechaCreacion": _fecha(ticket.fechaCreacion),
         "fechaCierre": _fecha(ticket.fechaCierre),
-        "respuestas": [_serializar_respuesta(r) for r in respuestas],
+        "respuestas": [
+            _serializar_respuesta(respuesta, autores.get(respuesta.usuarioId))
+            for respuesta in respuestas
+        ],
         "asignacionActual": _serializar_asignacion(asignacion),
     }
 
 
-def _serializar_respuesta(respuesta):
+def _serializar_respuesta(respuesta, autor=None):
+    nombre = None
+    if autor is not None:
+        nombre = f"{autor.nombreUsuario} {autor.apaterno or ''}".strip()
+
     return {
         "idRespuesta": respuesta.idRespuesta,
         "ticketId": respuesta.ticketId,
+        "usuarioId": respuesta.usuarioId,
+        "autor": nombre,
+        "iniciales": iniciales(autor) if autor is not None else None,
         "mensaje": respuesta.mensaje,
         "fechaCreacion": _fecha(respuesta.fechaCreacion),
     }

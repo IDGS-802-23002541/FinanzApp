@@ -2533,12 +2533,140 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /soporte/tickets/{idTicket}:
+    put:
+      tags:
+        - Soporte
+      summary: Editar mi reporte de ayuda pendiente
+      description: >-
+        Actualiza asunto, descripción, categoría o prioridad de un ticket
+        propio mientras siga ABIERTO. Los tickets eliminados o ya atendidos no
+        se pueden editar.
+      operationId: editarTicket
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTicket
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketEditarRequest'
+            example:
+              asunto: No puedo cerrar mi cartera
+              descripcion: Sigue saliendo el error al confirmar.
+              categoria: CARTERA
+              prioridad: ALTA
+      responses:
+        '200':
+          description: Ticket actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketRespuesta'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El ticket no pertenece al usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El ticket no está pendiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo actualizar el ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Soporte
+      summary: Eliminar mi reporte de ayuda pendiente
+      description: >-
+        Baja lógica de un ticket propio mientras siga ABIERTO: cambia su estado
+        a ELIMINADO y conserva el historial. Solo el propietario puede hacerlo.
+      operationId: eliminarTicket
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idTicket
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ticket eliminado
+          content:
+            application/json:
+              example:
+                ok: true
+                data:
+                  ticketId: 3
+                mensaje: Ticket eliminado correctamente.
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El ticket no pertenece al usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: El ticket no está pendiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo eliminar el ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /soporte/tickets/{idTicket}/respuestas:
     post:
       tags:
         - Soporte
       summary: Responder un reporte de ayuda
-      description: Responde el propietario del ticket o un usuario con rol ADMIN o TRABAJADOR.
+      description: Solo un usuario con rol ADMIN o TRABAJADOR puede responder tickets.
       operationId: responderTicket
       security:
         - bearerAuth: []
@@ -4133,6 +4261,33 @@ components:
             - ALTA
             - URGENTE
           default: MEDIA
+    TicketEditarRequest:
+      type: object
+      properties:
+        asunto:
+          type: string
+          maxLength: 150
+          example: No puedo cerrar mi cartera
+        descripcion:
+          type: string
+          maxLength: 3000
+          example: Sigue saliendo el error al confirmar.
+        categoria:
+          type: string
+          enum:
+            - GENERAL
+            - CUENTA
+            - CARTERA
+            - PAGOS
+            - ERROR
+            - OTRO
+        prioridad:
+          type: string
+          enum:
+            - BAJA
+            - MEDIA
+            - ALTA
+            - URGENTE
     RespuestaTicket:
       type: object
       properties:
@@ -4142,6 +4297,17 @@ components:
         ticketId:
           type: integer
           example: 2
+        usuarioId:
+          type: integer
+          example: 9
+        autor:
+          type: string
+          nullable: true
+          example: Diego Borja
+        iniciales:
+          type: string
+          nullable: true
+          example: DB
         mensaje:
           type: string
           example: Ya lo revisamos y corregimos.

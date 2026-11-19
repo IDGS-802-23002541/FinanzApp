@@ -19,8 +19,21 @@ data class CrearTicketRequest(
 )
 
 @Serializable
-data class ResponderTicketRequest(
-    val mensaje: String
+data class EditarTicketRequest(
+    val asunto: String,
+    val descripcion: String,
+    val categoria: String,
+    val prioridad: String
+)
+
+@Serializable
+data class RespuestaEliminarTicket(
+    val data: DatosTicketEliminado = DatosTicketEliminado()
+)
+
+@Serializable
+data class DatosTicketEliminado(
+    val ticketId: Int = 0
 )
 
 @Serializable
@@ -50,16 +63,6 @@ data class PaginacionTickets(
     val porPagina: Int = 20,
     val total: Int = 0,
     val totalPaginas: Int = 0
-)
-
-@Serializable
-data class RespuestaResponderTicket(
-    val data: DatosRespuestaCreada = DatosRespuestaCreada()
-)
-
-@Serializable
-data class DatosRespuestaCreada(
-    val respuesta: RespuestaTicket = RespuestaTicket()
 )
 
 @Serializable
