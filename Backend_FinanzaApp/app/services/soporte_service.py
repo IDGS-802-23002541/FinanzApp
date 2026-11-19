@@ -51,6 +51,8 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
         return {"ok": False, "mensaje": error}, 400
 
     filtros = _filtros_visibilidad(current_user)
+    # La baja es logica: los reportes eliminados no se listan.
+    filtros.append(Ticket.estado != "ELIMINADO")
     if estado:
         filtros.append(Ticket.estado == estado)
 
@@ -96,6 +98,82 @@ def listar_tickets(estado=None, pagina="1", por_pagina="20"):
     }, 200
 
 
+def editar_ticket(id_ticket, datos):
+    ticket, error = _buscar_ticket(id_ticket)
+    if error:
+        return error
+
+    if ticket.usuarioId != current_user.idUsuario:
+        return {
+            "ok": False,
+            "mensaje": "No puedes editar este ticket.",
+        }, 403
+
+    if ticket.estado != "ABIERTO":
+        return {
+            "ok": False,
+            "mensaje": "Solo puedes editar un reporte pendiente.",
+        }, 409
+
+    cambios, error = _validar_edicion(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    try:
+        for campo, valor in cambios.items():
+            setattr(ticket, campo, valor)
+        ticket.fechaActualizacion = seguridad.ahora_utc()
+        db.session.commit()
+        respuestas, asignaciones = _relaciones([ticket])
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo actualizar el ticket."}, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "ticket": _serializar_ticket(
+                ticket,
+                respuestas.get(ticket.idTicket, []),
+                asignaciones.get(ticket.idTicket),
+            )
+        },
+        "mensaje": "Ticket actualizado correctamente.",
+    }, 200
+
+
+def eliminar_ticket(id_ticket):
+    ticket, error = _buscar_ticket(id_ticket)
+    if error:
+        return error
+
+    if ticket.usuarioId != current_user.idUsuario:
+        return {
+            "ok": False,
+            "mensaje": "No puedes eliminar este ticket.",
+        }, 403
+
+    if ticket.estado != "ABIERTO":
+        return {
+            "ok": False,
+            "mensaje": "Solo puedes eliminar un reporte pendiente.",
+        }, 409
+
+    try:
+        ticket.estado = "ELIMINADO"
+        ticket.fechaActualizacion = seguridad.ahora_utc()
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo eliminar el ticket."}, 503
+
+    return {
+        "ok": True,
+        "data": {"ticketId": ticket.idTicket},
+        "mensaje": "Ticket eliminado correctamente.",
+    }, 200
+
+
 def crear_respuesta(id_ticket, datos):
     mensaje = _texto(datos.get("mensaje"))
     if not mensaje:
@@ -106,15 +184,16 @@ def crear_respuesta(id_ticket, datos):
             "mensaje": "El mensaje no puede exceder los 3000 caracteres.",
         }, 400
 
+    # El cliente consulta sus respuestas, pero solo el personal responde.
+    if not _es_staff():
+        return {
+            "ok": False,
+            "mensaje": "Solo el personal de soporte puede responder tickets.",
+        }, 403
+
     ticket, error = _buscar_ticket(id_ticket)
     if error:
         return error
-
-    if not _es_staff() and ticket.usuarioId != current_user.idUsuario:
-        return {
-            "ok": False,
-            "mensaje": "No tienes permisos para responder este ticket.",
-        }, 403
 
     respuesta = RespuestaTicket(
         ticketId=ticket.idTicket,
@@ -282,6 +361,49 @@ def _validar_ticket(datos):
         "categoria": categoria,
         "prioridad": prioridad,
     }, None
+
+
+def _validar_edicion(datos):
+    cambios = {}
+
+    if "asunto" in datos:
+        asunto = _texto(datos.get("asunto"))
+        if not asunto:
+            return None, "El asunto es obligatorio."
+        if len(asunto) > 150:
+            return None, "El asunto no puede exceder los 150 caracteres."
+        cambios["asunto"] = asunto
+
+    if "descripcion" in datos:
+        descripcion = _texto(datos.get("descripcion"))
+        if not descripcion:
+            return None, "La descripción es obligatoria."
+        if len(descripcion) > 3000:
+            return None, "La descripción no puede exceder los 3000 caracteres."
+        cambios["descripcion"] = descripcion
+
+    if "categoria" in datos:
+        categoria = datos.get("categoria")
+        if not isinstance(categoria, str):
+            return None, "La categoría debe ser texto."
+        categoria = categoria.strip().upper()
+        if categoria not in CATEGORIAS:
+            return None, "La categoría no es válida."
+        cambios["categoria"] = categoria
+
+    if "prioridad" in datos:
+        prioridad = datos.get("prioridad")
+        if not isinstance(prioridad, str):
+            return None, "La prioridad debe ser texto."
+        prioridad = prioridad.strip().upper()
+        if prioridad not in PRIORIDADES:
+            return None, "La prioridad no es válida."
+        cambios["prioridad"] = prioridad
+
+    if not cambios:
+        return None, "No se enviaron campos para actualizar."
+
+    return cambios, None
 
 
 def _es_staff():
