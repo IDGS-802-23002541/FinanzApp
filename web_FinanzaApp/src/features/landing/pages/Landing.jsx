@@ -492,6 +492,14 @@ function Landing() {
         minHeight: '100vh',
         backgroundColor: 'var(--color-fondo)',
         color: 'var(--color-texto)',
+        backgroundImage: [
+          'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--color-acento) 18%, transparent), transparent 38%)',
+          'radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--color-primario) 12%, transparent), transparent 42%)',
+          'radial-gradient(circle at 50% 92%, color-mix(in srgb, var(--color-secundario) 12%, transparent), transparent 45%)',
+          'linear-gradient(color-mix(in srgb, var(--color-borde) 45%, transparent) 1px, transparent 1px)',
+          'linear-gradient(90deg, color-mix(in srgb, var(--color-borde) 45%, transparent) 1px, transparent 1px)',
+        ].join(', '),
+        backgroundSize: 'auto, auto, auto, 48px 48px, 48px 48px',
         '& section': { animation: 'aparecer 0.6s ease-out both' },
         '& h2': { position: 'relative', display: 'inline-block', pb: 1.25 },
         '& h2::after': {
@@ -514,7 +522,7 @@ function Landing() {
           overflow: 'hidden',
           background: 'var(--gradiente-marca)',
           color: 'var(--paleta-blanco)',
-          pb: { xs: 10, md: 14 },
+          pb: { xs: 14, md: 18 },
         }}
       >
         <Box
@@ -753,6 +761,26 @@ function Landing() {
 
             <SimulacionCartera />
           </Box>
+        </Box>
+
+        <Box
+          component="svg"
+          aria-hidden="true"
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          sx={{
+            position: 'absolute',
+            bottom: -1,
+            left: 0,
+            width: '100%',
+            height: { xs: 48, md: 80 },
+            display: 'block',
+          }}
+        >
+          <path
+            d="M0,70 C240,118 480,10 720,40 C960,70 1200,122 1440,66 L1440,120 L0,120 Z"
+            fill="var(--color-fondo)"
+          />
         </Box>
       </Box>
 
