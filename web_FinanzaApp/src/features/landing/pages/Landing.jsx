@@ -1265,6 +1265,69 @@ function Landing() {
 
         <Box
           component="section"
+          sx={{
+            mt: { xs: 8, md: 12 },
+            p: { xs: 2, md: 2.5 },
+            borderRadius: '28px',
+            background: 'var(--gradiente-marca)',
+            color: 'var(--paleta-blanco)',
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ px: { xs: 1, md: 1.5 }, pt: { xs: 1, md: 1.5 } }}>
+            <Typography
+              component="h2"
+              sx={{
+                fontSize: { xs: '1.6rem', md: '2.15rem' },
+                fontWeight: 800,
+                color: 'var(--paleta-blanco)',
+              }}
+            >
+              Así se siente tener tus cuentas en orden
+            </Typography>
+            <Typography sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.82)' }}>
+              Planea, registra y comparte tus gastos sin perder el control.
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              mt: 2.5,
+              borderRadius: '18px',
+              overflow: 'hidden',
+              backgroundColor: 'var(--color-primario)',
+              boxShadow: '0 20px 44px rgba(0, 0, 0, 0.28)',
+            }}
+          >
+            <Box
+              component="video"
+              controls
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="https://images.pexels.com/videos/6700653/accountant-accounting-adult-banknote-6700653.jpeg?auto=compress&cs=tinysrgb&w=1280"
+              src="https://videos.pexels.com/video-files/6700653/6700653-hd_1280_720_25fps.mp4"
+              aria-label="Video de una persona organizando sus finanzas"
+              sx={{
+                display: 'block',
+                width: '100%',
+                aspectRatio: '16 / 9',
+                objectFit: 'cover',
+              }}
+            />
+          </Box>
+
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', mt: 1.5, opacity: 0.7 }}
+          >
+            Video: Tima Miroshnichenko / Pexels
+          </Typography>
+        </Box>
+
+        <Box
+          component="section"
           id="ejemplos"
           sx={{
             position: 'relative',
