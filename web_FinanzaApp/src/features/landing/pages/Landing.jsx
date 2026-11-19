@@ -94,6 +94,46 @@ const PREGUNTAS = [
     respuesta:
       'Pierde el acceso a la cartera, pero sus transacciones se conservan con su autor. Además, el propietario puede volver a invitarlo después.',
   },
+  {
+    pregunta: '¿Qué tipos de cartera existen?',
+    respuesta:
+      'Hogar, Viaje, Evento y Otro. Las de Hogar se enfocan en el control mensual; las de Viaje y Evento manejan fechas, presupuesto y un cierre con balance.',
+  },
+  {
+    pregunta: '¿Puedo llevar mis pagos fijos o recurrentes?',
+    respuesta:
+      'Sí. Registra el nombre, monto, categoría, frecuencia y fecha de inicio. La lista muestra el próximo vencimiento y puedes marcar cada periodo como “Hecho”.',
+  },
+  {
+    pregunta: '¿Puedo descargar mis reportes?',
+    respuesta:
+      'Sí. Puedes filtrar tus movimientos y exportarlos en CSV o PDF con la misma información de la vista previa.',
+  },
+  {
+    pregunta: '¿Quién puede ver mi información financiera?',
+    respuesta:
+      'Solo tú y las personas que invitaste a la cartera. El personal administrativo ve métricas agregadas y el buzón de comentarios, no tus carteras ni transacciones.',
+  },
+  {
+    pregunta: '¿Qué ocurre cuando cierro una cartera de viaje o evento?',
+    respuesta:
+      'Solo el propietario puede cerrarla. Se calcula el balance total, por categoría y por participante, y la cartera queda en solo lectura para consultar o descargar su reporte.',
+  },
+  {
+    pregunta: '¿Puedo editar o eliminar un movimiento?',
+    respuesta:
+      'Sí. Las transacciones se pueden editar o dar de baja; al eliminarlas dejan de contar en saldos y reportes, pero no se borra el historial de la cartera.',
+  },
+  {
+    pregunta: '¿Necesito conexión a internet?',
+    respuesta:
+      'Sí. FinanzApp funciona en línea para mantener tus carteras sincronizadas entre la web y el celular, y para que todos los miembros vean los cambios al momento.',
+  },
+  {
+    pregunta: '¿Cómo pido ayuda si tengo un problema?',
+    respuesta:
+      'Desde la sección de Soporte puedes crear un reporte de ayuda y darle seguimiento: verás su estatus y las respuestas del equipo.',
+  },
 ]
 
 const COMPARATIVA = [
