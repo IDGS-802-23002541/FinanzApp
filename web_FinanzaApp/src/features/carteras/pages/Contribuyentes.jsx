@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import {
   Alert,
   Avatar,
@@ -17,18 +17,22 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { eliminarColaborador } from '../api.js'
+import { eliminarColaborador, salirCartera } from '../api.js'
 import { IconoPapelera } from '../../../components/ui/Iconos.jsx'
 
 function Contribuyentes() {
   const { cartera, id, recargar } = useOutletContext()
+  const navegar = useNavigate()
   const [porEliminar, setPorEliminar] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [confirmarSalida, setConfirmarSalida] = useState(false)
+  const [saliendo, setSaliendo] = useState(false)
   const [error, setError] = useState('')
 
   const colaboradores = cartera.colaboradores ?? []
   const esPropietario = cartera.rol === 'Propietario'
   const puedeEliminar = esPropietario && cartera.estatus === 'Activa'
+  const puedeSalir = !esPropietario && cartera.estatus === 'Activa'
 
   const eliminar = async () => {
     setEliminando(true)
@@ -44,6 +48,18 @@ function Contribuyentes() {
     }
   }
 
+  const salir = async () => {
+    setSaliendo(true)
+    setError('')
+    try {
+      await salirCartera(id)
+      navegar('/carteras')
+    } catch (err) {
+      setError(err.message)
+      setSaliendo(false)
+    }
+  }
+
   return (
     <Paper
       elevation={0}
@@ -55,16 +71,35 @@ function Contribuyentes() {
       }}
     >
       <Stack spacing={2.5}>
-        <Box>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-            Contribuyentes
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: 'var(--color-texto-secundario)' }}
-          >
-            Personas con acceso a esta cartera.
-          </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 2,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+              Contribuyentes
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: 'var(--color-texto-secundario)' }}
+            >
+              Personas con acceso a esta cartera.
+            </Typography>
+          </Box>
+          {puedeSalir && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setConfirmarSalida(true)}
+            >
+              Salir de la cartera
+            </Button>
+          )}
         </Box>
 
         {error && <Alert severity="error">{error}</Alert>}
@@ -145,6 +180,32 @@ function Contribuyentes() {
           </Stack>
         )}
       </Stack>
+
+      <Dialog
+        open={confirmarSalida}
+        onClose={() => setConfirmarSalida(false)}
+      >
+        <DialogTitle>Salir de la cartera</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Deseas salir de esta cartera? Dejarás de tener acceso, pero tus
+            transacciones se conservarán.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmarSalida(false)} disabled={saliendo}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={salir}
+            color="error"
+            variant="contained"
+            disabled={saliendo}
+          >
+            {saliendo ? 'Saliendo…' : 'Salir'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={Boolean(porEliminar)} onClose={() => setPorEliminar(null)}>
         <DialogTitle>Eliminar contribuyente</DialogTitle>

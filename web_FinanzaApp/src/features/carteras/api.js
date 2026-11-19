@@ -219,3 +219,9 @@ export async function eliminarColaborador(idCartera, idUsuario) {
   )
   return data
 }
+
+// Da de baja al usuario actual como colaborador de la cartera.
+export async function salirCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/salir`, {})
+  return data
+}
