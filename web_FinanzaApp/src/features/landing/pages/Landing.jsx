@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, Navigate } from 'react-router-dom'
 import FormularioComentarios from '../components/FormularioComentarios.jsx'
+import Revelar from '../components/Revelar.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { formatearMonto } from '../../../utils/formato.js'
 import { PANEL_POR_ROL } from '../../../utils/constantes.js'
@@ -620,7 +621,6 @@ function Landing() {
           pointerEvents: 'none',
           zIndex: 0,
         },
-        '& section': { animation: 'aparecer 0.6s ease-out both' },
         '& h2': { position: 'relative', display: 'inline-block', pb: 1.25 },
         '& h2::after': {
           content: '""',
@@ -763,7 +763,7 @@ function Landing() {
               mt: { xs: 6, md: 9 },
             }}
           >
-            <Box>
+            <Revelar>
               <Chip
                 label="Finanzas compartidas sin enredos"
                 sx={{
@@ -877,9 +877,12 @@ function Landing() {
                   ),
                 )}
               </Stack>
-            </Box>
+            </Revelar>
 
-            <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+            <Revelar
+              delay={150}
+              sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
+            >
               <Box
                 aria-hidden="true"
                 sx={{
@@ -955,7 +958,7 @@ function Landing() {
                   + Aportación recibida
                 </Typography>
               </Box>
-            </Box>
+            </Revelar>
           </Box>
         </Box>
 
@@ -997,9 +1000,10 @@ function Landing() {
             gap: 2.5,
           }}
         >
-          {BENEFICIOS.map(({ titulo, Icono, texto, detalle, fondo, color, borde }) => (
-            <Box
+          {BENEFICIOS.map(({ titulo, Icono, texto, detalle, fondo, color, borde }, indice) => (
+            <Revelar
               key={titulo}
+              delay={indice * 110}
               sx={{
                 position: 'relative',
                 overflow: 'hidden',
@@ -1061,7 +1065,7 @@ function Landing() {
               >
                 {detalle}
               </Typography>
-            </Box>
+            </Revelar>
           ))}
         </Box>
 
@@ -1112,8 +1116,9 @@ function Landing() {
             }}
           >
             {COMPARATIVA.map((columna, indice) => (
-              <Box
+              <Revelar
                 key={columna.titulo}
+                delay={indice * 120}
                 sx={{
                   p: 3,
                   height: '100%',
@@ -1155,7 +1160,7 @@ function Landing() {
                   }
                 />
                 {indice === 0 ? <MockNavegador /> : <MockTelefono />}
-              </Box>
+              </Revelar>
             ))}
           </Box>
         </Box>
@@ -1177,8 +1182,8 @@ function Landing() {
             { valor: '3', texto: 'tipos de cartera' },
             { valor: '8', texto: 'caracteres en la clave de invitación' },
             { valor: '100%', texto: 'en línea, sin hojas de cálculo' },
-          ].map((dato) => (
-            <Box key={dato.texto}>
+          ].map((dato, indice) => (
+            <Revelar key={dato.texto} delay={indice * 110}>
               <Typography
                 sx={{
                   fontSize: { xs: '2rem', md: '2.5rem' },
@@ -1192,7 +1197,7 @@ function Landing() {
               <Typography variant="body2" sx={{ mt: 0.75, opacity: 0.85 }}>
                 {dato.texto}
               </Typography>
-            </Box>
+            </Revelar>
           ))}
         </Box>
 
@@ -1229,36 +1234,38 @@ function Landing() {
             }}
           >
             {PASOS.map((paso, indice) => (
-              <Tarjeta key={paso.numero}>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                  <Box
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                      backgroundColor:
-                        indice === 1
-                          ? 'var(--color-acento)'
-                          : 'var(--color-primario)',
-                      color: 'var(--color-sobre-primario)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: '1.1rem',
-                      flexShrink: 0,
-                    }}
+              <Revelar key={paso.numero} delay={indice * 110} sx={{ height: '100%' }}>
+                <Tarjeta>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        backgroundColor:
+                          indice === 1
+                            ? 'var(--color-acento)'
+                            : 'var(--color-primario)',
+                        color: 'var(--color-sobre-primario)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 800,
+                        fontSize: '1.1rem',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {paso.numero}
+                    </Box>
+                    <Typography sx={{ fontWeight: 800 }}>{paso.titulo}</Typography>
+                  </Stack>
+                  <Typography
+                    sx={{ mt: 1.5, color: 'var(--color-texto-secundario)' }}
                   >
-                    {paso.numero}
-                  </Box>
-                  <Typography sx={{ fontWeight: 800 }}>{paso.titulo}</Typography>
-                </Stack>
-                <Typography
-                  sx={{ mt: 1.5, color: 'var(--color-texto-secundario)' }}
-                >
-                  {paso.texto}
-                </Typography>
-              </Tarjeta>
+                    {paso.texto}
+                  </Typography>
+                </Tarjeta>
+              </Revelar>
             ))}
           </Box>
         </Box>
@@ -1290,7 +1297,8 @@ function Landing() {
             </Typography>
           </Box>
 
-          <Box
+          <Revelar
+            distancia={32}
             sx={{
               mt: 2.5,
               borderRadius: '18px',
@@ -1316,7 +1324,7 @@ function Landing() {
                 objectFit: 'cover',
               }}
             />
-          </Box>
+          </Revelar>
 
           <Typography
             variant="caption"
@@ -1376,36 +1384,38 @@ function Landing() {
               mt: 3,
             }}
           >
-            {EJEMPLOS.map(({ titulo, ilustracion, descripcion, ejemplos }) => (
-              <Tarjeta key={titulo}>
-                <Box
-                  sx={{
-                    borderRadius: '14px',
-                    background:
-                      'linear-gradient(150deg, var(--color-seleccion) 0%, var(--color-superficie-suave) 100%)',
-                    p: 1,
-                  }}
-                >
-                  <IlustracionEjemplo tipo={ilustracion} />
-                </Box>
-                <Typography sx={{ mt: 2, fontWeight: 800 }}>{titulo}</Typography>
-                <Typography
-                  sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}
-                >
-                  {descripcion}
-                </Typography>
-                <Stack spacing={0.75} sx={{ mt: 2 }}>
-                  {ejemplos.map((ejemplo) => (
-                    <Typography
-                      key={ejemplo}
-                      variant="body2"
-                      sx={{ color: 'var(--color-texto-terciario)' }}
-                    >
-                      · {ejemplo}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Tarjeta>
+            {EJEMPLOS.map(({ titulo, ilustracion, descripcion, ejemplos }, indice) => (
+              <Revelar key={titulo} delay={indice * 110} sx={{ height: '100%' }}>
+                <Tarjeta>
+                  <Box
+                    sx={{
+                      borderRadius: '14px',
+                      background:
+                        'linear-gradient(150deg, var(--color-seleccion) 0%, var(--color-superficie-suave) 100%)',
+                      p: 1,
+                    }}
+                  >
+                    <IlustracionEjemplo tipo={ilustracion} />
+                  </Box>
+                  <Typography sx={{ mt: 2, fontWeight: 800 }}>{titulo}</Typography>
+                  <Typography
+                    sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}
+                  >
+                    {descripcion}
+                  </Typography>
+                  <Stack spacing={0.75} sx={{ mt: 2 }}>
+                    {ejemplos.map((ejemplo) => (
+                      <Typography
+                        key={ejemplo}
+                        variant="body2"
+                        sx={{ color: 'var(--color-texto-terciario)' }}
+                      >
+                        · {ejemplo}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Tarjeta>
+              </Revelar>
             ))}
           </Box>
         </Box>
@@ -1422,42 +1432,43 @@ function Landing() {
           </Typography>
 
           <Stack spacing={1.5} sx={{ mt: 3 }}>
-            {PREGUNTAS.map((item) => (
-              <Accordion
-                key={item.pregunta}
-                elevation={0}
-                disableGutters
-                sx={{
-                  border: '1px solid var(--color-borde)',
-                  borderRadius: '14px !important',
-                  backgroundColor: 'var(--color-superficie)',
-                  '&::before': { display: 'none' },
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={
-                    <Typography
-                      sx={{
-                        fontWeight: 800,
-                        color: 'var(--color-primario)',
-                        fontSize: '1.25rem',
-                        lineHeight: 1,
-                      }}
-                    >
-                      +
-                    </Typography>
-                  }
+            {PREGUNTAS.map((item, indice) => (
+              <Revelar key={item.pregunta} delay={indice * 80} distancia={16}>
+                <Accordion
+                  elevation={0}
+                  disableGutters
+                  sx={{
+                    border: '1px solid var(--color-borde)',
+                    borderRadius: '14px !important',
+                    backgroundColor: 'var(--color-superficie)',
+                    '&::before': { display: 'none' },
+                  }}
                 >
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {item.pregunta}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Typography sx={{ color: 'var(--color-texto-secundario)' }}>
-                    {item.respuesta}
-                  </Typography>
-                </AccordionDetails>
-              </Accordion>
+                  <AccordionSummary
+                    expandIcon={
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: 'var(--color-primario)',
+                          fontSize: '1.25rem',
+                          lineHeight: 1,
+                        }}
+                      >
+                        +
+                      </Typography>
+                    }
+                  >
+                    <Typography sx={{ fontWeight: 700 }}>
+                      {item.pregunta}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography sx={{ color: 'var(--color-texto-secundario)' }}>
+                      {item.respuesta}
+                    </Typography>
+                  </AccordionDetails>
+                </Accordion>
+              </Revelar>
             ))}
           </Stack>
         </Box>
@@ -1482,7 +1493,7 @@ function Landing() {
               alignItems: 'center',
             }}
           >
-            <Box>
+            <Revelar>
               <Typography
                 component="h2"
                 sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
@@ -1500,12 +1511,14 @@ function Landing() {
                   'Nos ayuda a priorizar nuevas funciones',
                 ]}
               />
-            </Box>
-            <FormularioComentarios />
+            </Revelar>
+            <Revelar delay={140}>
+              <FormularioComentarios />
+            </Revelar>
           </Box>
         </Box>
 
-        <Box
+        <Revelar
           component="section"
           sx={{
             mt: { xs: 8, md: 10 },
@@ -1544,7 +1557,7 @@ function Landing() {
           >
             Crear cuenta gratis
           </Button>
-        </Box>
+        </Revelar>
 
         <Box
           component="footer"
