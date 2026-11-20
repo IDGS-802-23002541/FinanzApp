@@ -17,13 +17,14 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { listarCategorias } from '../../carteras/api.js'
-import { eliminarPago, listarPagos } from '../api.js'
+import { eliminarPago, listarPagos, marcarPagoHecho } from '../api.js'
 import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import DialogoNuevoPago from '../components/DialogoNuevoPago.jsx'
-import { IconoMas } from '../../../components/ui/Iconos.jsx'
+import { IconoCheck, IconoMas } from '../../../components/ui/Iconos.jsx'
 
 const COLUMNAS = [
   'Concepto',
@@ -44,6 +45,18 @@ const sxBoton = {
   textTransform: 'none',
 }
 
+function hoyISO() {
+  const ahora = new Date()
+  const local = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
+
+// Vence hoy o antes -> se puede marcar como hecho.
+function venceHoyOAntes(fecha, hoy) {
+  if (!fecha) return true
+  return String(fecha).slice(0, 10) <= hoy
+}
+
 // Pagos recurrentes de una cartera (HU-07.1).
 function PagosCartera() {
   const { cartera, id } = useOutletContext()
@@ -56,6 +69,9 @@ function PagosCartera() {
   const [porEliminar, setPorEliminar] = useState(null)
   const [errorEliminar, setErrorEliminar] = useState('')
   const [eliminando, setEliminando] = useState(false)
+  const [marcandoId, setMarcandoId] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const [errorAccion, setErrorAccion] = useState('')
   const [recarga, setRecarga] = useState(0)
 
   const esPropietario = cartera?.rol === 'Propietario'
@@ -93,6 +109,8 @@ function PagosCartera() {
     categorias.find((categoria) => categoria.idCategoria === categoriaId)?.nombre ??
     'Sin categoría'
 
+  const hoy = hoyISO()
+
   const manejarGuardado = () => {
     setDialogoAbierto(false)
     setEditando(null)
@@ -102,6 +120,24 @@ function PagosCartera() {
   const abrirEliminar = (pago) => {
     setErrorEliminar('')
     setPorEliminar(pago)
+  }
+
+  const marcarHecho = async (pago) => {
+    if (marcandoId != null) return
+
+    setMarcandoId(pago.id)
+    setErrorAccion('')
+    setAviso('')
+
+    try {
+      await marcarPagoHecho(pago.id)
+      setAviso(`Pago “${pago.nombre}” marcado como hecho.`)
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorAccion(err.message)
+    } finally {
+      setMarcandoId(null)
+    }
   }
 
   const confirmarEliminar = async () => {
@@ -155,6 +191,18 @@ function PagosCartera() {
           </Button>
         )}
       </Box>
+
+      {aviso && (
+        <Alert severity="success" onClose={() => setAviso('')}>
+          {aviso}
+        </Alert>
+      )}
+
+      {errorAccion && (
+        <Alert severity="error" onClose={() => setErrorAccion('')}>
+          {errorAccion}
+        </Alert>
+      )}
 
       {cargando ? (
         <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
@@ -236,17 +284,53 @@ function PagosCartera() {
                   <TableCell>{formatearMonto(pago.monto)}</TableCell>
                   <TableCell>{pago.frecuencia}</TableCell>
                   <TableCell>
-                    {pago.proximaEjecucion
-                      ? formatearFecha(pago.proximaEjecucion)
-                      : 'Sin fecha'}
+                    <Typography sx={{ fontSize: '0.875rem' }}>
+                      {pago.proximaEjecucion
+                        ? formatearFecha(pago.proximaEjecucion)
+                        : 'Sin fecha'}
+                    </Typography>
+                    {pago.ultimaEjecucion?.fechaProgramada && (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          mt: 0.25,
+                        }}
+                      >
+                        <IconoCheck
+                          sx={{ fontSize: 13, color: 'var(--color-exito)' }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: '0.75rem',
+                            color: 'var(--color-texto-terciario)',
+                          }}
+                        >
+                          Último pago:{' '}
+                          {formatearFecha(
+                            pago.ultimaEjecucion.fechaProgramada,
+                          )}
+                        </Typography>
+                      </Box>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={pago.estado}
+                      label={
+                        pago.estado === 'Pendiente' &&
+                        !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                          ? 'Programado'
+                          : pago.estado
+                      }
                       size="small"
                       sx={{
                         backgroundColor: 'var(--color-superficie-suave)',
-                        color: 'var(--color-texto-secundario)',
+                        color:
+                          pago.estado === 'Pendiente' &&
+                          venceHoyOAntes(pago.proximaEjecucion, hoy)
+                            ? 'var(--color-primario)'
+                            : 'var(--color-texto-secundario)',
                         fontWeight: 600,
                       }}
                     />
@@ -254,7 +338,42 @@ function PagosCartera() {
                   {esPropietario && (
                     <TableCell>
                       {pago.estado !== 'Cancelado' && (
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 0.5,
+                          }}
+                        >
+                          {pago.estado === 'Pendiente' && (
+                            <Tooltip
+                              title={
+                                !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                                  ? `Disponible el ${formatearFecha(pago.proximaEjecucion)}`
+                                  : ''
+                              }
+                            >
+                              <span>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  startIcon={<IconoCheck sx={{ fontSize: 15 }} />}
+                                  onClick={() => marcarHecho(pago)}
+                                  disabled={
+                                    marcandoId === pago.id ||
+                                    !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                                  }
+                                  sx={{ ...sxBoton, fontSize: '0.8125rem' }}
+                                >
+                                  {marcandoId === pago.id
+                                    ? 'Marcando…'
+                                    : 'Marcar hecho'}
+                                </Button>
+                              </span>
+                            </Tooltip>
+                          )}
+
                           <Button
                             size="small"
                             onClick={() => setEditando(pago)}
