@@ -22,6 +22,7 @@ function aVistaPago(pago) {
     categoriaId: pago.categoriaId,
     nombre: pago.nombre,
     monto: pago.monto ?? 0,
+    frecuenciaValor: pago.frecuencia,
     frecuencia: FRECUENCIA_TEXTO[pago.frecuencia] ?? pago.frecuencia,
     fechaInicio: pago.fechaInicio ?? '',
     proximaEjecucion: pago.proximaEjecucion ?? '',
@@ -58,5 +59,26 @@ export async function crearPago({
     fechaInicio: fechaCorte,
     categoriaId: categoriaId ? Number(categoriaId) : undefined,
   })
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Edicion: el backend solo actualiza los campos que recibe.
+export async function editarPago(
+  idPago,
+  { nombre, monto, frecuencia, fechaCorte, categoriaId },
+) {
+  const { data } = await api.put(`/pagos-recurrentes/${idPago}`, {
+    nombre: nombre.trim(),
+    monto: Number(monto),
+    frecuencia,
+    fechaInicio: fechaCorte,
+    categoriaId: categoriaId ? Number(categoriaId) : null,
+  })
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Baja logica: el backend cambia el estado a CANCELADO.
+export async function eliminarPago(idPago) {
+  const { data } = await api.delete(`/pagos-recurrentes/${idPago}`)
   return data?.pago ? aVistaPago(data.pago) : null
 }

@@ -6,6 +6,10 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   Table,
   TableBody,
@@ -16,7 +20,7 @@ import {
   Typography,
 } from '@mui/material'
 import { listarCategorias } from '../../carteras/api.js'
-import { listarPagos } from '../api.js'
+import { eliminarPago, listarPagos } from '../api.js'
 import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import DialogoNuevoPago from '../components/DialogoNuevoPago.jsx'
 import { IconoMas } from '../../../components/ui/Iconos.jsx'
@@ -48,9 +52,14 @@ function PagosCartera() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [dialogoAbierto, setDialogoAbierto] = useState(false)
+  const [editando, setEditando] = useState(null)
+  const [porEliminar, setPorEliminar] = useState(null)
+  const [errorEliminar, setErrorEliminar] = useState('')
+  const [eliminando, setEliminando] = useState(false)
   const [recarga, setRecarga] = useState(0)
 
   const esPropietario = cartera?.rol === 'Propietario'
+  const columnas = esPropietario ? [...COLUMNAS, 'Acciones'] : COLUMNAS
 
   useEffect(() => {
     let vigente = true
@@ -86,7 +95,28 @@ function PagosCartera() {
 
   const manejarGuardado = () => {
     setDialogoAbierto(false)
+    setEditando(null)
     setRecarga((actual) => actual + 1)
+  }
+
+  const abrirEliminar = (pago) => {
+    setErrorEliminar('')
+    setPorEliminar(pago)
+  }
+
+  const confirmarEliminar = async () => {
+    setEliminando(true)
+    setErrorEliminar('')
+
+    try {
+      await eliminarPago(porEliminar.id)
+      setPorEliminar(null)
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorEliminar(err.message)
+    } finally {
+      setEliminando(false)
+    }
   }
 
   return (
@@ -184,7 +214,7 @@ function PagosCartera() {
           <Table size="small">
             <TableHead>
               <TableRow>
-                {COLUMNAS.map((columna) => (
+                {columnas.map((columna) => (
                   <TableCell
                     key={columna}
                     sx={{
@@ -221,6 +251,29 @@ function PagosCartera() {
                       }}
                     />
                   </TableCell>
+                  {esPropietario && (
+                    <TableCell>
+                      {pago.estado !== 'Cancelado' && (
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Button
+                            size="small"
+                            onClick={() => setEditando(pago)}
+                            sx={sxBoton}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => abrirEliminar(pago)}
+                            sx={sxBoton}
+                          >
+                            Eliminar
+                          </Button>
+                        </Box>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -234,6 +287,75 @@ function PagosCartera() {
           onCerrar={() => setDialogoAbierto(false)}
           onGuardado={manejarGuardado}
         />
+      )}
+
+      {editando && (
+        <DialogoNuevoPago
+          carteraId={id}
+          pago={editando}
+          onCerrar={() => setEditando(null)}
+          onGuardado={manejarGuardado}
+        />
+      )}
+
+      {porEliminar && (
+        <Dialog
+          open
+          onClose={() => setPorEliminar(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Eliminar pago recurrente</DialogTitle>
+          <DialogContent>
+            <Typography
+              sx={{
+                fontSize: '0.875rem',
+                color: 'var(--color-texto-secundario)',
+              }}
+            >
+              Se cancelará la regla “{porEliminar.nombre}”. Dejará de generar
+              recordatorios y las transacciones ya registradas se conservan.
+            </Typography>
+
+            <Box
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderLeft: '3px solid var(--color-alerta)',
+                backgroundColor: 'var(--color-superficie-suave)',
+                borderRadius: '8px',
+              }}
+            >
+              <Typography
+                sx={{ fontSize: '0.8125rem', color: 'var(--color-alerta)' }}
+              >
+                La baja es lógica: no se borra el historial.
+              </Typography>
+            </Box>
+
+            {errorEliminar && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {errorEliminar}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              onClick={() => setPorEliminar(null)}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="error"
+              variant="contained"
+              onClick={confirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? 'Eliminando…' : 'Eliminar pago'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Stack>
   )
