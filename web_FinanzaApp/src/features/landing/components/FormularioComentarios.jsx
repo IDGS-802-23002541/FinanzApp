@@ -85,8 +85,8 @@ function FormularioComentarios() {
       sx={{
         p: { xs: 2.5, md: 4 },
         border: '1px solid var(--color-borde)',
-        borderRadius: '20px',
-        boxShadow: '0 12px 32px rgba(23, 59, 69, 0.08)',
+        borderRadius: '16px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
       }}
     >
       <Typography variant="h2" sx={{ fontSize: '1.4rem', fontWeight: 800 }}>
