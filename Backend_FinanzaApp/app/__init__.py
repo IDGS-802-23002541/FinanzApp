@@ -24,6 +24,7 @@ def create_app():
     jwt.init_app(app)
 
     from app import models
+    from app.routes.admin import admin_bp
     from app.routes.auth import auth_bp
     from app.routes.carteras import carteras_bp
     from app.routes.categorias import categorias_bp
@@ -35,6 +36,7 @@ def create_app():
     from app.routes.transacciones import transacciones_bp
     from app.routes.comentarios import comentarios_bp
 
+    app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(carteras_bp)
     app.register_blueprint(categorias_bp)

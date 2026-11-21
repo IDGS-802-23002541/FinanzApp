@@ -22,6 +22,10 @@ def crear_ticket():
 def listar_tickets():
     payload, status = soporte_service.listar_tickets(
         estado=request.args.get("estado"),
+        categoria=request.args.get("categoria"),
+        responsable=request.args.get("responsable"),
+        desde=request.args.get("desde"),
+        hasta=request.args.get("hasta"),
         pagina=request.args.get("pagina", "1"),
         por_pagina=request.args.get("porPagina", "20"),
     )

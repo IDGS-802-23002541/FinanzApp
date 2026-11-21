@@ -54,71 +54,34 @@ def _datos_sesion(usuario, sesion, token_refresh):
         "refresh_token": token_refresh,
         "token_type": "Bearer",
         "expires_in": int(expira_en.total_seconds()),
+        "debeCambiarContrasenia": usuario.debeCambiarContrasenia,
         "usuario": serializar_usuario(usuario),
     }
 
 
 def registrar(datos):
-    nombre = (datos.get("nombreUsuario") or "").strip()
-    apaterno = (datos.get("apaterno") or "").strip()
-    amaterno = (datos.get("amaterno") or "").strip() or None
-    correo = (datos.get("correo") or "").strip().lower()
-    contrasenia = datos.get("contrasenia") or ""
+    campos, error = validacion.datos_usuario(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
 
-    faltantes = [
-        campo
-        for campo, valor in (
-            ("nombreUsuario", nombre),
-            ("apaterno", apaterno),
-            ("correo", correo),
-            ("contrasenia", contrasenia),
-        )
-        if not valor
-    ]
-    if faltantes:
-        return {
-            "ok": False,
-            "mensaje": f"Faltan campos: {', '.join(faltantes)}.",
-        }, 400
-    if (
-        len(nombre) > 80
-        or len(apaterno) > 80
-        or (amaterno and len(amaterno) > 80)
-    ):
-        return {
-            "ok": False,
-            "mensaje": "El nombre o los apellidos superan 80 caracteres.",
-        }, 400
-    if len(correo) > 254:
-        return {
-            "ok": False,
-            "mensaje": "El correo supera 254 caracteres.",
-        }, 400
-    if not validacion.correo_valido(correo):
-        return {
-            "ok": False,
-            "mensaje": "El correo no tiene un formato válido.",
-        }, 400
+    contrasenia = datos.get("contrasenia") or ""
+    if not contrasenia:
+        return {"ok": False, "mensaje": "Faltan campos: contrasenia."}, 400
     requisitos = validacion.requisitos_contrasenia(contrasenia)
     if requisitos:
         return {
             "ok": False,
-            "mensaje": (
-                "La contraseña debe incluir: " + ", ".join(requisitos) + "."
-            ),
+            "mensaje": ("La contraseña debe incluir: " + ", ".join(requisitos) + "."),
         }, 400
 
     existe = db.session.execute(
-        db.select(Usuario).where(Usuario.correo == correo)
+        db.select(Usuario).where(Usuario.correo == campos["correo"])
     ).scalar_one_or_none()
     if existe:
         return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
 
     usuario = Usuario(
-        nombreUsuario=nombre,
-        apaterno=apaterno,
-        amaterno=amaterno,
-        correo=correo,
+        **campos,
         contrasenia=generate_password_hash(contrasenia),
         rolGlobal="CLIENTE",
         estado="ACTIVO",
@@ -146,9 +109,7 @@ def login(correo, contrasenia, ip, user_agent):
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
-    if usuario is None or not check_password_hash(
-        usuario.contrasenia, contrasenia
-    ):
+    if usuario is None or not check_password_hash(usuario.contrasenia, contrasenia):
         return {"ok": False, "mensaje": MENSAJE_CREDENCIALES}, 401
     if usuario.estado != "ACTIVO":
         return {"ok": False, "mensaje": MENSAJE_CREDENCIALES}, 401
@@ -187,15 +148,11 @@ def solicitar_recuperacion(correo):
                 usuarioId=usuario.idUsuario,
                 hashToken=seguridad.hash_codigo(codigo),
                 fechaExpiracion=ahora
-                + timedelta(
-                    minutes=current_app.config["RECUPERACION_MINUTOS"]
-                ),
+                + timedelta(minutes=current_app.config["RECUPERACION_MINUTOS"]),
             )
         )
         db.session.commit()
-    datos_respuesta = (
-        {"codigo": codigo} if codigo and current_app.debug else None
-    )
+    datos_respuesta = {"codigo": codigo} if codigo and current_app.debug else None
     return {
         "ok": True,
         "data": datos_respuesta,
@@ -228,9 +185,7 @@ def restablecer(correo, codigo, contrasenia):
     if requisitos:
         return {
             "ok": False,
-            "mensaje": (
-                "La contraseña debe incluir: " + ", ".join(requisitos) + "."
-            ),
+            "mensaje": ("La contraseña debe incluir: " + ", ".join(requisitos) + "."),
         }, 400
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
@@ -304,6 +259,7 @@ def cambiar_contrasenia(actual, nueva):
         }, 400
     ahora = seguridad.ahora_utc()
     current_user.contrasenia = generate_password_hash(nueva)
+    current_user.debeCambiarContrasenia = False
     current_user.fechaActualizacion = ahora
     sid_actual = get_jwt().get("sid")
     db.session.execute(
@@ -388,9 +344,7 @@ def eliminar(contrasenia):
     current_user.apaterno = "Eliminado"
     current_user.amaterno = None
     current_user.correo = f"elim+{current_user.idUsuario}@local.invalid"
-    current_user.contrasenia = generate_password_hash(
-        seguridad.nuevo_refresh()
-    )
+    current_user.contrasenia = generate_password_hash(seguridad.nuevo_refresh())
     current_user.estado = "ELIMINADO"
     current_user.fechaBaja = ahora
     current_user.fechaActualizacion = ahora
@@ -400,9 +354,7 @@ def eliminar(contrasenia):
         )
     )
     db.session.execute(
-        db.delete(Notificacion).where(
-            Notificacion.usuarioId == current_user.idUsuario
-        )
+        db.delete(Notificacion).where(Notificacion.usuarioId == current_user.idUsuario)
     )
     db.session.execute(
         db.update(TokenRecuperacion)
@@ -436,8 +388,7 @@ def refresh(token_refresh):
         }, 400
     sesion = db.session.execute(
         db.select(SesionUsuario).where(
-            SesionUsuario.hashRefreshToken
-            == seguridad.hash_token(token_refresh)
+            SesionUsuario.hashRefreshToken == seguridad.hash_token(token_refresh)
         )
     ).scalar_one_or_none()
     if (
@@ -522,9 +473,7 @@ def guardar_preferencia(datos):
 def _datos_preferencia(preferencia):
     datos = {"tema": preferencia.tema if preferencia is not None else "CLARO"}
     for campo in CAMPOS_NOTIFICACION:
-        datos[campo] = (
-            getattr(preferencia, campo) if preferencia is not None else True
-        )
+        datos[campo] = getattr(preferencia, campo) if preferencia is not None else True
     return datos
 
 
@@ -550,6 +499,7 @@ def _validar_preferencia(datos):
     if not cambios:
         return None, "No se envió ninguna preferencia."
     return cambios, None
+
 
 def editar_cuenta(datos):
     nombre_usuario = (datos.get("nombreUsuario") or "").strip()
@@ -627,6 +577,3 @@ def editar_cuenta(datos):
         "data": serializar_usuario(current_user),
         "mensaje": "Cuenta actualizada correctamente.",
     }, 200
-    
-    
-    
