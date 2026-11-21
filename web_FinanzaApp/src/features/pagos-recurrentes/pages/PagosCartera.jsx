@@ -6,6 +6,10 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   Table,
   TableBody,
@@ -13,13 +17,14 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { listarCategorias } from '../../carteras/api.js'
-import { listarPagos } from '../api.js'
+import { eliminarPago, listarPagos, marcarPagoHecho } from '../api.js'
 import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import DialogoNuevoPago from '../components/DialogoNuevoPago.jsx'
-import { IconoMas } from '../../../components/ui/Iconos.jsx'
+import { IconoCheck, IconoMas } from '../../../components/ui/Iconos.jsx'
 
 const COLUMNAS = [
   'Concepto',
@@ -40,6 +45,18 @@ const sxBoton = {
   textTransform: 'none',
 }
 
+function hoyISO() {
+  const ahora = new Date()
+  const local = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
+
+// Vence hoy o antes -> se puede marcar como hecho.
+function venceHoyOAntes(fecha, hoy) {
+  if (!fecha) return true
+  return String(fecha).slice(0, 10) <= hoy
+}
+
 // Pagos recurrentes de una cartera (HU-07.1).
 function PagosCartera() {
   const { cartera, id } = useOutletContext()
@@ -48,9 +65,17 @@ function PagosCartera() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [dialogoAbierto, setDialogoAbierto] = useState(false)
+  const [editando, setEditando] = useState(null)
+  const [porEliminar, setPorEliminar] = useState(null)
+  const [errorEliminar, setErrorEliminar] = useState('')
+  const [eliminando, setEliminando] = useState(false)
+  const [marcandoId, setMarcandoId] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const [errorAccion, setErrorAccion] = useState('')
   const [recarga, setRecarga] = useState(0)
 
   const esPropietario = cartera?.rol === 'Propietario'
+  const columnas = esPropietario ? [...COLUMNAS, 'Acciones'] : COLUMNAS
 
   useEffect(() => {
     let vigente = true
@@ -84,9 +109,50 @@ function PagosCartera() {
     categorias.find((categoria) => categoria.idCategoria === categoriaId)?.nombre ??
     'Sin categoría'
 
+  const hoy = hoyISO()
+
   const manejarGuardado = () => {
     setDialogoAbierto(false)
+    setEditando(null)
     setRecarga((actual) => actual + 1)
+  }
+
+  const abrirEliminar = (pago) => {
+    setErrorEliminar('')
+    setPorEliminar(pago)
+  }
+
+  const marcarHecho = async (pago) => {
+    if (marcandoId != null) return
+
+    setMarcandoId(pago.id)
+    setErrorAccion('')
+    setAviso('')
+
+    try {
+      await marcarPagoHecho(pago.id)
+      setAviso(`Pago “${pago.nombre}” marcado como hecho.`)
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorAccion(err.message)
+    } finally {
+      setMarcandoId(null)
+    }
+  }
+
+  const confirmarEliminar = async () => {
+    setEliminando(true)
+    setErrorEliminar('')
+
+    try {
+      await eliminarPago(porEliminar.id)
+      setPorEliminar(null)
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorEliminar(err.message)
+    } finally {
+      setEliminando(false)
+    }
   }
 
   return (
@@ -125,6 +191,18 @@ function PagosCartera() {
           </Button>
         )}
       </Box>
+
+      {aviso && (
+        <Alert severity="success" onClose={() => setAviso('')}>
+          {aviso}
+        </Alert>
+      )}
+
+      {errorAccion && (
+        <Alert severity="error" onClose={() => setErrorAccion('')}>
+          {errorAccion}
+        </Alert>
+      )}
 
       {cargando ? (
         <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
@@ -184,7 +262,7 @@ function PagosCartera() {
           <Table size="small">
             <TableHead>
               <TableRow>
-                {COLUMNAS.map((columna) => (
+                {columnas.map((columna) => (
                   <TableCell
                     key={columna}
                     sx={{
@@ -206,21 +284,115 @@ function PagosCartera() {
                   <TableCell>{formatearMonto(pago.monto)}</TableCell>
                   <TableCell>{pago.frecuencia}</TableCell>
                   <TableCell>
-                    {pago.proximaEjecucion
-                      ? formatearFecha(pago.proximaEjecucion)
-                      : 'Sin fecha'}
+                    <Typography sx={{ fontSize: '0.875rem' }}>
+                      {pago.proximaEjecucion
+                        ? formatearFecha(pago.proximaEjecucion)
+                        : 'Sin fecha'}
+                    </Typography>
+                    {pago.ultimaEjecucion?.fechaProgramada && (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          mt: 0.25,
+                        }}
+                      >
+                        <IconoCheck
+                          sx={{ fontSize: 13, color: 'var(--color-exito)' }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: '0.75rem',
+                            color: 'var(--color-texto-terciario)',
+                          }}
+                        >
+                          Último pago:{' '}
+                          {formatearFecha(
+                            pago.ultimaEjecucion.fechaProgramada,
+                          )}
+                        </Typography>
+                      </Box>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={pago.estado}
+                      label={
+                        pago.estado === 'Pendiente' &&
+                        !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                          ? 'Programado'
+                          : pago.estado
+                      }
                       size="small"
                       sx={{
                         backgroundColor: 'var(--color-superficie-suave)',
-                        color: 'var(--color-texto-secundario)',
+                        color:
+                          pago.estado === 'Pendiente' &&
+                          venceHoyOAntes(pago.proximaEjecucion, hoy)
+                            ? 'var(--color-primario)'
+                            : 'var(--color-texto-secundario)',
                         fontWeight: 600,
                       }}
                     />
                   </TableCell>
+                  {esPropietario && (
+                    <TableCell>
+                      {pago.estado !== 'Cancelado' && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 0.5,
+                          }}
+                        >
+                          {pago.estado === 'Pendiente' && (
+                            <Tooltip
+                              title={
+                                !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                                  ? `Disponible el ${formatearFecha(pago.proximaEjecucion)}`
+                                  : ''
+                              }
+                            >
+                              <span>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  startIcon={<IconoCheck sx={{ fontSize: 15 }} />}
+                                  onClick={() => marcarHecho(pago)}
+                                  disabled={
+                                    marcandoId === pago.id ||
+                                    !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                                  }
+                                  sx={{ ...sxBoton, fontSize: '0.8125rem' }}
+                                >
+                                  {marcandoId === pago.id
+                                    ? 'Marcando…'
+                                    : 'Marcar hecho'}
+                                </Button>
+                              </span>
+                            </Tooltip>
+                          )}
+
+                          <Button
+                            size="small"
+                            onClick={() => setEditando(pago)}
+                            sx={sxBoton}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => abrirEliminar(pago)}
+                            sx={sxBoton}
+                          >
+                            Eliminar
+                          </Button>
+                        </Box>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -234,6 +406,75 @@ function PagosCartera() {
           onCerrar={() => setDialogoAbierto(false)}
           onGuardado={manejarGuardado}
         />
+      )}
+
+      {editando && (
+        <DialogoNuevoPago
+          carteraId={id}
+          pago={editando}
+          onCerrar={() => setEditando(null)}
+          onGuardado={manejarGuardado}
+        />
+      )}
+
+      {porEliminar && (
+        <Dialog
+          open
+          onClose={() => setPorEliminar(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Eliminar pago recurrente</DialogTitle>
+          <DialogContent>
+            <Typography
+              sx={{
+                fontSize: '0.875rem',
+                color: 'var(--color-texto-secundario)',
+              }}
+            >
+              Se cancelará la regla “{porEliminar.nombre}”. Dejará de generar
+              recordatorios y las transacciones ya registradas se conservan.
+            </Typography>
+
+            <Box
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderLeft: '3px solid var(--color-alerta)',
+                backgroundColor: 'var(--color-superficie-suave)',
+                borderRadius: '8px',
+              }}
+            >
+              <Typography
+                sx={{ fontSize: '0.8125rem', color: 'var(--color-alerta)' }}
+              >
+                La baja es lógica: no se borra el historial.
+              </Typography>
+            </Box>
+
+            {errorEliminar && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {errorEliminar}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              onClick={() => setPorEliminar(null)}
+              disabled={eliminando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="error"
+              variant="contained"
+              onClick={confirmarEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? 'Eliminando…' : 'Eliminar pago'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Stack>
   )

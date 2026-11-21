@@ -4329,6 +4329,31 @@ components:
           type: string
           format: date
           example: '2026-12-01'
+        ultimaEjecucion:
+          type: object
+          nullable: true
+          properties:
+            idEjecucion:
+              type: integer
+              example: 7
+            pagoRecurrenteId:
+              type: integer
+              example: 4
+            transaccionId:
+              type: integer
+              nullable: true
+              example: 120
+            fechaProgramada:
+              type: string
+              format: date
+              example: '2026-11-01'
+            monto:
+              type: number
+              format: double
+              example: 4500
+            estado:
+              type: string
+              example: EJECUTADO
         estado:
           type: string
           enum:

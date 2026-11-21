@@ -12,7 +12,7 @@ import {
   TextField,
 } from '@mui/material'
 import SelectorCategorias from '../../carteras/components/SelectorCategorias.jsx'
-import { crearPago } from '../api.js'
+import { crearPago, editarPago } from '../api.js'
 
 const FRECUENCIAS = [
   { valor: 'DIARIO', texto: 'Diario' },
@@ -55,15 +55,30 @@ function validar({ nombre, monto, frecuencia, fechaCorte }) {
   return errores
 }
 
-// Alta de pago recurrente (HU-07.1). Se monta limpio en cada apertura.
-function DialogoNuevoPago({ carteraId, onCerrar, onGuardado }) {
-  const [formulario, setFormulario] = useState({
-    nombre: '',
-    categoriaId: null,
-    monto: '',
-    frecuencia: 'MENSUAL',
-    fechaCorte: hoyISO(),
-  })
+function valoresIniciales(pago) {
+  if (!pago) {
+    return {
+      nombre: '',
+      categoriaId: null,
+      monto: '',
+      frecuencia: 'MENSUAL',
+      fechaCorte: hoyISO(),
+    }
+  }
+
+  return {
+    nombre: pago.nombre ?? '',
+    categoriaId: pago.categoriaId ?? null,
+    monto: pago.monto != null ? String(pago.monto) : '',
+    frecuencia: pago.frecuenciaValor ?? 'MENSUAL',
+    fechaCorte: pago.fechaInicio ?? hoyISO(),
+  }
+}
+
+// Alta/edicion de pago recurrente (HU-07.1 y HU-07.2).
+function DialogoNuevoPago({ carteraId, pago, onCerrar, onGuardado }) {
+  const esEdicion = Boolean(pago)
+  const [formulario, setFormulario] = useState(() => valoresIniciales(pago))
   const [errores, setErrores] = useState({})
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -85,7 +100,11 @@ function DialogoNuevoPago({ carteraId, onCerrar, onGuardado }) {
     setErrorEnvio('')
 
     try {
-      await crearPago({ carteraId, ...formulario })
+      if (esEdicion) {
+        await editarPago(pago.id, formulario)
+      } else {
+        await crearPago({ carteraId, ...formulario })
+      }
       onGuardado()
     } catch (err) {
       setErrorEnvio(err.message)
@@ -97,7 +116,9 @@ function DialogoNuevoPago({ carteraId, onCerrar, onGuardado }) {
   return (
     <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Nuevo pago recurrente</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {esEdicion ? 'Editar pago recurrente' : 'Nuevo pago recurrente'}
+        </DialogTitle>
 
         <DialogContent dividers>
           <Stack spacing={2}>
@@ -183,7 +204,11 @@ function DialogoNuevoPago({ carteraId, onCerrar, onGuardado }) {
             Cancelar
           </Button>
           <Button type="submit" variant="contained" disabled={enviando} sx={sxBoton}>
-            {enviando ? 'Guardando…' : 'Guardar pago'}
+            {enviando
+              ? 'Guardando…'
+              : esEdicion
+                ? 'Guardar cambios'
+                : 'Guardar pago'}
           </Button>
         </DialogActions>
       </Box>

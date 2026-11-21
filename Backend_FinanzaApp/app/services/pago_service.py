@@ -27,15 +27,29 @@ ESTADOS_PAGO = {"ACTIVO", "PAUSADO", "CANCELADO"}
 
 def calcular_proxima_ejecucion(fecha_inicio, frecuencia):
     """Devuelve la fecha del siguiente periodo segun la frecuencia."""
+    return _sumar_periodos(fecha_inicio, frecuencia, 1)
+
+
+def _sumar_periodos(fecha, frecuencia, periodos):
     if frecuencia == "DIARIO":
-        return fecha_inicio + timedelta(days=1)
+        return fecha + timedelta(days=periodos)
     if frecuencia == "SEMANAL":
-        return fecha_inicio + timedelta(days=7)
+        return fecha + timedelta(days=7 * periodos)
     if frecuencia == "MENSUAL":
-        return _sumar_meses(fecha_inicio, 1)
+        return _sumar_meses(fecha, periodos)
     if frecuencia == "ANUAL":
-        return _sumar_meses(fecha_inicio, 12)
+        return _sumar_meses(fecha, 12 * periodos)
     raise ValueError("La frecuencia no es valida.")
+
+
+def _proxima_segun_ejecuciones(pago):
+    """Primer periodo no pagado contando desde la fecha de inicio."""
+    total = db.session.execute(
+        db.select(func.count())
+        .select_from(PagoRecEjecucion)
+        .where(PagoRecEjecucion.pagoRecurrenteId == pago.idPagoRecurrente)
+    ).scalar_one()
+    return _sumar_periodos(pago.fechaInicio, pago.frecuencia, total)
 
 
 def _sumar_meses(fecha, meses):
@@ -76,9 +90,8 @@ def crear(datos):
         carteraId=cartera_id,
         usuarioId=current_user.idUsuario,
         estado="ACTIVO",
-        proximaEjecucion=calcular_proxima_ejecucion(
-            cambios["fechaInicio"], cambios["frecuencia"]
-        ),
+        # El primer vencimiento es la fecha de inicio, no el siguiente periodo.
+        proximaEjecucion=cambios["fechaInicio"],
         **cambios,
     )
     db.session.add(pago)
@@ -131,6 +144,9 @@ def listar(cartera_id=None, estado=None, pagina="1", por_pagina="20"):
 
     if estado:
         filtros.append(PagoRecurrente.estado == estado)
+    else:
+        # Por defecto no se muestran los pagos dados de baja.
+        filtros.append(PagoRecurrente.estado != "CANCELADO")
 
     try:
         total = db.session.execute(
@@ -160,6 +176,9 @@ def listar(cartera_id=None, estado=None, pagina="1", por_pagina="20"):
             .scalars()
             .all()
         )
+        ultimas = _ultimas_ejecuciones(
+            [pago.idPagoRecurrente for pago in filas]
+        )
     except SQLAlchemyError:
         db.session.rollback()
         return {
@@ -171,7 +190,10 @@ def listar(cartera_id=None, estado=None, pagina="1", por_pagina="20"):
     return {
         "ok": True,
         "data": {
-            "pagos": [_serializar(pago) for pago in filas],
+            "pagos": [
+                _serializar(pago, ultimas.get(pago.idPagoRecurrente))
+                for pago in filas
+            ],
             "paginacion": {
                 "pagina": pagina,
                 "porPagina": por_pagina,
@@ -204,15 +226,13 @@ def editar(id_pago, datos):
             "mensaje": "No se enviaron campos para actualizar.",
         }, 400
 
-    for campo, valor in cambios.items():
-        setattr(pago, campo, valor)
-
-    if "frecuencia" in cambios or "fechaInicio" in cambios:
-        pago.proximaEjecucion = calcular_proxima_ejecucion(
-            pago.fechaInicio, pago.frecuencia
-        )
-
     try:
+        for campo, valor in cambios.items():
+            setattr(pago, campo, valor)
+
+        if "frecuencia" in cambios or "fechaInicio" in cambios:
+            pago.proximaEjecucion = _proxima_segun_ejecuciones(pago)
+
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
@@ -476,7 +496,30 @@ def _pago_y_membresia(id_pago):
     return pago, membresia, None
 
 
-def _serializar(pago):
+def _ultimas_ejecuciones(ids):
+    if not ids:
+        return {}
+
+    filas = (
+        db.session.execute(
+            db.select(PagoRecEjecucion)
+            .where(PagoRecEjecucion.pagoRecurrenteId.in_(ids))
+            .order_by(
+                PagoRecEjecucion.fechaEjecucion.desc(),
+                PagoRecEjecucion.idEjecucion.desc(),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    ultimas = {}
+    for fila in filas:
+        ultimas.setdefault(fila.pagoRecurrenteId, fila)
+    return ultimas
+
+
+def _serializar(pago, ultima_ejecucion=None):
     return {
         "idPagoRecurrente": pago.idPagoRecurrente,
         "carteraId": pago.carteraId,
@@ -489,6 +532,11 @@ def _serializar(pago):
         "fechaFin": pago.fechaFin.isoformat() if pago.fechaFin else None,
         "proximaEjecucion": (
             pago.proximaEjecucion.isoformat() if pago.proximaEjecucion else None
+        ),
+        "ultimaEjecucion": (
+            _serializar_ejecucion(ultima_ejecucion)
+            if ultima_ejecucion is not None
+            else None
         ),
         "estado": pago.estado,
     }

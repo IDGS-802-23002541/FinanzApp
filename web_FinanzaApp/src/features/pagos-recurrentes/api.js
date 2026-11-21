@@ -22,9 +22,13 @@ function aVistaPago(pago) {
     categoriaId: pago.categoriaId,
     nombre: pago.nombre,
     monto: pago.monto ?? 0,
+    frecuenciaValor: pago.frecuencia,
     frecuencia: FRECUENCIA_TEXTO[pago.frecuencia] ?? pago.frecuencia,
-    fechaInicio: pago.fechaInicio ?? '',
-    proximaEjecucion: pago.proximaEjecucion ?? '',
+    fechaInicio: pago.fechaInicio ? String(pago.fechaInicio).slice(0, 10) : '',
+    proximaEjecucion: pago.proximaEjecucion
+      ? String(pago.proximaEjecucion).slice(0, 10)
+      : '',
+    ultimaEjecucion: pago.ultimaEjecucion ?? null,
     estado: ESTADO_TEXTO[pago.estado] ?? pago.estado,
   }
 }
@@ -59,4 +63,34 @@ export async function crearPago({
     categoriaId: categoriaId ? Number(categoriaId) : undefined,
   })
   return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Edicion: el backend solo actualiza los campos que recibe.
+export async function editarPago(
+  idPago,
+  { nombre, monto, frecuencia, fechaCorte, categoriaId },
+) {
+  const { data } = await api.put(`/pagos-recurrentes/${idPago}`, {
+    nombre: nombre.trim(),
+    monto: Number(monto),
+    frecuencia,
+    fechaInicio: fechaCorte,
+    categoriaId: categoriaId ? Number(categoriaId) : null,
+  })
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Baja logica: el backend cambia el estado a CANCELADO.
+export async function eliminarPago(idPago) {
+  const { data } = await api.delete(`/pagos-recurrentes/${idPago}`)
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Registra el periodo como pagado y crea el gasto correspondiente.
+export async function marcarPagoHecho(idPago, fechaProgramada) {
+  const { data } = await api.post(
+    `/pagos-recurrentes/${idPago}/hecho`,
+    fechaProgramada ? { fechaProgramada } : {},
+  )
+  return data
 }
