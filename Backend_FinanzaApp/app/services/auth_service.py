@@ -150,7 +150,7 @@ def solicitar_recuperacion(correo):
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
     codigo = None
-    if usuario is not None and usuario.estado == "ACTIVO":
+    if usuario is not None and usuario.estado in ("ACTIVO", "INACTIVO"):
         ahora = seguridad.ahora_utc()
         db.session.execute(
             db.update(TokenRecuperacion)
@@ -171,9 +171,14 @@ def solicitar_recuperacion(correo):
         )
         db.session.commit()
     if codigo:
-        email_service.enviar_codigo_recuperacion(
-            correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
-        )
+        if usuario.estado == "INACTIVO":
+            email_service.enviar_codigo_recuperacion_reactiva(
+                correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
+            )
+        else:
+            email_service.enviar_codigo_recuperacion(
+                correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
+            )
     datos_respuesta = {"codigo": codigo} if codigo and current_app.debug else None
     return {
         "ok": True,
@@ -212,7 +217,7 @@ def restablecer(correo, codigo, contrasenia):
     usuario = db.session.execute(
         db.select(Usuario).where(Usuario.correo == correo)
     ).scalar_one_or_none()
-    if usuario is None or usuario.estado != "ACTIVO":
+    if usuario is None or usuario.estado not in ("ACTIVO", "INACTIVO"):
         return {
             "ok": False,
             "mensaje": "El código no es válido o ya expiró.",
@@ -231,9 +236,15 @@ def restablecer(correo, codigo, contrasenia):
             "ok": False,
             "mensaje": "El código no es válido o ya expiró.",
         }, 400
+    # Olvido de contrasenia con cuenta desactivada: se resuelve en un solo paso.
+    reactivada = usuario.estado == "INACTIVO"
+    if reactivada:
+        usuario.estado = "ACTIVO"
     usuario.contrasenia = generate_password_hash(contrasenia)
     usuario.fechaActualizacion = ahora
     token.fechaUso = ahora
+    if reactivada:
+        _restaurar_carteras(usuario.idUsuario)
     db.session.execute(
         db.update(SesionUsuario)
         .where(
@@ -243,6 +254,12 @@ def restablecer(correo, codigo, contrasenia):
         .values(fechaRevocacion=ahora)
     )
     db.session.commit()
+    if reactivada:
+        return {
+            "ok": True,
+            "data": None,
+            "mensaje": "Cuenta reactivada y contraseña actualizada correctamente.",
+        }, 200
     return {
         "ok": True,
         "data": None,
