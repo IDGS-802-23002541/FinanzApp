@@ -19,6 +19,8 @@ from app.models import (
 from app.utils import seguridad, validacion
 from app.utils.serializers import serializar_usuario
 
+from app.services import email_service
+
 MENSAJE_CREDENCIALES = "Credenciales incorrectas."
 MENSAJE_RECUPERACION = (
     "Si el correo esta registrado, recibiras un codigo de recuperacion"
@@ -152,6 +154,10 @@ def solicitar_recuperacion(correo):
             )
         )
         db.session.commit()
+    if codigo:
+        email_service.enviar_codigo_recuperacion(
+            correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
+        )
     datos_respuesta = {"codigo": codigo} if codigo and current_app.debug else None
     return {
         "ok": True,

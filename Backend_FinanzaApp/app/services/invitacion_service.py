@@ -6,12 +6,18 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
 from app.models import Cartera, Invitacion, MiembroCartera, Usuario
+from app.services import email_service
+from app.utils import validacion
 
 ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 DIAS_VIGENCIA = 7
 
 
-def generar(id_cartera):
+def generar(id_cartera, correo=None):
+    correo = (correo or "").strip().lower()
+    if correo and not validacion.correo_valido(correo):
+        return {"ok": False, "mensaje": "El correo no tiene un formato válido."}, 400
+
     try:
         fila = db.session.execute(
             db.select(MiembroCartera, Cartera)
@@ -80,6 +86,9 @@ def generar(id_cartera):
             "ok": False,
             "mensaje": "No se pudo generar la invitación.",
         }, 503
+
+    if correo:
+        email_service.enviar_invitacion(correo, cartera.nombre, codigo)
 
     return {
         "ok": True,
