@@ -2577,8 +2577,8 @@ paths:
       summary: Listar reportes de ayuda
       description: >-
         Un cliente ve sus propios tickets y un usuario con rol ADMIN o
-        TRABAJADOR ve todos. Los filtros de estado, categoría, responsable y
-        fecha son combinables, y el listado se pagina.
+        TRABAJADOR ve todos. Los filtros de estado, categoría, prioridad,
+        responsable y fecha son combinables, y el listado se pagina.
       operationId: listarTickets
       security:
         - bearerAuth: []
@@ -2604,6 +2604,15 @@ paths:
               - PAGOS
               - ERROR
               - OTRO
+        - in: query
+          name: prioridad
+          schema:
+            type: string
+            enum:
+              - BAJA
+              - MEDIA
+              - ALTA
+              - URGENTE
         - in: query
           name: responsable
           description: idUsuario del trabajador asignado actualmente
@@ -4513,6 +4522,14 @@ components:
             - ESPERA
             - RESUELTO
             - CERRADO
+        cliente:
+          type: string
+          nullable: true
+          example: Ana López
+        asignado:
+          type: string
+          nullable: true
+          example: Diego Borja
         fechaCreacion:
           type: string
           format: date-time

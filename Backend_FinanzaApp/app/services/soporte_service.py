@@ -36,7 +36,11 @@ def crear_ticket(datos):
 
     return {
         "ok": True,
-        "data": {"ticket": _serializar_ticket(ticket, [], None, {})},
+        "data": {
+            "ticket": _serializar_ticket(
+                ticket, [], None, {current_user.idUsuario: current_user}
+            )
+        },
         "mensaje": "Ticket creado correctamente.",
     }, 201
 
@@ -44,6 +48,7 @@ def crear_ticket(datos):
 def listar_tickets(
     estado=None,
     categoria=None,
+    prioridad=None,
     responsable=None,
     desde=None,
     hasta=None,
@@ -57,6 +62,10 @@ def listar_tickets(
     categoria = (categoria or "").strip().upper()
     if categoria and categoria not in CATEGORIAS:
         return {"ok": False, "mensaje": "El filtro categoria no es válido."}, 400
+
+    prioridad = (prioridad or "").strip().upper()
+    if prioridad and prioridad not in PRIORIDADES:
+        return {"ok": False, "mensaje": "El filtro prioridad no es válido."}, 400
 
     if responsable in (None, ""):
         responsable = None
@@ -91,7 +100,7 @@ def listar_tickets(
     filtros.append(Ticket.estado != "ELIMINADO")
     if estado:
         filtros.append(Ticket.estado == estado)
-    filtros.extend(_filtros_tickets(categoria, responsable, desde, hasta))
+    filtros.extend(_filtros_tickets(categoria, prioridad, responsable, desde, hasta))
 
     try:
         total = db.session.execute(
@@ -108,7 +117,7 @@ def listar_tickets(
             .scalars()
             .all()
         )
-        respuestas, asignaciones, autores = _relaciones(tickets)
+        respuestas, asignaciones, usuarios = _relaciones(tickets)
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudieron obtener los tickets."}, 503
@@ -121,7 +130,7 @@ def listar_tickets(
                     ticket,
                     respuestas.get(ticket.idTicket, []),
                     asignaciones.get(ticket.idTicket),
-                    autores,
+                    usuarios,
                 )
                 for ticket in tickets
             ],
@@ -162,7 +171,7 @@ def editar_ticket(id_ticket, datos):
             setattr(ticket, campo, valor)
         ticket.fechaActualizacion = seguridad.ahora_utc()
         db.session.commit()
-        respuestas, asignaciones, autores = _relaciones([ticket])
+        respuestas, asignaciones, usuarios = _relaciones([ticket])
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo actualizar el ticket."}, 503
@@ -174,7 +183,7 @@ def editar_ticket(id_ticket, datos):
                 ticket,
                 respuestas.get(ticket.idTicket, []),
                 asignaciones.get(ticket.idTicket),
-                autores,
+                usuarios,
             )
         },
         "mensaje": "Ticket actualizado correctamente.",
@@ -357,7 +366,7 @@ def cerrar_ticket(id_ticket, datos):
 
         _cerrar_ticket(ticket, ahora)
         db.session.commit()
-        respuestas, asignaciones, autores = _relaciones([ticket])
+        respuestas, asignaciones, usuarios = _relaciones([ticket])
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo cerrar el ticket."}, 503
@@ -369,7 +378,7 @@ def cerrar_ticket(id_ticket, datos):
                 ticket,
                 respuestas.get(ticket.idTicket, []),
                 asignaciones.get(ticket.idTicket),
-                autores,
+                usuarios,
             )
         },
         "mensaje": "Ticket cerrado correctamente.",
@@ -464,10 +473,12 @@ def _filtros_visibilidad(usuario):
     return [Ticket.usuarioId == usuario.idUsuario]
 
 
-def _filtros_tickets(categoria, responsable, desde, hasta):
+def _filtros_tickets(categoria, prioridad, responsable, desde, hasta):
     filtros = []
     if categoria:
         filtros.append(Ticket.categoria == categoria)
+    if prioridad:
+        filtros.append(Ticket.prioridad == prioridad)
     if responsable:
         filtros.append(
             Ticket.idTicket.in_(
@@ -523,22 +534,23 @@ def _relaciones(tickets):
         .all()
     )
 
-    usuario_ids = {respuesta.usuarioId for respuesta in respuestas}
-    autores = {}
-    if usuario_ids:
-        autores = {
-            usuario.idUsuario: usuario
-            for usuario in db.session.execute(
-                db.select(Usuario).where(Usuario.idUsuario.in_(usuario_ids))
-            )
-            .scalars()
-            .all()
-        }
+    # Incluye al cliente del ticket, al asignado actual y a los autores del hilo.
+    usuario_ids = {ticket.usuarioId for ticket in tickets}
+    usuario_ids.update(respuesta.usuarioId for respuesta in respuestas)
+    usuario_ids.update(asignacion.trabajadorId for asignacion in asignaciones)
+    usuarios = {
+        usuario.idUsuario: usuario
+        for usuario in db.session.execute(
+            db.select(Usuario).where(Usuario.idUsuario.in_(usuario_ids))
+        )
+        .scalars()
+        .all()
+    }
 
     por_ticket = {}
     for respuesta in respuestas:
         por_ticket.setdefault(respuesta.ticketId, []).append(respuesta)
-    return por_ticket, {a.ticketId: a for a in asignaciones}, autores
+    return por_ticket, {a.ticketId: a for a in asignaciones}, usuarios
 
 
 def _aplicar_asignacion(ticket, asignacion_anterior, momento):
@@ -553,8 +565,12 @@ def _cerrar_ticket(ticket, momento):
     ticket.fechaCierre = momento
 
 
-def _serializar_ticket(ticket, respuestas, asignacion, autores=None):
-    autores = autores or {}
+def _serializar_ticket(ticket, respuestas, asignacion, usuarios=None):
+    usuarios = usuarios or {}
+    cliente = usuarios.get(ticket.usuarioId)
+    asignado = (
+        usuarios.get(asignacion.trabajadorId) if asignacion is not None else None
+    )
     return {
         "idTicket": ticket.idTicket,
         "asunto": ticket.asunto,
@@ -562,10 +578,12 @@ def _serializar_ticket(ticket, respuestas, asignacion, autores=None):
         "categoria": ticket.categoria,
         "prioridad": ticket.prioridad,
         "estado": ticket.estado,
+        "cliente": _nombre_usuario(cliente),
+        "asignado": _nombre_usuario(asignado),
         "fechaCreacion": _fecha(ticket.fechaCreacion),
         "fechaCierre": _fecha(ticket.fechaCierre),
         "respuestas": [
-            _serializar_respuesta(respuesta, autores.get(respuesta.usuarioId))
+            _serializar_respuesta(respuesta, usuarios.get(respuesta.usuarioId))
             for respuesta in respuestas
         ],
         "asignacionActual": _serializar_asignacion(asignacion),
@@ -598,6 +616,12 @@ def _serializar_asignacion(asignacion):
         "fechaInicio": _fecha(asignacion.fechaInicio),
         "observaciones": asignacion.observaciones,
     }
+
+
+def _nombre_usuario(usuario):
+    if usuario is None:
+        return None
+    return f"{usuario.nombreUsuario} {usuario.apaterno or ''}".strip()
 
 
 def _texto(valor):
