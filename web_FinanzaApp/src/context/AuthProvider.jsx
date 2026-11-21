@@ -53,8 +53,19 @@ export function AuthProvider({ children }) {
     setUsuario(null)
   }
 
+  // Refleja en la sesión los datos que el backend ya persistió (p. ej. perfil).
+  const actualizarUsuario = (datos) => {
+    setUsuario((actual) => {
+      const nuevo = { ...actual, ...datos }
+      localStorage.setItem('usuario', JSON.stringify(nuevo))
+      return nuevo
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion }}>
+    <AuthContext.Provider
+      value={{ usuario, iniciarSesion, cerrarSesion, actualizarUsuario }}
+    >
       {children}
     </AuthContext.Provider>
   )

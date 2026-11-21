@@ -4,7 +4,9 @@ import Tarjeta from './Tarjeta.jsx'
 import Dato from './Dato.jsx'
 import { AvatarUsuario, IconoCheck } from '../../../components/ui/Iconos.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
+import { editarCuenta } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
+import { CORREO_VALIDO } from '../../../utils/constantes.js'
 
 const sxCampo = { gridColumn: '1 / -1' }
 const sxBoton = {
@@ -14,34 +16,86 @@ const sxBoton = {
   fontSize: '0.875rem',
 }
 
-// Tarjeta "Perfil" (mockup): los datos de la cuenta viven aquí, incluida la
-// fecha de registro en solo lectura. La edición es la HU-08.1.
-function FormularioPerfil() {
-  const { usuario } = useAuth()
-
-  const formularioInicial = {
+function datosDeUsuario(usuario) {
+  return {
     nombreUsuario: usuario?.nombreUsuario ?? '',
     apaterno: usuario?.apaterno ?? '',
     amaterno: usuario?.amaterno ?? '',
-    telefono: '',
     correo: usuario?.correo ?? '',
   }
+}
 
+function validar({ nombreUsuario, apaterno, amaterno, correo }) {
+  const errores = {}
+
+  if (!nombreUsuario.trim()) {
+    errores.nombreUsuario = 'Ingresa tu nombre.'
+  } else if (nombreUsuario.trim().length > 80) {
+    errores.nombreUsuario = 'El nombre no puede exceder los 80 caracteres.'
+  }
+
+  if (apaterno.trim().length > 80) {
+    errores.apaterno = 'El apellido no puede exceder los 80 caracteres.'
+  }
+
+  if (amaterno.trim().length > 80) {
+    errores.amaterno = 'El apellido no puede exceder los 80 caracteres.'
+  }
+
+  if (!correo.trim()) {
+    errores.correo = 'Ingresa tu correo electrónico.'
+  } else if (correo.trim().length > 254) {
+    errores.correo = 'El correo no puede exceder los 254 caracteres.'
+  } else if (!CORREO_VALIDO.test(correo.trim())) {
+    errores.correo = 'Ingresa un correo válido.'
+  }
+
+  return errores
+}
+
+// Tarjeta "Perfil": edita nombre, apellidos y correo (HU-08.1). La fecha de
+// registro se muestra en solo lectura.
+function FormularioPerfil() {
+  const { usuario, actualizarUsuario } = useAuth()
+
+  const formularioInicial = datosDeUsuario(usuario)
   const [formulario, setFormulario] = useState(formularioInicial)
-  const [aviso, setAviso] = useState('')
+  const [errores, setErrores] = useState({})
+  const [aviso, setAviso] = useState(null)
+  const [guardando, setGuardando] = useState(false)
 
   const hayCambios =
     JSON.stringify(formulario) !== JSON.stringify(formularioInicial)
 
   const actualizar = (campo) => (evento) => {
-    setAviso('')
+    setAviso(null)
+    setErrores((actual) => ({ ...actual, [campo]: undefined }))
     setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
   }
 
-  const guardar = (evento) => {
+  const guardar = async (evento) => {
     evento.preventDefault()
-    if (!hayCambios) return
-    setAviso('Pendiente del backend: aún no existe el endpoint para editar el perfil (HU-08.1).')
+    if (!hayCambios || guardando) return
+
+    const nuevosErrores = validar(formulario)
+    setErrores(nuevosErrores)
+    if (Object.keys(nuevosErrores).length > 0) return
+
+    setGuardando(true)
+    setAviso(null)
+    try {
+      const datos = await editarCuenta(formulario)
+      actualizarUsuario(datos)
+      setFormulario(datosDeUsuario(datos))
+      setAviso({
+        tipo: 'success',
+        texto: 'Tus datos se actualizaron correctamente.',
+      })
+    } catch (err) {
+      setAviso({ tipo: 'error', texto: err.message })
+    } finally {
+      setGuardando(false)
+    }
   }
 
   const iniciales = [usuario?.nombreUsuario, usuario?.apaterno]
@@ -76,6 +130,9 @@ function FormularioPerfil() {
             autoComplete="given-name"
             value={formulario.nombreUsuario}
             onChange={actualizar('nombreUsuario')}
+            error={Boolean(errores.nombreUsuario)}
+            helperText={errores.nombreUsuario}
+            slotProps={{ htmlInput: { maxLength: 80 } }}
           />
           <TextField
             size="small"
@@ -83,18 +140,18 @@ function FormularioPerfil() {
             autoComplete="family-name"
             value={formulario.apaterno}
             onChange={actualizar('apaterno')}
+            error={Boolean(errores.apaterno)}
+            helperText={errores.apaterno}
+            slotProps={{ htmlInput: { maxLength: 80 } }}
           />
           <TextField
             size="small"
             label="Apellido materno"
             value={formulario.amaterno}
             onChange={actualizar('amaterno')}
-          />
-          <TextField
-            size="small"
-            label="Teléfono"
-            value={formulario.telefono}
-            onChange={actualizar('telefono')}
+            error={Boolean(errores.amaterno)}
+            helperText={errores.amaterno}
+            slotProps={{ htmlInput: { maxLength: 80 } }}
           />
           <TextField
             size="small"
@@ -103,6 +160,9 @@ function FormularioPerfil() {
             autoComplete="email"
             value={formulario.correo}
             onChange={actualizar('correo')}
+            error={Boolean(errores.correo)}
+            helperText={errores.correo}
+            slotProps={{ htmlInput: { maxLength: 254 } }}
             sx={sxCampo}
           />
         </Box>
@@ -115,8 +175,8 @@ function FormularioPerfil() {
         </Box>
 
         {aviso && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            {aviso}
+          <Alert severity={aviso.tipo} sx={{ mt: 2 }}>
+            {aviso.texto}
           </Alert>
         )}
 
@@ -124,10 +184,10 @@ function FormularioPerfil() {
           type="submit"
           variant="contained"
           startIcon={<IconoCheck />}
-          disabled={!hayCambios}
+          disabled={!hayCambios || guardando}
           sx={{ mt: 2, ...sxBoton }}
         >
-          Guardar cambios
+          {guardando ? 'Guardando…' : 'Guardar cambios'}
         </Button>
       </Box>
     </Tarjeta>
