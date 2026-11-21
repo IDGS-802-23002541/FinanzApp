@@ -53,6 +53,22 @@ def test_solo_admin_crea_trabajadores(monkeypatch):
     assert payload["ok"] is False
 
 
+def test_cliente_no_consulta_metricas(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    payload, status = admin_service.metricas()
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_trabajador_no_crea_trabajadores(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    payload, status = admin_service.crear_trabajador(
+        {"nombreUsuario": "Ana", "apaterno": "Ruiz", "correo": "a@b.mx"}
+    )
+    assert status == 403
+    assert payload["ok"] is False
+
+
 def test_resumen_tickets_mapea_estados():
     resumen = admin_service._resumen_tickets(
         {"ABIERTO": 2, "EN_PROCESO": 1, "CERRADO": 3, "ELIMINADO": 9}

@@ -92,7 +92,7 @@ function ReactivarCuenta() {
     try {
       await solicitarCodigoReactivacion(correo.trim())
       setPaso(2)
-    } catch (fallo) {
+    } catch {
       setError('No pudimos enviar el código. Intenta de nuevo.')
     } finally {
       setEnviando(false)
