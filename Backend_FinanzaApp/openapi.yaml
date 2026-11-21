@@ -1867,9 +1867,27 @@ paths:
       operationId: listarComentarios
       security:
         - bearerAuth: []
+      parameters:
+        - in: query
+          name: pagina
+          required: false
+          description: Número de página (desde 1).
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: porPagina
+          required: false
+          description: Comentarios por página (1 a 100).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         '200':
-          description: Buzón de comentarios
+          description: Buzón de comentarios paginado
           content:
             application/json:
               schema:
@@ -1882,9 +1900,30 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Comentario'
+                  paginacion:
+                    type: object
+                    properties:
+                      pagina:
+                        type: integer
+                        example: 1
+                      porPagina:
+                        type: integer
+                        example: 20
+                      total:
+                        type: integer
+                        example: 24
+                      totalPaginas:
+                        type: integer
+                        example: 2
                   mensaje:
                     type: string
                     example: Comentarios obtenidos correctamente.
+        '400':
+          description: Parámetros de paginación inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Token no proporcionado o inválido
           content:
@@ -1899,6 +1938,63 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: No se pudieron obtener los comentarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /comentarios/{idComentario}/archivar:
+    post:
+      tags:
+        - Comentarios
+      summary: Archivar un comentario del buzón
+      description: >-
+        Cambia el estado del comentario a ARCHIVADO sin borrar el registro.
+        Solo para staff (ADMIN o TRABAJADOR).
+      operationId: archivarComentario
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idComentario
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comentario archivado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Comentario'
+                  mensaje:
+                    type: string
+                    example: Comentario archivado correctamente.
+        '401':
+          description: Token no proporcionado o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: El usuario no es ADMIN ni TRABAJADOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Comentario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: No se pudo archivar el comentario
           content:
             application/json:
               schema:
@@ -2200,108 +2296,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: No se pudo generar el reporte
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /comentarios:
-    post:
-      tags:
-        - Comentarios
-      summary: Enviar un comentario desde la landing
-      description: >-
-        Endpoint público (sin sesión). Valida nombre, correo y mensaje, y aplica
-        un límite anti-spam de 3 comentarios por IP cada 10 minutos.
-      operationId: crearComentario
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ComentarioRequest'
-            example:
-              nombre: Aideé Casillas
-              correo: aidee@ejemplo.com
-              comentario: Me gustó la app, ¿tienen versión de escritorio?
-      responses:
-        '201':
-          description: Comentario registrado con estado PENDIENTE
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Comentario'
-                  mensaje:
-                    type: string
-                    example: Comentario creado correctamente.
-        '400':
-          description: >-
-            Datos inválidos: campos faltantes o vacíos, longitudes excedidas
-            (nombre 120, correo 254, comentario 2000) o correo mal formado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: Límite de comentarios por IP excedido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: No se pudo guardar el comentario
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    get:
-      tags:
-        - Comentarios
-      summary: Ver el buzón de comentarios de la landing
-      description: >-
-        Devuelve todos los comentarios enviados desde la landing, del más
-        reciente al más antiguo. Solo para staff (ADMIN o TRABAJADOR). No
-        expone la IP de origen.
-      operationId: listarComentarios
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Buzón de comentarios
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Comentario'
-                  mensaje:
-                    type: string
-                    example: Comentarios obtenidos correctamente.
-        '401':
-          description: Token no proporcionado o inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: El usuario no es ADMIN ni TRABAJADOR
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: No se pudieron obtener los comentarios
           content:
             application/json:
               schema:
@@ -4175,8 +4169,8 @@ components:
           type: string
           enum:
             - PENDIENTE
-            - PUBLICADO
-            - OCULTO
+            - ATENDIDO
+            - ARCHIVADO
           example: PENDIENTE
         fechaCreacion:
           type: string
