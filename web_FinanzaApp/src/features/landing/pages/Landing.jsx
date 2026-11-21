@@ -157,11 +157,11 @@ function Tarjeta({ children }) {
         backgroundColor: 'var(--color-superficie)',
         border: '1px solid var(--color-borde)',
         borderRadius: '20px',
-        boxShadow: '0 8px 24px rgba(23, 59, 69, 0.06)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.06)',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
         '&:hover': {
           transform: 'translateY(-6px)',
-          boxShadow: '0 18px 38px rgba(23, 59, 69, 0.16)',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.06), 0 18px 38px rgba(0, 0, 0, 0.12)',
         },
       }}
     >
@@ -290,7 +290,7 @@ function SimulacionCartera() {
               </Typography>
               <Typography
                 variant="caption"
-                sx={{ color: 'var(--color-texto-terciario)' }}
+                sx={{ color: 'var(--color-texto-secundario)' }}
               >
                 {movimiento.fecha}
               </Typography>
@@ -418,7 +418,7 @@ function MockTelefono() {
         border: '6px solid var(--color-primario)',
         backgroundColor: 'var(--color-superficie)',
         p: 1.5,
-        boxShadow: '0 12px 28px rgba(23, 59, 69, 0.14)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06), 0 12px 28px rgba(0, 0, 0, 0.1)',
         animation: 'flotarSuave 6s ease-in-out infinite',
       }}
     >
@@ -603,21 +603,15 @@ function Landing() {
         minHeight: '100vh',
         backgroundColor: 'var(--color-fondo)',
         color: 'var(--color-texto)',
-        backgroundImage: [
-          'radial-gradient(circle at 10% 6%, color-mix(in srgb, var(--color-acento) 34%, transparent), transparent 42%)',
-          'radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--color-primario) 24%, transparent), transparent 46%)',
-          'radial-gradient(circle at 48% 94%, color-mix(in srgb, var(--color-secundario) 26%, transparent), transparent 50%)',
-          'linear-gradient(color-mix(in srgb, var(--color-borde) 60%, transparent) 1px, transparent 1px)',
-          'linear-gradient(90deg, color-mix(in srgb, var(--color-borde) 60%, transparent) 1px, transparent 1px)',
-        ].join(', '),
-        backgroundSize: 'auto, auto, auto, 48px 48px, 48px 48px',
+        backgroundImage:
+          'radial-gradient(1100px 520px at 50% 0%, color-mix(in srgb, var(--color-acento) 16%, transparent), transparent 70%)',
         '&::after': {
           content: '""',
           position: 'absolute',
           inset: 0,
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")",
-          opacity: 0.07,
+          opacity: 0.04,
           pointerEvents: 'none',
           zIndex: 0,
         },
@@ -709,7 +703,18 @@ function Landing() {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={{ xs: 1, sm: 2 }} sx={{ alignItems: 'center' }}>
+            <Stack
+              direction="row"
+              spacing={{ xs: 1, sm: 2 }}
+              sx={{
+                alignItems: 'center',
+                '& .MuiButton-root': {
+                  minHeight: { xs: 38, sm: 50 },
+                  px: { xs: 1.5, sm: 2.5 },
+                  fontSize: { xs: '0.8rem', sm: '0.9375rem' },
+                },
+              }}
+            >
               <Link
                 href="#producto"
                 underline="none"
@@ -736,7 +741,12 @@ function Landing() {
                 component={RouterLink}
                 to="/login"
                 underline="none"
-                sx={{ color: 'inherit', fontWeight: 700 }}
+                sx={{
+                  display: { xs: 'none', sm: 'inline' },
+                  color: 'inherit',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                }}
               >
                 Iniciar sesión
               </Link>
@@ -788,7 +798,7 @@ function Landing() {
                   component="span"
                   sx={{
                     background:
-                      'linear-gradient(90deg, var(--color-acento), var(--color-secundario))',
+                      'linear-gradient(90deg, var(--color-acento), var(--paleta-fondo))',
                     WebkitBackgroundClip: 'text',
                     backgroundClip: 'text',
                     color: 'transparent',
@@ -842,18 +852,17 @@ function Landing() {
                   </Button>
                 ) : (
                   <Tooltip title="La descarga estará disponible pronto.">
-                    <span>
-                      <Button
-                        variant="outlined"
-                        disabled
-                        sx={{
-                          color: 'var(--paleta-blanco)',
-                          borderColor: 'rgba(255, 255, 255, 0.35)',
-                        }}
-                      >
-                        Descargar app
-                      </Button>
-                    </span>
+                    <Chip
+                      label="App Android: próximamente"
+                      sx={{
+                        alignSelf: { xs: 'stretch', sm: 'center' },
+                        height: 44,
+                        color: 'var(--paleta-blanco)',
+                        border: '1px dashed rgba(255, 255, 255, 0.45)',
+                        backgroundColor: 'transparent',
+                        fontWeight: 600,
+                      }}
+                    />
                   </Tooltip>
                 )}
               </Stack>
@@ -911,7 +920,7 @@ function Landing() {
                   borderRadius: '999px',
                   backgroundColor: 'var(--color-superficie)',
                   color: 'var(--color-texto)',
-                  boxShadow: '0 12px 26px rgba(23, 59, 69, 0.24)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1), 0 12px 26px rgba(0, 0, 0, 0.18)',
                   animation: 'flotar 5.5s ease-in-out infinite',
                   zIndex: 2,
                 }}
@@ -948,7 +957,7 @@ function Landing() {
                   borderRadius: '999px',
                   backgroundColor: 'var(--color-acento)',
                   color: 'var(--paleta-petroleo)',
-                  boxShadow: '0 12px 26px rgba(23, 59, 69, 0.24)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1), 0 12px 26px rgba(0, 0, 0, 0.18)',
                   animation: 'flotar 7s ease-in-out infinite',
                   animationDelay: '1.2s',
                   zIndex: 2,
@@ -1012,7 +1021,7 @@ function Landing() {
                 borderRadius: '20px',
                 border: '1px solid var(--color-borde)',
                 background: `linear-gradient(150deg, ${fondo} 0%, var(--color-superficie) 78%)`,
-                boxShadow: '0 8px 24px rgba(23, 59, 69, 0.08)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.07)',
                 transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                 '&::before': {
                   content: '""',
@@ -1025,7 +1034,7 @@ function Landing() {
                 },
                 '&:hover': {
                   transform: 'translateY(-8px)',
-                  boxShadow: '0 20px 40px rgba(23, 59, 69, 0.2)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06), 0 20px 40px rgba(0, 0, 0, 0.14)',
                 },
               }}
             >
@@ -1040,7 +1049,7 @@ function Landing() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 18px rgba(198, 93, 69, 0.32)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12), 0 8px 18px rgba(0, 0, 0, 0.16)',
                 }}
               >
                 <Icono sx={{ fontSize: 26 }} />
@@ -1170,6 +1179,7 @@ function Landing() {
             mt: { xs: 8, md: 10 },
             p: { xs: 3, md: 4 },
             borderRadius: '24px',
+            border: '1px solid var(--color-borde)',
             background: 'var(--gradiente-marca)',
             color: 'var(--paleta-blanco)',
             display: 'grid',
@@ -1206,22 +1216,19 @@ function Landing() {
           sx={{
             mt: { xs: 8, md: 12 },
             p: { xs: 3, md: 4.5 },
-            borderRadius: '24px',
-            background: 'var(--gradiente-marca)',
-            color: 'var(--paleta-blanco)',
+            borderRadius: '28px',
+            border: '1px solid var(--color-borde)',
+            background:
+              'linear-gradient(160deg, var(--color-superficie) 0%, var(--color-superficie-suave) 100%)',
           }}
         >
           <Typography
             component="h2"
-            sx={{
-              fontSize: { xs: '1.6rem', md: '2.15rem' },
-              fontWeight: 800,
-              color: 'var(--paleta-blanco)',
-            }}
+            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
           >
             Así de fácil es empezar
           </Typography>
-          <Typography sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.8)' }}>
+          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
             Tres pasos y tu cartera queda lista.
           </Typography>
 
@@ -1343,9 +1350,9 @@ function Landing() {
             mt: { xs: 8, md: 12 },
             p: { xs: 3, md: 4 },
             borderRadius: '28px',
+            border: '1px solid var(--color-borde)',
             background:
-              'linear-gradient(140deg, var(--color-secundario) 0%, var(--color-primario) 100%)',
-            color: 'var(--paleta-blanco)',
+              'linear-gradient(160deg, var(--color-superficie) 0%, var(--color-superficie-suave) 100%)',
           }}
         >
           <Box
@@ -1358,21 +1365,17 @@ function Landing() {
               height: 260,
               borderRadius: '50%',
               backgroundColor: 'var(--color-acento)',
-              opacity: 0.22,
+              opacity: 0.18,
               pointerEvents: 'none',
             }}
           />
           <Typography
             component="h2"
-            sx={{
-              fontSize: { xs: '1.6rem', md: '2.15rem' },
-              fontWeight: 800,
-              color: 'var(--paleta-blanco)',
-            }}
+            sx={{ fontSize: { xs: '1.6rem', md: '2.15rem' }, fontWeight: 800 }}
           >
             Una cartera para cada plan
           </Typography>
-          <Typography sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.82)' }}>
+          <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
             Elige el tipo de cartera según lo que quieras organizar.
           </Typography>
 
@@ -1408,7 +1411,7 @@ function Landing() {
                       <Typography
                         key={ejemplo}
                         variant="body2"
-                        sx={{ color: 'var(--color-texto-terciario)' }}
+                        sx={{ color: 'var(--color-texto-secundario)' }}
                       >
                         · {ejemplo}
                       </Typography>
@@ -1442,6 +1445,9 @@ function Landing() {
                     borderRadius: '14px !important',
                     backgroundColor: 'var(--color-superficie)',
                     '&::before': { display: 'none' },
+                    '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+                      transform: 'rotate(135deg)',
+                    },
                   }}
                 >
                   <AccordionSummary
@@ -1523,9 +1529,8 @@ function Landing() {
           sx={{
             mt: { xs: 8, md: 10 },
             p: { xs: 3, md: 5 },
-            borderRadius: '24px',
-            background:
-              'linear-gradient(120deg, var(--color-secundario) 0%, var(--color-primario) 100%)',
+            borderRadius: '28px',
+            background: 'var(--gradiente-marca)',
             color: 'var(--paleta-blanco)',
             display: 'flex',
             justifyContent: 'space-between',
@@ -1594,7 +1599,7 @@ function Landing() {
               FinanzApp
             </Typography>
           </Stack>
-          <Typography variant="body2" sx={{ color: 'var(--color-texto-terciario)' }}>
+          <Typography variant="body2" sx={{ color: 'var(--color-texto-secundario)' }}>
             Hecho para que las cuentas no se vuelvan un problema.
           </Typography>
         </Box>
