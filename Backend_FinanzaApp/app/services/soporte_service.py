@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.extensions import db
 from app.models import AsignacionTicket, RespuestaTicket, Ticket, Usuario
 from app.services import notificacion_service
+from app.services import email_service
 from app.services.comentario_service import ROLES_BUZON
 from app.utils import seguridad, validacion
 from app.utils.serializers import iniciales
@@ -33,6 +34,10 @@ def crear_ticket(datos):
     except SQLAlchemyError:
         db.session.rollback()
         return {"ok": False, "mensaje": "No se pudo crear el ticket."}, 503
+
+    email_service.enviar_confirmacion_ticket(
+        current_user.correo, ticket.asunto, ticket.idTicket
+    )
 
     return {
         "ok": True,

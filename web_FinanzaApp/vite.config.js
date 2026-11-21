@@ -20,6 +20,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
+      '/comentarios': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
       '/transacciones': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
@@ -29,10 +33,6 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/soporte': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/comentarios': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },

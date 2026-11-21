@@ -6,6 +6,7 @@ import Landing from '../features/landing/pages/Landing.jsx'
 import Login from '../features/auth/pages/Login.jsx'
 import Registro from '../features/auth/pages/Registro.jsx'
 import RecuperarContrasena from '../features/auth/pages/RecuperarContrasena.jsx'
+import ReactivarCuenta from '../features/auth/pages/ReactivarCuenta.jsx'
 import ListaCarteras from '../features/carteras/pages/Lista.jsx'
 import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: '/login', element: <Login /> },
       { path: '/registro', element: <Registro /> },
       { path: '/recuperar', element: <RecuperarContrasena /> },
+      { path: '/reactivar', element: <ReactivarCuenta /> },
     ],
   },
   {
