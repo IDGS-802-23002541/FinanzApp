@@ -59,6 +59,27 @@ def restablecer():
     return jsonify(payload), status
 
 
+@auth_bp.post("/reactivar")
+def reactivar():
+    datos = _cuerpo()
+    if datos is None:
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = auth_service.solicitar_reactivacion(datos.get("correo"))
+    return jsonify(payload), status
+
+
+@auth_bp.post("/reactivar/confirmar")
+def confirmar_reactivacion():
+    datos = _cuerpo()
+    if datos is None:
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = auth_service.confirmar_reactivacion(
+        datos.get("correo"),
+        datos.get("codigo"),
+    )
+    return jsonify(payload), status
+
+
 @auth_bp.post("/cambiar")
 @jwt_required()
 def cambiar_contrasenia():

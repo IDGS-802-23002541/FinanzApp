@@ -290,6 +290,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /auth/reactivar:
+    post:
+      tags:
+        - Auth
+      summary: Solicitar código de reactivación
+      description: Genera un código de 6 dígitos con vigencia de 30 minutos para reactivar una cuenta desactivada. Siempre responde con un mensaje neutro para no revelar si el correo existe.
+      operationId: solicitarReactivacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecuperarRequest'
+            example:
+              correo: prueba1@dominio.com
+      responses:
+        '200':
+          description: Solicitud procesada (mensaje neutro)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecuperacionSolicitada'
+              example:
+                ok: true
+                data: null
+                mensaje: Si la cuenta esta desactivada, recibiras un codigo para reactivarla
+        '400':
+          description: Cuerpo inválido o correo con formato incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/reactivar/confirmar:
+    post:
+      tags:
+        - Auth
+      summary: Confirmar reactivación con código
+      description: Valida el código vigente y de un solo uso, reactiva la cuenta y recupera las carteras que se archivaron al desactivarla.
+      operationId: confirmarReactivacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+            example:
+              correo: prueba1@dominio.com
+              codigo: '123456'
+      responses:
+        '200':
+          description: Cuenta reactivada
+          content:
+            application/json:
+              example:
+                ok: true
+                data: null
+                mensaje: Cuenta reactivada correctamente.
+        '400':
+          description: Código no válido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /auth/restablecer:
     post:
       tags:
@@ -3132,6 +3195,21 @@ components:
           type: string
           format: email
           example: prueba1@dominio.com
+    CodigoRequest:
+      type: object
+      required:
+        - correo
+        - codigo
+      properties:
+        correo:
+          type: string
+          format: email
+          example: prueba1@dominio.com
+        codigo:
+          type: string
+          minLength: 6
+          maxLength: 6
+          example: '123456'
     RestablecerRequest:
       type: object
       required:

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Alert,
   Box,
   Button,
   Dialog,
@@ -14,10 +13,7 @@ import Tarjeta from './Tarjeta.jsx'
 import CampoContrasena from '../../auth/components/CampoContrasena.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { ROLES } from '../../../utils/constantes.js'
-import { desactivarCuenta } from '../api.js'
-
-//COMENTARIO
-//DESACTIVAR y ELIMINAR hacen la misma acción de desactivar la cuenta, pero el backend aún no tiene el endpoint para eliminarla 
+import { desactivarCuenta, eliminarCuenta } from '../api.js'
 
 const sxBoton = {
   minHeight: 0,
@@ -42,8 +38,6 @@ const ACCIONES = {
       'Si tienes carteras propias, éstas se eliminarán y tus colaboradores perderán acceso. ' +
       'Las transacciones que registraste se conservan.',
     boton: 'Eliminar cuenta',
-    aviso:
-      'Pendiente del backend: aún no existe el endpoint para eliminar la cuenta (HU-02.5b).',
   },
 }
 
@@ -53,14 +47,12 @@ function ZonaRiesgo() {
   const [accion, setAccion] = useState(null)
   const [contrasenia, setContrasenia] = useState('')
   const [errorContrasenia, setErrorContrasenia] = useState('')
-  const [aviso, setAviso] = useState('')
   const [enviando, setEnviando] = useState(false)
 
   const abrir = (clave) => {
     setAccion(clave)
     setContrasenia('')
     setErrorContrasenia('')
-    setAviso('')
   }
 
   const cancelar = () => {
@@ -75,17 +67,15 @@ function ZonaRiesgo() {
       return
     }
 
-    if (accion === 'eliminar') {
-      setAviso(ACCIONES.eliminar.aviso)
-      cancelar()
-      return
-    }
-
     setEnviando(true)
     setErrorContrasenia('')
 
     try {
-      await desactivarCuenta(contrasenia)
+      if (accion === 'eliminar') {
+        await eliminarCuenta(contrasenia)
+      } else {
+        await desactivarCuenta(contrasenia)
+      }
 
       await cerrarSesion()
       navegar('/login')
@@ -137,12 +127,6 @@ function ZonaRiesgo() {
           Eliminar cuenta
         </Button>
       </Box>
-
-      {aviso && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          {aviso}
-        </Alert>
-      )}
 
       <Dialog open={Boolean(detalle)} onClose={cancelar} maxWidth="xs" fullWidth>
         <DialogTitle>{detalle?.titulo}</DialogTitle>

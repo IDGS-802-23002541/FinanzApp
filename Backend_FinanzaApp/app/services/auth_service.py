@@ -25,6 +25,9 @@ MENSAJE_CREDENCIALES = "Credenciales incorrectas."
 MENSAJE_RECUPERACION = (
     "Si el correo esta registrado, recibiras un codigo de recuperacion"
 )
+MENSAJE_REACTIVACION = (
+    "Si la cuenta esta desactivada, recibiras un codigo para reactivarla"
+)
 
 
 def _crear_sesion(usuario_id, ip, user_agent):
@@ -80,6 +83,19 @@ def registrar(datos):
         db.select(Usuario).where(Usuario.correo == campos["correo"])
     ).scalar_one_or_none()
     if existe:
+        if existe.estado == "INACTIVO":
+            return {
+                "ok": False,
+                "mensaje": (
+                    "La cuenta esta desactivada. "
+                    "Solicita la reactivacion para volver a usarla."
+                ),
+            }, 409
+        if existe.estado == "ELIMINADO":
+            return {
+                "ok": False,
+                "mensaje": "La cuenta fue eliminada y no se puede recuperar.",
+            }, 409
         return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
 
     usuario = Usuario(
@@ -231,6 +247,116 @@ def restablecer(correo, codigo, contrasenia):
         "ok": True,
         "data": None,
         "mensaje": "Contraseña actualizada correctamente.",
+    }, 200
+
+
+def _restaurar_carteras(usuario_id):
+    # Al desactivar se archivaron las carteras propias; al reactivar se recuperan.
+    filas = db.session.execute(
+        db.select(Cartera, MiembroCartera)
+        .join(MiembroCartera, MiembroCartera.carteraId == Cartera.idCartera)
+        .where(
+            MiembroCartera.usuarioId == usuario_id,
+            MiembroCartera.rol == "ADMIN",
+            MiembroCartera.estado == "BAJA",
+            Cartera.estado == "ARCHIVADA",
+        )
+    ).all()
+    for cartera, membresia in filas:
+        cartera.estado = "ACTIVA"
+        membresia.estado = "ACTIVO"
+        membresia.fechaBaja = None
+
+
+def solicitar_reactivacion(correo):
+    correo = (correo or "").strip().lower()
+    if not validacion.correo_valido(correo):
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
+    usuario = db.session.execute(
+        db.select(Usuario).where(Usuario.correo == correo)
+    ).scalar_one_or_none()
+    if usuario is not None and usuario.estado == "INACTIVO":
+        ahora = seguridad.ahora_utc()
+        db.session.execute(
+            db.update(TokenRecuperacion)
+            .where(
+                TokenRecuperacion.usuarioId == usuario.idUsuario,
+                TokenRecuperacion.fechaUso.is_(None),
+            )
+            .values(fechaUso=ahora)
+        )
+        codigo = seguridad.generar_codigo()
+        # Reutiliza la tabla de tokens de recuperacion: mismo codigo de un solo uso.
+        db.session.add(
+            TokenRecuperacion(
+                usuarioId=usuario.idUsuario,
+                hashToken=seguridad.hash_codigo(codigo),
+                fechaExpiracion=ahora
+                + timedelta(minutes=current_app.config["RECUPERACION_MINUTOS"]),
+            )
+        )
+        db.session.commit()
+        email_service.enviar_codigo_reactivacion(
+            correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
+        )
+    return {
+        "ok": True,
+        "data": None,
+        "mensaje": MENSAJE_REACTIVACION,
+    }, 200
+
+
+def confirmar_reactivacion(correo, codigo):
+    correo = (correo or "").strip().lower()
+    faltantes = [
+        campo
+        for campo, valor in (("correo", correo), ("codigo", codigo))
+        if not valor
+    ]
+    if faltantes:
+        return {
+            "ok": False,
+            "mensaje": f"Faltan campos: {','.join(faltantes)}.",
+        }, 400
+    if not validacion.correo_valido(correo):
+        return {
+            "ok": False,
+            "mensaje": "El correo no tiene un formato válido.",
+        }, 400
+    usuario = db.session.execute(
+        db.select(Usuario).where(Usuario.correo == correo)
+    ).scalar_one_or_none()
+    if usuario is None or usuario.estado != "INACTIVO":
+        return {
+            "ok": False,
+            "mensaje": "El código no es válido o ya expiró.",
+        }, 400
+    ahora = seguridad.ahora_utc()
+    token = db.session.execute(
+        db.select(TokenRecuperacion).where(
+            TokenRecuperacion.usuarioId == usuario.idUsuario,
+            TokenRecuperacion.hashToken == seguridad.hash_codigo(codigo),
+            TokenRecuperacion.fechaUso.is_(None),
+            TokenRecuperacion.fechaExpiracion > ahora,
+        )
+    ).scalar_one_or_none()
+    if token is None:
+        return {
+            "ok": False,
+            "mensaje": "El código no es válido o ya expiró.",
+        }, 400
+    usuario.estado = "ACTIVO"
+    usuario.fechaActualizacion = ahora
+    token.fechaUso = ahora
+    _restaurar_carteras(usuario.idUsuario)
+    db.session.commit()
+    return {
+        "ok": True,
+        "data": None,
+        "mensaje": "Cuenta reactivada correctamente.",
     }, 200
 
 
