@@ -11,7 +11,7 @@ import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
 import InvitacionQR from '../features/carteras/pages/InvitacionQR.jsx'
 import CierreBalance from '../features/carteras/pages/CierreBalance.jsx'
-import TabPendiente from '../features/carteras/pages/TabPendiente.jsx'
+import Contribuyentes from '../features/carteras/pages/Contribuyentes.jsx'
 import Transacciones from '../features/transacciones/pages/Transacciones.jsx'
 import TransaccionesCartera from '../features/transacciones/pages/TransaccionesCartera.jsx'
 import Reportes from '../features/reportes/pages/Reportes.jsx'
@@ -22,6 +22,7 @@ import Soporte from '../features/soporte/pages/MisTickets.jsx'
 import InicioAdmin from '../features/admin/pages/Inicio.jsx'
 import Trabajadores from '../features/admin/pages/Trabajadores.jsx'
 import TicketsAdmin from '../features/admin/pages/Tickets.jsx'
+import BuzonComentarios from '../features/admin/pages/BuzonComentarios.jsx'
 import PanelLayout from '../layouts/PanelLayout.jsx'
 import PaginaNoEncontrada from '../features/PaginaNoEncontrada.jsx'
 import { ROLES } from '../utils/constantes.js'
@@ -49,10 +50,7 @@ export const router = createBrowserRouter([
               { index: true, element: <Navigate to="resumen" replace /> },
               { path: 'resumen', element: <DetalleResumen /> },
               { path: 'transacciones', element: <TransaccionesCartera /> },
-              {
-                path: 'contribuyentes',
-                element: <TabPendiente titulo="Contribuyentes" />,
-              },
+              { path: 'contribuyentes', element: <Contribuyentes /> },
               { path: 'pagos', element: <PagosCartera /> },
               { path: 'invitacion', element: <InvitacionQR /> },
               { path: 'cierre', element: <CierreBalance /> },
@@ -67,6 +65,7 @@ export const router = createBrowserRouter([
           {element: <RoleRoute roles={[ROLES.ADMIN]} />, children: [
             {path: '/admin', element: <InicioAdmin />},
             {path: '/admin/trabajadores', element: <Trabajadores />},
+            {path: '/admin/comentarios', element: <BuzonComentarios />},
           ]},
           {path: '/admin/tickets', element: <TicketsAdmin />},
         ]},

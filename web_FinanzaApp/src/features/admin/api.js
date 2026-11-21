@@ -18,3 +18,9 @@ export async function responderTicket(idTicket, mensaje) {
   })
   return data
 }
+
+// Comentarios enviados desde la landing, del mas reciente al mas antiguo.
+export async function listarComentarios() {
+  const { data } = await api.get('/comentarios')
+  return data
+}
