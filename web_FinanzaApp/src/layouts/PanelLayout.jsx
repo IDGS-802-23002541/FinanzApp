@@ -19,9 +19,7 @@ const enlacesPorRol = {
   ],
   [ROLES.CLIENTE] : [
     { ruta: '/carteras', texto: 'Carteras', grupo: 'Principal' },
-    { ruta: '/transacciones', texto: 'Transacciones', grupo: 'Principal' },
     { ruta: '/reportes', texto: 'Reportes', grupo: 'Principal' },
-    { ruta: '/pagos-recurrentes', texto: 'Pagos recurrentes', grupo: 'Principal' },
     { ruta: '/soporte', texto: 'Soporte', grupo: 'Principal' },
     { ruta: '/ajustes', texto: 'Ajustes', grupo: 'Cuenta' },
   ]
