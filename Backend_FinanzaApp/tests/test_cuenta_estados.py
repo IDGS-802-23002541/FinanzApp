@@ -139,13 +139,15 @@ def test_recuperacion_envia_el_codigo_por_correo(monkeypatch):
     assert "código de recuperación" in enviados[0][2]
 
 
-def test_recuperacion_no_envia_correo_a_cuenta_desactivada(monkeypatch):
+def test_recuperacion_envia_codigo_que_tambien_reactiva(monkeypatch):
     _con_db(monkeypatch, [ResultadoFalso(UsuarioFalso(estado="INACTIVO"))])
     enviados = _con_correo(monkeypatch)
     with _app().app_context():
         payload, status = auth_service.solicitar_recuperacion("ana@ejemplo.com")
     assert status == 200
-    assert enviados == []
+    assert payload["ok"] is True
+    assert len(enviados) == 1
+    assert "reactivada" in enviados[0][2]
 
 
 def test_solicitar_reactivacion_envia_codigo(monkeypatch):
@@ -213,5 +215,31 @@ def test_eliminar_cuenta_exige_contrasena(monkeypatch):
     _con_db(monkeypatch, [])
     with _app().app_context():
         payload, status = auth_service.eliminar("")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_restablecer_con_cuenta_desactivada_reactiva_y_cambia_clave(monkeypatch):
+    usuario = UsuarioFalso(estado="INACTIVO")
+    token = type("Token", (), {"fechaUso": None})()
+    _con_db(
+        monkeypatch,
+        [ResultadoFalso(usuario), ResultadoFalso(token), ResultadoFalso(filas=[])],
+    )
+    with _app().app_context():
+        payload, status = auth_service.restablecer(
+            "ana@ejemplo.com", "123456", "NuevaClave1"
+        )
+    assert status == 200
+    assert usuario.estado == "ACTIVO"
+    assert "reactivada" in payload["mensaje"].lower()
+
+
+def test_restablecer_con_cuenta_eliminada_no_procede(monkeypatch):
+    _con_db(monkeypatch, [ResultadoFalso(UsuarioFalso(estado="ELIMINADO"))])
+    with _app().app_context():
+        payload, status = auth_service.restablecer(
+            "ana@ejemplo.com", "123456", "NuevaClave1"
+        )
     assert status == 400
     assert payload["ok"] is False

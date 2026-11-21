@@ -262,7 +262,7 @@ paths:
       tags:
         - Auth
       summary: Solicitar código de recuperación
-      description: Genera un código de 6 dígitos con vigencia de 30 minutos. Siempre responde con un mensaje neutro para no revelar si el correo existe.
+      description: Genera un código de 6 dígitos con vigencia de 30 minutos. Siempre responde con un mensaje neutro para no revelar si el correo existe. Si la cuenta está desactivada, el correo avisa y el código la reactiva al restablecer.
       operationId: solicitarRecuperacion
       requestBody:
         required: true
@@ -358,7 +358,7 @@ paths:
       tags:
         - Auth
       summary: Restablecer contraseña con código
-      description: Valida el código vigente y de un solo uso, actualiza la contraseña y revoca las sesiones activas.
+      description: Valida el código vigente y de un solo uso, actualiza la contraseña y revoca las sesiones activas. Si la cuenta estaba desactivada, queda reactivada con sus carteras.
       operationId: restablecerContrasenia
       requestBody:
         required: true

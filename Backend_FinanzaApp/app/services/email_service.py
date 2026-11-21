@@ -62,6 +62,19 @@ def enviar_codigo_reactivacion(destinatario, codigo, minutos):
     )
 
 
+def enviar_codigo_recuperacion_reactiva(destinatario, codigo, minutos):
+    return enviar(
+        destinatario,
+        "Recupera tu contraseña y reactiva tu cuenta de FinanzApp",
+        (
+            f"Tu cuenta está desactivada. Tu código es {codigo} "
+            f"(vence en {minutos} minutos). Úsalo para definir una "
+            "contraseña nueva y tu cuenta quedará reactivada. "
+            "Si no lo solicitaste, ignora este correo."
+        ),
+    )
+
+
 def enviar_invitacion(destinatario, nombre_cartera, codigo):
     return enviar(
         destinatario,
