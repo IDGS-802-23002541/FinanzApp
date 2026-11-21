@@ -6,10 +6,13 @@ import com.finanzap.features.auth.data.AuthApi
 import com.finanzap.features.auth.data.CambiarContrasenaRequest
 import com.finanzap.features.auth.data.ConfirmacionCuentaRequest
 import com.finanzap.features.auth.data.DatosToken
+import com.finanzap.features.auth.data.EditarCuentaRequest
 import com.finanzap.features.auth.data.LoginRequest
+import com.finanzap.features.auth.data.PreferenciasRequest
 import com.finanzap.features.auth.data.RecuperarRequest
 import com.finanzap.features.auth.data.RefreshRequest
 import com.finanzap.features.auth.data.RespuestaMensaje
+import com.finanzap.features.auth.data.RespuestaPreferencias
 import com.finanzap.features.auth.data.RespuestaRecuperacion
 import com.finanzap.features.auth.data.RespuestaSesion
 import com.finanzap.features.auth.data.RespuestaToken
@@ -112,4 +115,14 @@ private class ApiFalsa : AuthApi {
 
     override suspend fun eliminarCuenta(peticion: ConfirmacionCuentaRequest): RespuestaMensaje =
         throw UnsupportedOperationException()
+
+    override suspend fun editarCuenta(peticion: EditarCuentaRequest): RespuestaMensaje =
+        throw UnsupportedOperationException()
+
+    override suspend fun obtenerPreferencias(): RespuestaPreferencias =
+        throw UnsupportedOperationException()
+
+    override suspend fun guardarPreferencias(
+        peticion: PreferenciasRequest
+    ): RespuestaPreferencias = throw UnsupportedOperationException()
 }

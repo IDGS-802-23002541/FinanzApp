@@ -27,6 +27,12 @@ class Usuario(db.Model):
 
 class PreferenciaUsuario(db.Model):
     __tablename__ = "PREFERENCIAS_USUARIO"
+    __table_args__ = (
+        db.CheckConstraint(
+            "tema IN ('CLARO', 'OSCURO', 'SISTEMA')",
+            name="CK_PREFERENCIAS_USUARIO_tema",
+        ),
+    )
 
     usuarioId = db.Column(
         db.Integer, db.ForeignKey("USUARIO.idUsuario"), primary_key=True
@@ -36,6 +42,15 @@ class PreferenciaUsuario(db.Model):
         db.Boolean, nullable=False, server_default=db.text("1")
     )
     notificacionesApp = db.Column(
+        db.Boolean, nullable=False, server_default=db.text("1")
+    )
+    notificacionesMovimientos = db.Column(
+        db.Boolean, nullable=False, server_default=db.text("1")
+    )
+    notificacionesSistema = db.Column(
+        db.Boolean, nullable=False, server_default=db.text("1")
+    )
+    notificacionesPagos = db.Column(
         db.Boolean, nullable=False, server_default=db.text("1")
     )
     moneda = db.Column(db.String(3), nullable=False, server_default="MXN")

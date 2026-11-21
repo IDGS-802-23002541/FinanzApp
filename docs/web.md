@@ -17,6 +17,9 @@ Estado y estructura real del front web. Ubicación: **`web_FinanzaApp/`** (React
 - Enrutado con **react-router-dom 7** (`createBrowserRouter`).
 - Estilos: MUI + tokens CSS (`--color-*`) de `src/styles/tema.css`; el tema MUI se
   deriva de esos tokens en `src/styles/temaMui.js`.
+- QR de invitaciones con **react-qr-code** (aprobada en Sprint 3, tarea #252).
+- Gráficas con componentes propios en `src/features/carteras/components/`
+  (`GraficaBarras.jsx`, `GraficaDona.jsx`).
 - Consumo de la API centralizado en `src/services/apiClient.js` (adjunta el **JWT** y
   renueva la sesión con el refresh token). Cada módulo expone sus llamadas en
   `src/features/<módulo>/api.js`.

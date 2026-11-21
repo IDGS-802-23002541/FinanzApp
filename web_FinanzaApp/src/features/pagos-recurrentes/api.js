@@ -1,1 +1,96 @@
-// Llamadas a la API del módulo de pagos recurrentes (usar services/apiClient.js).
+// Llamadas a la API del modulo de pagos recurrentes (usar services/apiClient.js).
+import { api } from '../../services/apiClient.js'
+
+const FRECUENCIA_TEXTO = {
+  DIARIO: 'Diario',
+  SEMANAL: 'Semanal',
+  MENSUAL: 'Mensual',
+  ANUAL: 'Anual',
+}
+
+// El backend maneja ACTIVO/PAUSADO/CANCELADO; la vista usa textos cortos.
+const ESTADO_TEXTO = {
+  ACTIVO: 'Pendiente',
+  PAUSADO: 'Pausado',
+  CANCELADO: 'Cancelado',
+}
+
+function aVistaPago(pago) {
+  return {
+    id: pago.idPagoRecurrente,
+    carteraId: pago.carteraId,
+    categoriaId: pago.categoriaId,
+    nombre: pago.nombre,
+    monto: pago.monto ?? 0,
+    frecuenciaValor: pago.frecuencia,
+    frecuencia: FRECUENCIA_TEXTO[pago.frecuencia] ?? pago.frecuencia,
+    fechaInicio: pago.fechaInicio ? String(pago.fechaInicio).slice(0, 10) : '',
+    proximaEjecucion: pago.proximaEjecucion
+      ? String(pago.proximaEjecucion).slice(0, 10)
+      : '',
+    ultimaEjecucion: pago.ultimaEjecucion ?? null,
+    estado: ESTADO_TEXTO[pago.estado] ?? pago.estado,
+  }
+}
+
+export async function listarPagos(idCartera) {
+  const params = new URLSearchParams({
+    carteraId: String(idCartera),
+    porPagina: '100',
+  })
+  const { data } = await api.get(`/pagos-recurrentes?${params}`)
+  return {
+    pagos: (data?.pagos ?? []).map(aVistaPago),
+    paginacion: data?.paginacion ?? null,
+  }
+}
+
+// Crea un pago recurrente. "fechaCorte" es la fecha desde la que corre.
+export async function crearPago({
+  carteraId,
+  nombre,
+  monto,
+  frecuencia,
+  fechaCorte,
+  categoriaId,
+}) {
+  const { data } = await api.post('/pagos-recurrentes', {
+    carteraId: Number(carteraId),
+    nombre: nombre.trim(),
+    monto: Number(monto),
+    frecuencia,
+    fechaInicio: fechaCorte,
+    categoriaId: categoriaId ? Number(categoriaId) : undefined,
+  })
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Edicion: el backend solo actualiza los campos que recibe.
+export async function editarPago(
+  idPago,
+  { nombre, monto, frecuencia, fechaCorte, categoriaId },
+) {
+  const { data } = await api.put(`/pagos-recurrentes/${idPago}`, {
+    nombre: nombre.trim(),
+    monto: Number(monto),
+    frecuencia,
+    fechaInicio: fechaCorte,
+    categoriaId: categoriaId ? Number(categoriaId) : null,
+  })
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Baja logica: el backend cambia el estado a CANCELADO.
+export async function eliminarPago(idPago) {
+  const { data } = await api.delete(`/pagos-recurrentes/${idPago}`)
+  return data?.pago ? aVistaPago(data.pago) : null
+}
+
+// Registra el periodo como pagado y crea el gasto correspondiente.
+export async function marcarPagoHecho(idPago, fechaProgramada) {
+  const { data } = await api.post(
+    `/pagos-recurrentes/${idPago}/hecho`,
+    fechaProgramada ? { fechaProgramada } : {},
+  )
+  return data
+}

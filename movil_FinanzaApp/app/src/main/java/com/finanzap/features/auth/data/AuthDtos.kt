@@ -38,6 +38,22 @@ data class ConfirmacionCuentaRequest(
     val contrasenia: String
 )
 
+// Los apellidos y el correo vacíos conservan su valor en el backend.
+@Serializable
+data class EditarCuentaRequest(
+    val nombreUsuario: String,
+    val apaterno: String,
+    val amaterno: String,
+    val correo: String
+)
+
+@Serializable
+data class PreferenciasRequest(
+    val notificacionesMovimientos: Boolean,
+    val notificacionesSistema: Boolean,
+    val notificacionesPagos: Boolean
+)
+
 // Respuestas: solo se declaran los campos que usa la app; el resto se ignora.
 @Serializable
 data class RespuestaSesion(
@@ -72,3 +88,15 @@ data class DatosRecuperacion(
 
 @Serializable
 class RespuestaMensaje
+
+@Serializable
+data class PreferenciasDto(
+    val notificacionesMovimientos: Boolean,
+    val notificacionesSistema: Boolean,
+    val notificacionesPagos: Boolean
+)
+
+@Serializable
+data class RespuestaPreferencias(
+    val data: PreferenciasDto
+)

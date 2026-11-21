@@ -68,11 +68,26 @@ class PagoRecurrente(db.Model):
             name="FK_PAGOS_RECURRENTES_MIEMBRO",
         ),
         db.Index("IX_PAGOS_RECURRENTES_proxima", "estado", "proximaEjecucion"),
+        db.CheckConstraint("monto > 0", name="CK_PAGOS_RECURRENTES_monto"),
+        db.CheckConstraint(
+            "frecuencia IN ('DIARIO', 'SEMANAL', 'MENSUAL', 'ANUAL')",
+            name="CK_PAGOS_RECURRENTES_frecuencia",
+        ),
+        db.CheckConstraint(
+            "estado IN ('ACTIVO', 'PAUSADO', 'CANCELADO')",
+            name="CK_PAGOS_RECURRENTES_estado",
+        ),
+        db.CheckConstraint(
+            "fechaFin IS NULL OR fechaFin >= fechaInicio",
+            name="CK_PAGOS_RECURRENTES_fechas",
+        ),
     )
 
     idPagoRecurrente = db.Column(db.Integer, primary_key=True)
     carteraId = db.Column(
-        db.Integer, db.ForeignKey("CARTERA.idCartera"), nullable=False
+        db.Integer,
+        db.ForeignKey("CARTERA.idCartera", ondelete="NO ACTION"),
+        nullable=False,
     )
     usuarioId = db.Column(db.Integer, nullable=False)
     categoriaId = db.Column(db.Integer, db.ForeignKey("CATEGORIAS.idCategoria"))
@@ -97,16 +112,23 @@ class PagoRecEjecucion(db.Model):
             "fechaProgramada",
             name="UQ_PAGOS_REC_EJECUCIONES_fecha",
         ),
+        db.CheckConstraint(
+            "monto > 0", name="CK_PAGOS_REC_EJECUCIONES_monto"
+        ),
+        db.CheckConstraint(
+            "estado IN ('PENDIENTE', 'EJECUTADO', 'FALLIDO', 'OMITIDO')",
+            name="CK_PAGOS_REC_EJECUCIONES_estado",
+        ),
     )
 
     idEjecucion = db.Column(db.Integer, primary_key=True)
     pagoRecurrenteId = db.Column(
         db.Integer,
-        db.ForeignKey("PAGOS_RECURRENTES.idPagoRecurrente"),
+        db.ForeignKey("PAGOS_RECURRENTES.idPagoRecurrente", ondelete="NO ACTION"),
         nullable=False,
     )
     transaccionId = db.Column(
-        db.Integer, db.ForeignKey("TRANSACCIONES.idTransaccion")
+        db.Integer, db.ForeignKey("TRANSACCIONES.idTransaccion"), nullable=True
     )
     fechaProgramada = db.Column(db.Date, nullable=False)
     fechaEjecucion = db.Column(DATETIME2)

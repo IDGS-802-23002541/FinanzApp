@@ -21,20 +21,32 @@ async function renovarSesion() {
   }
 
   // Se llama con fetch directo para no volver a entrar en la renovación.
-  const respuesta = await fetch(`${API_URL}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  })
+  try {
+    const respuesta = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
 
-  if (!respuesta.ok) {
+    if (!respuesta.ok) {
+      cerrarSesionLocal()
+      return false
+    }
+
+    const { data } = await respuesta.json()
+    // Si el backend no manda token, la sesión ya no sirve.
+    if (!data?.access_token) {
+      cerrarSesionLocal()
+      return false
+    }
+
+    localStorage.setItem('token', data.access_token)
+    return true
+  } catch {
+    // Sin red no se puede renovar: se cierra la sesión local.
     cerrarSesionLocal()
     return false
   }
-
-  const { data } = await respuesta.json()
-  localStorage.setItem('token', data.access_token)
-  return true
 }
 
 function crearError(respuesta, ruta) {

@@ -12,6 +12,24 @@ import com.finanzap.features.auth.data.AuthRepositoryImpl
 import com.finanzap.features.carteras.data.CarterasApi
 import com.finanzap.features.carteras.data.CarterasRepository
 import com.finanzap.features.carteras.data.CarterasRepositoryImpl
+import com.finanzap.features.carteras.data.InvitacionesApi
+import com.finanzap.features.carteras.data.InvitacionesRepository
+import com.finanzap.features.carteras.data.InvitacionesRepositoryImpl
+import com.finanzap.features.pagos.data.PagosApi
+import com.finanzap.features.pagos.data.PagosRepository
+import com.finanzap.features.pagos.data.PagosRepositoryImpl
+import com.finanzap.features.reportes.data.ReportesApi
+import com.finanzap.features.reportes.data.ReportesRepository
+import com.finanzap.features.reportes.data.ReportesRepositoryImpl
+import com.finanzap.features.soporte.data.SoporteApi
+import com.finanzap.features.soporte.data.SoporteRepository
+import com.finanzap.features.soporte.data.SoporteRepositoryImpl
+import com.finanzap.features.transacciones.data.CategoriasApi
+import com.finanzap.features.transacciones.data.CategoriasRepository
+import com.finanzap.features.transacciones.data.CategoriasRepositoryImpl
+import com.finanzap.features.transacciones.data.TransaccionesApi
+import com.finanzap.features.transacciones.data.TransaccionesRepository
+import com.finanzap.features.transacciones.data.TransaccionesRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -40,7 +58,37 @@ abstract class Modulos {
 
     @Binds
     @Singleton
+    abstract fun bindInvitacionesRepository(
+        impl: InvitacionesRepositoryImpl
+    ): InvitacionesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransaccionesRepository(
+        impl: TransaccionesRepositoryImpl
+    ): TransaccionesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCategoriasRepository(
+        impl: CategoriasRepositoryImpl
+    ): CategoriasRepository
+
+    @Binds
+    @Singleton
     abstract fun bindSesionLocal(impl: SesionLocalCifrada): SesionLocal
+
+    @Binds
+    @Singleton
+    abstract fun bindReportesRepository(impl: ReportesRepositoryImpl): ReportesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSoporteRepository(impl: SoporteRepositoryImpl): SoporteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPagosRepository(impl: PagosRepositoryImpl): PagosRepository
 
     companion object {
 
@@ -86,5 +134,35 @@ abstract class Modulos {
         @Singleton
         fun provideCarterasApi(retrofit: Retrofit): CarterasApi =
             retrofit.create(CarterasApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideInvitacionesApi(retrofit: Retrofit): InvitacionesApi =
+            retrofit.create(InvitacionesApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideTransaccionesApi(retrofit: Retrofit): TransaccionesApi =
+            retrofit.create(TransaccionesApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideCategoriasApi(retrofit: Retrofit): CategoriasApi =
+            retrofit.create(CategoriasApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideReportesApi(retrofit: Retrofit): ReportesApi =
+            retrofit.create(ReportesApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideSoporteApi(retrofit: Retrofit): SoporteApi =
+            retrofit.create(SoporteApi::class.java)
+
+        @Provides
+        @Singleton
+        fun providePagosApi(retrofit: Retrofit): PagosApi =
+            retrofit.create(PagosApi::class.java)
     }
 }

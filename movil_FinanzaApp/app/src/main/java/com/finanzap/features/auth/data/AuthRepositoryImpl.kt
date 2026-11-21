@@ -90,6 +90,57 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
 
+    override suspend fun editarCuenta(
+        nombreUsuario: String,
+        apaterno: String,
+        amaterno: String,
+        correo: String
+    ): Result<Unit> =
+        try {
+            authApi.editarCuenta(
+                EditarCuentaRequest(
+                    nombreUsuario = nombreUsuario,
+                    apaterno = apaterno,
+                    amaterno = amaterno,
+                    correo = correo
+                )
+            )
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun obtenerPreferencias(): Result<PreferenciasNotificacion> =
+        try {
+            Result.success(authApi.obtenerPreferencias().data.aPreferencias())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun guardarPreferencias(
+        movimientos: Boolean,
+        sistema: Boolean,
+        pagos: Boolean
+    ): Result<PreferenciasNotificacion> =
+        try {
+            val respuesta = authApi.guardarPreferencias(
+                PreferenciasRequest(
+                    notificacionesMovimientos = movimientos,
+                    notificacionesSistema = sistema,
+                    notificacionesPagos = pagos
+                )
+            )
+            Result.success(respuesta.data.aPreferencias())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     /**
      * Revoca la sesión en el backend y siempre borra el guardado local.
      * Si no hay red se limpia igual: el refresh token caduca solo en el servidor.
@@ -106,4 +157,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun haySesion(): Boolean = sesionLocal.haySesion()
+
+    private fun PreferenciasDto.aPreferencias() = PreferenciasNotificacion(
+        movimientos = notificacionesMovimientos,
+        sistema = notificacionesSistema,
+        pagos = notificacionesPagos
+    )
 }

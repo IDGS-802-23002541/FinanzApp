@@ -20,6 +20,14 @@ class FechasTest {
     }
 
     @Test
+    fun `fecha con hora se muestra en dd MM aaaa HH mm`() {
+        assertEquals(
+            "01/11/2026 14:30",
+            formatearFechaHoraCorta("2026-11-01T14:30:00.123456")
+        )
+    }
+
+    @Test
     fun `texto invalido se devuelve sin cambios`() {
         assertEquals("sin-fecha", formatearFechaCorta("sin-fecha"))
     }

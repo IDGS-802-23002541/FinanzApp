@@ -28,13 +28,23 @@ def create_app():
     from app.routes.carteras import carteras_bp
     from app.routes.categorias import categorias_bp
     from app.routes.invitaciones import invitaciones_bp
+    from app.routes.miembros import miembros_bp
+    from app.routes.reportes import reportes_bp
+    from app.routes.pagos import pagos_bp
+    from app.routes.soporte import soporte_bp
     from app.routes.transacciones import transacciones_bp
+    from app.routes.comentarios import comentarios_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(carteras_bp)
     app.register_blueprint(categorias_bp)
     app.register_blueprint(invitaciones_bp)
+    app.register_blueprint(miembros_bp)
+    app.register_blueprint(reportes_bp)
+    app.register_blueprint(pagos_bp)
+    app.register_blueprint(soporte_bp)
     app.register_blueprint(transacciones_bp)
+    app.register_blueprint(comentarios_bp)
 
     @jwt.user_lookup_loader
     def cargar_usuario(_jwt_header, jwt_data):

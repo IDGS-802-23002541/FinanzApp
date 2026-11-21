@@ -29,6 +29,9 @@ class CarterasContenidoTest {
                     ),
                     acciones = CarterasAcciones(
                         onNuevaCartera = {},
+                        onAbrirCartera = {},
+                        onRegistrarGasto = {},
+                        onUnirseCartera = {},
                         onSegmentoChange = {},
                         onTipoChange = {},
                         onBusquedaChange = {},
@@ -53,6 +56,9 @@ class CarterasContenidoTest {
                     state = CarterasUiState(cargando = false),
                     acciones = CarterasAcciones(
                         onNuevaCartera = { creada = true },
+                        onAbrirCartera = {},
+                        onRegistrarGasto = {},
+                        onUnirseCartera = {},
                         onSegmentoChange = {},
                         onTipoChange = {},
                         onBusquedaChange = {},

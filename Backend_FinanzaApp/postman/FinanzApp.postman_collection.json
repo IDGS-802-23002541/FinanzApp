@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
-    "name": "FinanzApp - Auth",
-    "description": "Pruebas del módulo de autenticación: registro (#96) y sesión JWT (#99).",
+    "name": "FinanzApp - API",
+    "description": "Regresion del Sprint 3: autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta, notificaciones, pagos recurrentes y soporte. Incluye matriz de permisos y casos borde. Montos MXN; fechas de API en YYYY-MM-DD.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,6 +20,62 @@
     },
     {
       "key": "codigoRecuperacion",
+      "value": ""
+    },
+    {
+      "key": "idCartera",
+      "value": ""
+    },
+    {
+      "key": "idUsuario",
+      "value": ""
+    },
+    {
+      "key": "codigoInvitacion",
+      "value": ""
+    },
+    {
+      "key": "periodoId",
+      "value": ""
+    },
+    {
+      "key": "accessTokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "idTransaccion",
+      "value": ""
+    },
+    {
+      "key": "idCategoria",
+      "value": ""
+    },
+    {
+      "key": "idPagoRecurrente",
+      "value": ""
+    },
+    {
+      "key": "idTicket",
+      "value": ""
+    },
+    {
+      "key": "accessTokenColaborador",
+      "value": ""
+    },
+    {
+      "key": "idCarteraAjena",
+      "value": ""
+    },
+    {
+      "key": "idPropietario",
+      "value": ""
+    },
+    {
+      "key": "idTransaccionAjena",
+      "value": ""
+    },
+    {
+      "key": "correoExistente",
       "value": ""
     }
   ],
@@ -1063,6 +1119,1179 @@
             ],
             "url": "{{baseUrl}}/carteras?estado=INACTIVA",
             "description": "Esperado: 400. INACTIVA no existe; el valor de BD es ARCHIVADA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "28 - Detalle de cartera",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Incluye resumen, series y colaboradores."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "29 - Periodos de cartera",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/periodos",
+            "description": "Esperado: 200. Periodos de una cartera Hogar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "30 - Consultar invitacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/invitaciones",
+            "description": "Esperado: 200 como propietario; 403 como colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "31 - Generar invitacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/invitaciones",
+            "description": "Esperado: 201. Solo propietario y cartera activa."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "32 - Unirse a cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"codigo\":\"{{codigoInvitacion}}\"}"
+            },
+            "url": "{{baseUrl}}/invitaciones/unirse",
+            "description": "Esperado: 201. Usar token del colaborador y una clave vigente."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "33 - Eliminar colaborador",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/miembros/{{idUsuario}}",
+            "description": "Esperado: 200. Baja logica; no borra transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "34 - Salir de cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/salir",
+            "description": "Esperado: 200. Usar token del colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "35 - Finalizar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/finalizar",
+            "description": "Esperado: 200. Solo propietario, tipo Viaje/Evento y estado Activa."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "36 - Detalle de cartera finalizada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Debe incluir balance total, por categoria y por participante."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "37 - Inactivar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/inactivar",
+            "description": "Esperado: 200. Estado ARCHIVADA; no borra datos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "38 - Reactivar cartera",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/reactivar",
+            "description": "Esperado: 200. Vuelve a ACTIVA si no esta FINALIZADA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "39 - Editar cartera",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Cartera editada\",\"descripcion\":\"Descripcion de prueba\"}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}",
+            "description": "Esperado: 200. Solo nombre y descripcion."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "01 - Vista previa de reporte",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCartera}}&cantidad=5",
+            "description": "Esperado: 200. Solo carteras del propietario; hayDatos indica si se puede exportar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Exportar reporte CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes/exportar?carteraId={{idCartera}}&formato=CSV",
+            "description": "Esperado: 200 con archivo CSV; 409 si no hay datos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Vista previa por periodo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCartera}}&periodoId={{periodoId}}",
+            "description": "Esperado: 200. El periodo debe pertenecer a la cartera."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Exportar reporte PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes/exportar?carteraId={{idCartera}}&formato=PDF",
+            "description": "Esperado: 200 con archivo application/pdf; 409 si no hay datos."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Comentarios",
+      "item": [
+        {
+          "name": "01 - Crear comentario (publico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prueba 255\",\n  \"correo\": \"prueba255@dominio.com\",\n  \"comentario\": \"Comentario de regresion\"\n}"
+            },
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 201. Sin JWT. No expone la IP. Limite: 3 por IP cada 10 min; el cuarto devuelve 429."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar comentarios (staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 200 con token ADMIN/TRABAJADOR; 403 con CLIENTE. Usar accessTokenAdmin."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Cuenta",
+      "item": [
+        {
+          "name": "01 - Editar cuenta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"Prueba 255\",\n  \"apaterno\": \"\",\n  \"amaterno\": \"\",\n  \"correo\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/editar_cuenta",
+            "description": "Esperado: 200. nombreUsuario obligatorio; apellidos/correo vacios conservan su valor; correo duplicado 409."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Preferencias: GET",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 200 con tema y los 3 booleanos de notificaciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Preferencias: PUT notificaciones",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificacionesMovimientos\": true,\n  \"notificacionesSistema\": true,\n  \"notificacionesPagos\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 200; PUT parcial y devuelve los 3 booleanos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Preferencias: booleano invalido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificacionesPagos\": \"si\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/preferencias",
+            "description": "Esperado: 400. notificacionesPagos debe ser booleano."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Transacciones",
+      "item": [
+        {
+          "name": "01 - Listar transacciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones?pagina=1&porPagina=20",
+            "description": "Esperado: 200. Incluye paginacion, totales y autor; excluye eliminadas."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Crear gasto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 250.5,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}},\n  \"metodoPago\": \"EFECTIVO\",\n  \"descripcion\": \"Prueba 255\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 201. Monto MXN mayor a 0; fecha YYYY-MM-DD; categoriaId obligatorio para GASTO."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Editar transaccion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 300,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}},\n  \"metodoPago\": \"EFECTIVO\",\n  \"descripcion\": \"Editada 255\"\n}"
+            },
+            "url": "{{baseUrl}}/transacciones/{{idTransaccion}}",
+            "description": "Esperado: 200. Solo propietario y cartera ACTIVA."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Eliminar transaccion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transacciones/{{idTransaccion}}",
+            "description": "Esperado: 200. Borrado logico; no elimina fisicamente."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "01 - Listar categorias",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias?tipo=GASTO",
+            "description": "Esperado: 200. Incluye categorias globales y personalizadas compatibles."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Crear categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Categoria 255\",\n  \"tipo\": \"GASTO\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/categorias",
+            "description": "Esperado: 201. Nombre unico por cartera; tipo INGRESO, GASTO o AMBOS."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Pagos recurrentes",
+      "item": [
+        {
+          "name": "01 - Crear pago recurrente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carteraId\": {{idCartera}},\n  \"nombre\": \"Renta\",\n  \"descripcion\": \"Pago mensual\",\n  \"monto\": 4500,\n  \"frecuencia\": \"MENSUAL\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"fechaFin\": \"2027-12-01\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes",
+            "description": "Esperado: 201. Solo el propietario; un colaborador recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar pagos recurrentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes?carteraId={{idCartera}}&estado=ACTIVO&pagina=1&porPagina=20",
+            "description": "Esperado: 200 con la lista y la paginacion."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Editar pago recurrente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Renta\",\n  \"monto\": 4800,\n  \"estado\": \"PAUSADO\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}",
+            "description": "Esperado: 200. Solo el propietario; un colaborador recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Cancelar pago recurrente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}",
+            "description": "Esperado: 200 con estado CANCELADO (borrado logico)."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Marcar pago recurrente como hecho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaProgramada\": \"2026-12-01\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}/hecho",
+            "description": "Esperado: 201 con la ejecucion y la transaccion creada."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "06 - Marcar el mismo periodo de nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaProgramada\": \"2026-12-01\"\n}"
+            },
+            "url": "{{baseUrl}}/pagos-recurrentes/{{idPagoRecurrente}}/hecho",
+            "description": "Esperado: 409. El periodo ya fue marcado como hecho."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Soporte",
+      "item": [
+        {
+          "name": "01 - Crear reporte de ayuda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"asunto\": \"No puedo cerrar mi cartera\",\n  \"descripcion\": \"Al confirmar me sale un error.\",\n  \"categoria\": \"CARTERA\",\n  \"prioridad\": \"MEDIA\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets",
+            "description": "Esperado: 201 con el ticket en estado ABIERTO."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Listar mis reportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            },
+            "url": "{{baseUrl}}/soporte/tickets?estado=ABIERTO&pagina=1&porPagina=20",
+            "description": "Esperado: 200. Un cliente ve sus tickets; el staff ve todos."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Responder reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"Ya lo revisamos y corregimos.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/respuestas",
+            "description": "Esperado: 201. El propietario del ticket o el staff."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Asignar reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Revisado con el equipo.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/asignar",
+            "description": "Esperado: 200. Solo ADMIN o TRABAJADOR; un cliente recibe 403."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Cerrar reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Resuelto.\"\n}"
+            },
+            "url": "{{baseUrl}}/soporte/tickets/{{idTicket}}/cerrar",
+            "description": "Esperado: 200 con estado CERRADO. Solo ADMIN o TRABAJADOR."
+          },
+          "response": [],
+          "event": []
+        }
+      ]
+    },
+    {
+      "name": "Permisos y casos borde",
+      "description": "Matriz de #256. Ticket ya cerrado: no aplica porque el modulo de soporte no tiene endpoints implementados.",
+      "item": [
+        {
+          "name": "01 - Cliente consulta buzon de comentarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/comentarios",
+            "description": "Esperado: 403. El buzon es solo ADMIN/TRABAJADOR. Usar accessToken de CLIENTE."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "02 - Colaborador edita cartera ajena",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intento colaborador 256\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}",
+            "description": "Esperado: 403 o 404. Colaborador no puede editar una cartera que no administra."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "03 - Colaborador inactiva cartera ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/inactivar",
+            "description": "Esperado: 403 o 404. Solo propietario puede inactivar."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "04 - Colaborador finaliza cartera ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/finalizar",
+            "description": "Esperado: 403. Solo propietario y tipo Viaje/Evento."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "05 - Colaborador elimina al propietario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/miembros/{{idPropietario}}",
+            "description": "Esperado: 403. El propietario no puede ser eliminado por un colaborador."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "06 - Cliente consulta cartera ajena",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}",
+            "description": "Esperado: 404. Un usuario no debe ver carteras donde no es miembro."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "07 - Cliente consulta reporte de cartera ajena",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/reportes?carteraId={{idCarteraAjena}}",
+            "description": "Esperado: 404. Reportes solo considera carteras del propietario."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "08 - Gasto con monto cero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 0,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 400. El monto debe ser mayor a cero."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "09 - Gasto con monto negativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": -10,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCartera}}/transacciones",
+            "description": "Esperado: 400. El monto debe ser mayor a cero."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "10 - Cartera con periodo invertido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cartera invertida 256\",\n  \"tipo\": \"VIAJE\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"fechaFin\": \"2026-11-01\"\n}"
+            },
+            "url": "{{baseUrl}}/carteras",
+            "description": "Esperado: 400. fechaFin no puede ser anterior a fechaInicio."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "11 - Correo duplicado al editar cuenta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"Prueba 256\",\n  \"correo\": \"{{correoExistente}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/editar_cuenta",
+            "description": "Esperado: 409. correoExistente debe ser el correo de otra cuenta."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "12 - Colaborador edita transaccion ajena",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"GASTO\",\n  \"monto\": 100,\n  \"fecha\": \"2026-11-13\",\n  \"categoriaId\": {{idCategoria}}\n}"
+            },
+            "url": "{{baseUrl}}/transacciones/{{idTransaccionAjena}}",
+            "description": "Esperado: 403. Solo el propietario puede editar transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "13 - Colaborador elimina transaccion ajena",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transacciones/{{idTransaccionAjena}}",
+            "description": "Esperado: 403. Solo el propietario puede eliminar transacciones."
+          },
+          "response": [],
+          "event": []
+        },
+        {
+          "name": "14 - Colaborador genera invitacion ajena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessTokenColaborador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{baseUrl}}/carteras/{{idCarteraAjena}}/invitaciones",
+            "description": "Esperado: 403 o 404. Solo el propietario puede generar invitaciones."
           },
           "response": [],
           "event": []

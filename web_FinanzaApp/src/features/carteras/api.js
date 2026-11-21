@@ -40,6 +40,10 @@ function aVistaCartera(cartera) {
     estatus: ESTATUS_POR_ESTADO[cartera.estado],
     rol: ROL_EN_PANTALLA[cartera.rol],
     descripcion: cartera.descripcion ?? '',
+    // crudos para precargar el formulario de edicion 
+    presupuestoInicial : cartera.presupuestoInicial ?? 0,
+    fechaInicio: cartera.fechaInicio ?? '',
+    fechaFin: cartera.fechaFin ?? '',
     periodo:
       fechaInicio && fechaFin
         ? `${formatearFecha(fechaInicio)} → ${formatearFecha(fechaFin)}`
@@ -47,13 +51,23 @@ function aVistaCartera(cartera) {
   }
 }
 
-// El detalle necesita el presupuesto y el administrador; la lista no los usa.
+// El detalle necesita resumen, series y colaboradores, la lista no los usa
 function aVistaDetalle(cartera) {
   return {
     ...aVistaCartera(cartera),
     presupuestoInicial: cartera.presupuestoInicial ?? 0,
     administrador: cartera.administrador ?? '',
     inicialesAdministrador: cartera.inicialesAdministrador ?? '',
+    colaboradores: cartera.colaboradores ?? [],
+    resumen: cartera.resumen ?? {
+      presupuestoInicial: cartera.presupuestoInicial ?? 0,
+      totalIngresos: 0,
+      totalGastos: 0,
+      saldo: cartera.presupuestoInicial ?? 0,
+    },
+    series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
+    balance: cartera.balance ?? null,
+    fechaCierre: cartera.fechaCierre ?? null,
   }
 }
 
@@ -104,5 +118,87 @@ export async function crearCartera({
     fechaFin: conPeriodo && fechaFin ? fechaFin : undefined,
   })
 
+  return data
+}
+
+// trae las categorias activas de la cartera, tipo filtra ingreso o gasto 
+export async function listarCategorias(idCartera, tipo){
+  const query = tipo ? `?tipo=${encodeURIComponent(tipo)}` : ''
+  const { data } = await api.get(`/carteras/${idCartera}/categorias${query}`)
+  return data
+}
+
+// crea una categoria nueva en la cartera y regresa la que quedo guardada 
+
+export async function crearCategoria(idCartera, {nombre, tipo}){
+  const {data} = await api.post(`/carteras/${idCartera}/categorias`, {
+    nombre: nombre.trim(),
+    tipo,
+  })
+  return data
+}
+
+// registra un ingreso o gasto, el gasto exige categoriaId 
+export async function crearTransaccion(idCartera, {tipo, monto, fecha,categoriaId, metodoPago,descripcion}){
+  const {data} = await api.post(`/carteras/${idCartera}/transacciones`, {
+    tipo,
+    monto: Number(monto),
+    fecha,
+    // el ingreso usa la catgoria aportaciones del backend, solo el gasto manda id 
+    ...(tipo === 'GASTO' ? {categoriaId: Number(categoriaId)} : {}),
+    metodoPago: metodoPago || undefined,
+    descripcion: descripcion?.trim() || undefined,
+  })
+  return data
+}
+
+// Periodos de ingreso de una cartera Hogar.
+export async function listarPeriodos(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/periodos`)
+  return data
+}
+
+// Invitacion activa y bitacora de ingresos de la cartera.
+export async function obtenerInvitacion(idCartera) {
+  const { data } = await api.get(`/carteras/${idCartera}/invitaciones`)
+  return data
+}
+
+// Genera una invitacion nueva (revoca la anterior).
+export async function generarInvitacion(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/invitaciones`, {})
+  return data
+}
+
+// Cierra una cartera Viaje/Evento y devuelve la cartera con su balance.
+export async function finalizarCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/finalizar`, {})
+  return data
+}
+
+// Edita una cartera existente. Arma el cuerpo igual que crearCartera,
+// pero aqui si se manda descripcion vacia para poder borrarla.
+export async function editarCartera(
+  idCartera,
+  {nombre, categoria, descripcion, presupuesto, fechaInicio, fechaFin}
+) {
+  const conPeriodo = admitePeriodo(categoria)
+
+  const { data } = await api.put(`/carteras/${idCartera}`,{
+    nombre: nombre.trim(),
+    // el tipo es de solo lectura: no se manda para no permitir cambiarlo
+    descripcion: descripcion.trim(),
+    // Hogar no maneja presupuesto ni fechas: se limpian con 0 y null
+    presupuestoInicial: conPeriodo ? Number(presupuesto || 0) : 0,
+    fechaInicio: conPeriodo ? fechaInicio || null : null,
+    fechaFin: conPeriodo ? fechaFin || null : null,
+  })
+
+  return data
+}
+
+// Inactiva la cartera (borrado logico a ARCHIVADA); no elimina datos.
+export async function inactivarCartera(idCartera) {
+  const { data } = await api.post(`/carteras/${idCartera}/inactivar`, {})
   return data
 }
