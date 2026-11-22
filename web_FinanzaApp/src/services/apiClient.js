@@ -85,7 +85,18 @@ async function peticion(ruta, opciones = {}, puedeRenovar = true) {
     throw error
   }
 
-  return respuesta.status === 204 ? null : respuesta.json()
+  if (respuesta.status === 204) return null
+
+  // Si el servidor devuelve HTML (p. ej. una ruta que aún no existe en prod),
+  // no se intenta parsear como JSON para no romper la pantalla.
+  const tipo = respuesta.headers.get('content-type') ?? ''
+  if (!tipo.includes('application/json')) {
+    const error = new Error(`Respuesta no válida al llamar ${ruta}`)
+    error.status = respuesta.status
+    throw error
+  }
+
+  return respuesta.json()
 }
 
 export const api = {

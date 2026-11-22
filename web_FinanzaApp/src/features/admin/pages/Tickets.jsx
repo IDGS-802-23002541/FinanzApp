@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Avatar,
@@ -6,6 +6,11 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   MenuItem,
   Pagination,
@@ -20,8 +25,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { listarTickets, responderTicket } from '../api.js'
+import {
+  asignarTicket,
+  cerrarTicket,
+  listarTickets,
+  listarTrabajadores,
+  responderTicket,
+} from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
+import { useAuth } from '../../../hooks/useAuth.js'
 
 const ESTADOS = {
   ABIERTO: 'Abierto',
@@ -45,6 +57,11 @@ const PRIORIDADES = {
   MEDIA: 'Media',
   ALTA: 'Alta',
   URGENTE: 'Urgente',
+}
+
+const AREAS_PERSONAL = {
+  ADMIN: 'Administrador',
+  TRABAJADOR: 'Trabajador',
 }
 
 const FILTROS_INICIALES = {
@@ -82,6 +99,9 @@ const sxCelda = {
 // Bandeja de soporte para admin y trabajador: tabla con filtros (HU-12.1)
 // y detalle con respuesta (HU-12.3).
 function TicketsAdmin() {
+  const { usuario } = useAuth()
+  const detalleRef = useRef(null)
+  const bajarAlDetalle = useRef(false)
   const [tickets, setTickets] = useState([])
   const [filtros, setFiltros] = useState(FILTROS_INICIALES)
   const [cargando, setCargando] = useState(true)
@@ -94,6 +114,17 @@ function TicketsAdmin() {
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [recarga, setRecarga] = useState(0)
+  const [trabajadores, setTrabajadores] = useState([])
+  const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState('')
+  const [cargandoTrabajadores, setCargandoTrabajadores] = useState(true)
+  const [asignando, setAsignando] = useState(false)
+  const [errorAsignacion, setErrorAsignacion] = useState('')
+  const [avisoAsignacion, setAvisoAsignacion] = useState('')
+  const [resaltarDetalle, setResaltarDetalle] = useState(false)
+  const [porCerrar, setPorCerrar] = useState(false)
+  const [cerrando, setCerrando] = useState(false)
+  const [errorCierre, setErrorCierre] = useState('')
+  const [avisoCierre, setAvisoCierre] = useState(null)
 
   useEffect(() => {
     let vigente = true
@@ -136,11 +167,70 @@ function TicketsAdmin() {
     }
   }, [filtros, pagina, recarga])
 
+  useEffect(() => {
+    let vigente = true
+
+    const cargarTrabajadores = async () => {
+      setCargandoTrabajadores(true)
+      try {
+        const datos = await listarTrabajadores()
+        if (vigente) setTrabajadores(datos ?? [])
+      } catch (err) {
+        if (vigente) setErrorAsignacion(err.message)
+      } finally {
+        if (vigente) setCargandoTrabajadores(false)
+      }
+    }
+
+    cargarTrabajadores()
+    return () => {
+      vigente = false
+    }
+  }, [])
+
+  // Solo se baja al detalle cuando el usuario eligió una fila.
+  useEffect(() => {
+    if (!seleccionadoId || !bajarAlDetalle.current) return
+    bajarAlDetalle.current = false
+    detalleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    requestAnimationFrame(() => detalleRef.current?.focus())
+  }, [seleccionadoId])
+
   const seleccionado =
     tickets.find((ticket) => ticket.idTicket === seleccionadoId) ?? null
   const cerrado = seleccionado?.estado === 'CERRADO'
   const respuestas = seleccionado?.respuestas ?? []
   const hayFiltros = Boolean(filtros.estado || filtros.prioridad)
+  const asignadoAmi =
+    seleccionado?.asignacionActual?.trabajadorId === usuario?.idUsuario
+
+  const destacarDetalle = () => {
+    setResaltarDetalle(false)
+    requestAnimationFrame(() => setResaltarDetalle(true))
+  }
+
+  const abrirDetalle = (idTicket) => {
+    setMensaje('')
+    setErrorEnvio('')
+    setTrabajadorSeleccionado('')
+    setErrorAsignacion('')
+    setAvisoAsignacion('')
+    setErrorCierre('')
+    setAvisoCierre(null)
+    destacarDetalle()
+
+    if (idTicket === seleccionadoId) {
+      detalleRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+      detalleRef.current?.focus()
+      return
+    }
+
+    bajarAlDetalle.current = true
+    setSeleccionadoId(idTicket)
+  }
 
   const cambiarFiltro = (campo) => (evento) => {
     setFiltros((actual) => ({ ...actual, [campo]: evento.target.value }))
@@ -150,6 +240,52 @@ function TicketsAdmin() {
   const limpiarFiltros = () => {
     setFiltros(FILTROS_INICIALES)
     setPagina(1)
+  }
+
+  const asignar = async (trabajadorId) => {
+    if (!seleccionado || asignando) return
+
+    setAsignando(true)
+    setErrorAsignacion('')
+    setAvisoAsignacion('')
+
+    try {
+      await asignarTicket(seleccionado.idTicket, {
+        trabajadorId,
+        idAsignacionActual:
+          seleccionado.asignacionActual?.idAsignacion ?? null,
+      })
+      setTrabajadorSeleccionado('')
+      setAvisoAsignacion('Ticket asignado correctamente.')
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorAsignacion(err.message)
+      // Si otro tomó el ticket, se recarga para mostrar la asignación real.
+      if (err.status === 409) setRecarga((actual) => actual + 1)
+    } finally {
+      setAsignando(false)
+    }
+  }
+
+  const cerrar = async () => {
+    if (!seleccionado || cerrando) return
+
+    setCerrando(true)
+    setErrorCierre('')
+
+    try {
+      await cerrarTicket(seleccionado.idTicket)
+      setPorCerrar(false)
+      setAvisoCierre({
+        idTicket: seleccionado.idTicket,
+        mensaje: 'Ticket cerrado correctamente.',
+      })
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorCierre(err.message)
+    } finally {
+      setCerrando(false)
+    }
   }
 
   const enviarRespuesta = async (evento) => {
@@ -325,11 +461,7 @@ function TicketsAdmin() {
                       key={ticket.idTicket}
                       hover
                       selected={activo}
-                      onClick={() => {
-                        setSeleccionadoId(ticket.idTicket)
-                        setMensaje('')
-                        setErrorEnvio('')
-                      }}
+                      onClick={() => abrirDetalle(ticket.idTicket)}
                       sx={{
                         cursor: 'pointer',
                         '&.Mui-selected': {
@@ -423,18 +555,50 @@ function TicketsAdmin() {
         </Box>
       ) : (
         <Box
+          ref={detalleRef}
+          tabIndex={-1}
+          onAnimationEnd={() => setResaltarDetalle(false)}
           sx={{
             border: '1px solid var(--color-borde)',
             borderRadius: '16px',
             backgroundColor: 'var(--color-superficie)',
             p: 2.5,
+            scrollMarginTop: 24,
+            '&:focus': { outline: 'none' },
+            animation: resaltarDetalle
+              ? 'destacarDetalle 2.2s ease-out'
+              : 'none',
+            '@keyframes destacarDetalle': {
+              '0%': {
+                borderColor: 'var(--color-resaltado)',
+                boxShadow:
+                  '0 0 0 4px color-mix(in srgb, var(--color-resaltado) 30%, transparent)',
+              },
+              '100%': {
+                borderColor: 'var(--color-borde)',
+                boxShadow:
+                  '0 0 0 0 color-mix(in srgb, var(--color-resaltado) 0%, transparent)',
+              },
+            },
           }}
         >
+          <Typography
+            sx={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--color-texto-terciario)',
+            }}
+          >
+            Detalle del ticket y respuesta
+          </Typography>
           <Typography
             sx={{
               fontSize: '1.125rem',
               fontWeight: 700,
               color: 'var(--color-texto)',
+              mt: 0.5,
             }}
           >
             {seleccionado.asunto}
@@ -480,6 +644,133 @@ function TicketsAdmin() {
           >
             {seleccionado.descripcion}
           </Typography>
+
+          <Box
+            sx={{
+              mt: 2.5,
+              p: 2,
+              border: '1px solid var(--color-borde)',
+              borderRadius: '12px',
+              backgroundColor: 'var(--color-superficie-suave)',
+            }}
+          >
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1.5}
+              sx={{
+                alignItems: { xs: 'stretch', md: 'center' },
+                justifyContent: 'space-between',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: '0.875rem',
+                  color: 'var(--color-texto-secundario)',
+                }}
+              >
+                Asignado a:{' '}
+                <Box
+                  component="span"
+                  sx={{ fontWeight: 700, color: 'var(--color-texto)' }}
+                >
+                  {seleccionado.asignado || 'Sin asignar'}
+                </Box>
+                {asignadoAmi && ' (tú)'}
+              </Typography>
+
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => asignar()}
+                disabled={asignando || asignadoAmi || cerrado}
+                sx={sxBoton}
+              >
+                {asignadoAmi ? 'Ya es tuyo' : 'Tomar ticket'}
+              </Button>
+            </Stack>
+
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              sx={{ mt: 1.5, alignItems: { xs: 'stretch', sm: 'center' } }}
+            >
+              <TextField
+                select
+                size="small"
+                label="Asignar a otro trabajador"
+                value={trabajadorSeleccionado}
+                onChange={(evento) =>
+                  setTrabajadorSeleccionado(evento.target.value)
+                }
+                disabled={asignando || cerrado || cargandoTrabajadores}
+                sx={{ minWidth: 260, flex: 1 }}
+                helperText={
+                  cargandoTrabajadores
+                    ? 'Cargando trabajadores…'
+                    : trabajadores.length === 0
+                      ? 'No hay trabajadores activos.'
+                      : ' '
+                }
+              >
+                {trabajadores.map((trabajador) => (
+                  <MenuItem
+                    key={trabajador.idUsuario}
+                    value={String(trabajador.idUsuario)}
+                  >
+                    {trabajador.nombre} ·{' '}
+                    {AREAS_PERSONAL[trabajador.rolGlobal] ??
+                      trabajador.rolGlobal}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => asignar(Number(trabajadorSeleccionado))}
+                disabled={
+                  asignando || cerrado || !trabajadorSeleccionado.trim()
+                }
+                sx={sxBoton}
+              >
+                Asignar
+              </Button>
+            </Stack>
+
+            {errorAsignacion && (
+              <Alert severity="warning" sx={{ mt: 1.5 }}>
+                {errorAsignacion}
+              </Alert>
+            )}
+            {avisoAsignacion && (
+              <Alert severity="success" sx={{ mt: 1.5 }}>
+                {avisoAsignacion}
+              </Alert>
+            )}
+          </Box>
+
+          {!cerrado && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={() => {
+                  setErrorCierre('')
+                  setPorCerrar(true)
+                }}
+                disabled={cerrando}
+                sx={sxBoton}
+              >
+                Cerrar ticket
+              </Button>
+            </Box>
+          )}
+
+          {avisoCierre?.idTicket === seleccionado.idTicket && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {avisoCierre.mensaje}
+            </Alert>
+          )}
 
           <Divider sx={{ my: 2.5 }} />
 
@@ -595,6 +886,46 @@ function TicketsAdmin() {
           )}
         </Box>
       )}
+
+      <Dialog
+        open={porCerrar}
+        onClose={() => {
+          if (!cerrando) setPorCerrar(false)
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Cerrar ticket</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Cerrar el ticket #{seleccionado?.idTicket}? Ya no admitirá más
+            respuestas.
+          </DialogContentText>
+          {errorCierre && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorCierre}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setPorCerrar(false)}
+            disabled={cerrando}
+            sx={sxBoton}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={cerrar}
+            disabled={cerrando}
+            sx={sxBoton}
+          >
+            {cerrando ? 'Cerrando…' : 'Cerrar ticket'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   )
 }
