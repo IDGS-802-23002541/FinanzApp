@@ -287,6 +287,20 @@ def asignar_ticket(id_ticket, datos):
             "mensaje": "El trabajador debe ser un identificador numérico.",
         }, 400
 
+    # El cliente manda la asignación que tenía para detectar si otro la cambió.
+    validar_actual = "idAsignacionActual" in datos
+    id_asignacion_actual = datos.get("idAsignacionActual")
+    if validar_actual and id_asignacion_actual is not None:
+        if (
+            isinstance(id_asignacion_actual, bool)
+            or not isinstance(id_asignacion_actual, int)
+            or id_asignacion_actual < 1
+        ):
+            return {
+                "ok": False,
+                "mensaje": "La asignación actual debe ser un identificador válido.",
+            }, 400
+
     observaciones = _texto(datos.get("observaciones"))
     if len(observaciones) > 500:
         return {
@@ -300,8 +314,16 @@ def asignar_ticket(id_ticket, datos):
 
     ahora = seguridad.ahora_utc()
     try:
-        if db.session.get(Usuario, trabajador_id) is None:
-            return {"ok": False, "mensaje": "El trabajador no existe."}, 400
+        trabajador = db.session.get(Usuario, trabajador_id)
+        if (
+            trabajador is None
+            or trabajador.rolGlobal not in {"ADMIN", "TRABAJADOR"}
+            or trabajador.estado != "ACTIVO"
+        ):
+            return {
+                "ok": False,
+                "mensaje": "El trabajador no existe o no está activo.",
+            }, 400
 
         actual = db.session.execute(
             db.select(AsignacionTicket).where(
@@ -309,6 +331,17 @@ def asignar_ticket(id_ticket, datos):
                 AsignacionTicket.esActual == db.true(),
             )
         ).scalar_one_or_none()
+
+        if validar_actual:
+            actual_id = actual.idAsignacion if actual is not None else None
+            if actual_id != id_asignacion_actual:
+                return {
+                    "ok": False,
+                    "mensaje": (
+                        "El ticket ya fue tomado o su asignación cambió. "
+                        "Actualiza la lista e intenta de nuevo."
+                    ),
+                }, 409
 
         _aplicar_asignacion(ticket, actual, ahora)
         # El índice único deja una sola asignación actual por ticket:
@@ -621,7 +654,12 @@ def _serializar_asignacion(asignacion):
 def _nombre_usuario(usuario):
     if usuario is None:
         return None
-    return f"{usuario.nombreUsuario} {usuario.apaterno or ''}".strip()
+    partes = [
+        usuario.nombreUsuario,
+        usuario.apaterno,
+        getattr(usuario, "amaterno", None),
+    ]
+    return " ".join(parte for parte in partes if parte).strip()
 
 
 def _texto(valor):

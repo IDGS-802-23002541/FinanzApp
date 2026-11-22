@@ -149,6 +149,72 @@ def test_crear_ticket_rechaza_mensaje_vacio(monkeypatch):
     assert payload["ok"] is False
 
 
+class SesionAsignacionFalsa:
+    def __init__(self, actual):
+        self.actual = actual
+
+    def get(self, modelo, id_registro):
+        if modelo is soporte_service.Usuario:
+            trabajador = UsuarioFalso("TRABAJADOR", id_registro)
+            trabajador.estado = "ACTIVO"
+            return trabajador
+        return None
+
+    def execute(self, _consulta):
+        return self
+
+    def scalar_one_or_none(self):
+        return self.actual
+
+    def add(self, _registro):
+        pass
+
+    def flush(self):
+        pass
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+
+def test_asignar_rechaza_si_la_asignacion_cambio(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 9, "idAsignacionActual": 2}
+    )
+
+    assert status == 409
+    assert payload["ok"] is False
+    assert "cambió" in payload["mensaje"]
+
+
+def test_asignar_permite_si_la_asignacion_actual_coincide(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 9, "idAsignacionActual": 3}
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert payload["data"]["asignacion"]["trabajadorId"] == 9
+
+
 def test_cliente_no_puede_asignar(monkeypatch):
     _como(monkeypatch, "CLIENTE")
     payload, status = soporte_service.asignar_ticket(1, {})
