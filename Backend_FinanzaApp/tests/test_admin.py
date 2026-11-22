@@ -28,12 +28,14 @@ def test_rutas_admin_registradas():
         for metodo in regla.methods
     }
     assert ("/admin/metricas", "GET") in rutas
+    assert ("/admin/trabajadores", "GET") in rutas
     assert ("/admin/trabajadores", "POST") in rutas
 
 
 def test_admin_requiere_token():
     cliente = _app().test_client()
     assert cliente.get("/admin/metricas").status_code == 401
+    assert cliente.get("/admin/trabajadores").status_code == 401
     assert cliente.post("/admin/trabajadores", json={}).status_code == 401
 
 
@@ -42,6 +44,30 @@ def test_solo_admin_consulta_metricas(monkeypatch):
     payload, status = admin_service.metricas()
     assert status == 403
     assert payload["ok"] is False
+
+
+def test_solo_staff_lista_trabajadores(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    payload, status = admin_service.listar_trabajadores()
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_serializar_trabajador_expone_datos_minimos():
+    trabajador = UsuarioFalso("TRABAJADOR")
+    trabajador.idUsuario = 7
+    trabajador.nombreUsuario = "Diego"
+    trabajador.apaterno = "Borja"
+    trabajador.correo = "diego@finanzapp.com"
+
+    datos = admin_service._serializar_trabajador(trabajador)
+
+    assert datos == {
+        "idUsuario": 7,
+        "nombre": "Diego Borja",
+        "correo": "diego@finanzapp.com",
+        "rolGlobal": "TRABAJADOR",
+    }
 
 
 def test_solo_admin_crea_trabajadores(monkeypatch):

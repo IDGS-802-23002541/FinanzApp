@@ -32,6 +32,11 @@ class TicketFalso:
 
 class AsignacionFalso:
     def __init__(self):
+        self.idAsignacion = 3
+        self.ticketId = 1
+        self.trabajadorId = 9
+        self.fechaInicio = datetime(2026, 2, 1)
+        self.observaciones = None
         self.esActual = True
         self.fechaFin = None
 
@@ -144,6 +149,72 @@ def test_crear_ticket_rechaza_mensaje_vacio(monkeypatch):
     assert payload["ok"] is False
 
 
+class SesionAsignacionFalsa:
+    def __init__(self, actual):
+        self.actual = actual
+
+    def get(self, modelo, id_registro):
+        if modelo is soporte_service.Usuario:
+            trabajador = UsuarioFalso("TRABAJADOR", id_registro)
+            trabajador.estado = "ACTIVO"
+            return trabajador
+        return None
+
+    def execute(self, _consulta):
+        return self
+
+    def scalar_one_or_none(self):
+        return self.actual
+
+    def add(self, _registro):
+        pass
+
+    def flush(self):
+        pass
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+
+def test_asignar_rechaza_si_la_asignacion_cambio(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 9, "idAsignacionActual": 2}
+    )
+
+    assert status == 409
+    assert payload["ok"] is False
+    assert "cambió" in payload["mensaje"]
+
+
+def test_asignar_permite_si_la_asignacion_actual_coincide(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 9, "idAsignacionActual": 3}
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert payload["data"]["asignacion"]["trabajadorId"] == 9
+
+
 def test_cliente_no_puede_asignar(monkeypatch):
     _como(monkeypatch, "CLIENTE")
     payload, status = soporte_service.asignar_ticket(1, {})
@@ -201,6 +272,8 @@ def test_serializacion_de_ticket_cumple_contrato():
         "categoria",
         "prioridad",
         "estado",
+        "cliente",
+        "asignado",
         "fechaCreacion",
         "fechaCierre",
         "respuestas",
@@ -208,8 +281,25 @@ def test_serializacion_de_ticket_cumple_contrato():
     }
     assert datos["respuestas"] == []
     assert datos["asignacionActual"] is None
+    assert datos["cliente"] is None
+    assert datos["asignado"] is None
     assert datos["fechaCreacion"] == "2026-01-01T00:00:00"
     assert datos["fechaCierre"] is None
+
+
+def test_serializacion_incluye_cliente_y_asignado():
+    cliente = UsuarioFalso("CLIENTE", 7)
+    trabajador = UsuarioFalso("TRABAJADOR", 9)
+    trabajador.nombreUsuario = "Diego"
+    trabajador.apaterno = "Borja"
+    asignacion = AsignacionFalso()
+
+    datos = soporte_service._serializar_ticket(
+        TicketFalso(), [], asignacion, {7: cliente, 9: trabajador}
+    )
+
+    assert datos["cliente"] == "Usuario Prueba"
+    assert datos["asignado"] == "Diego Borja"
 
 
 def _ticket_para_busqueda(monkeypatch, **cambios):
@@ -382,6 +472,12 @@ def test_listar_rechaza_categoria_invalida():
     assert payload["ok"] is False
 
 
+def test_listar_rechaza_prioridad_invalida():
+    payload, status = soporte_service.listar_tickets(prioridad="MAXIMA")
+    assert status == 400
+    assert payload["ok"] is False
+
+
 def test_listar_rechaza_responsable_no_numerico():
     payload, status = soporte_service.listar_tickets(responsable="ana")
     assert status == 400
@@ -402,14 +498,14 @@ def test_listar_rechaza_rango_de_fechas_invertido():
     assert payload["ok"] is False
 
 
-def test_filtros_tickets_combinan_categoria_responsable_y_fecha():
+def test_filtros_tickets_combinan_categoria_prioridad_responsable_y_fecha():
     from datetime import date
 
     filtros = soporte_service._filtros_tickets(
-        "PAGOS", 9, date(2026, 1, 1), date(2026, 1, 31)
+        "PAGOS", "ALTA", 9, date(2026, 1, 1), date(2026, 1, 31)
     )
-    assert len(filtros) == 4
+    assert len(filtros) == 5
 
 
 def test_filtros_tickets_vacios_sin_parametros():
-    assert soporte_service._filtros_tickets(None, None, None, None) == []
+    assert soporte_service._filtros_tickets(None, None, None, None, None) == []

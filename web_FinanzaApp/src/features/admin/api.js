@@ -7,14 +7,43 @@ export async function listarComentarios() {
   return data
 }
 
-export async function listarTickets({ estado, pagina = 1, porPagina = 20 } = {}) {
+export async function listarTickets({
+  estado,
+  prioridad,
+  pagina = 1,
+  porPagina = 20,
+} = {}) {
   const params = new URLSearchParams({
     pagina: String(pagina),
     porPagina: String(porPagina),
   })
   if (estado) params.append('estado', estado)
+  if (prioridad) params.append('prioridad', prioridad)
 
   const { data } = await api.get(`/soporte/tickets?${params}`)
+  return data
+}
+
+export async function listarTrabajadores() {
+  const { data } = await api.get('/admin/trabajadores')
+  return data.trabajadores
+}
+
+export async function asignarTicket(
+  idTicket,
+  { trabajadorId, idAsignacionActual } = {},
+) {
+  const cuerpo = { idAsignacionActual }
+  if (trabajadorId) cuerpo.trabajadorId = trabajadorId
+
+  const { data } = await api.post(`/soporte/tickets/${idTicket}/asignar`, cuerpo)
+  return data
+}
+
+export async function cerrarTicket(idTicket, observaciones = '') {
+  const { data } = await api.post(`/soporte/tickets/${idTicket}/cerrar`, {
+    observaciones: observaciones.trim(),
+  })
   return data
 }
 
