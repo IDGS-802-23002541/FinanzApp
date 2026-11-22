@@ -120,9 +120,20 @@ function Login() {
           />
         </Stack>
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+            mt: 1,
+          }}
+        >
           <Link component={RouterLink} to="/recuperar" sx={{ fontSize: '0.875rem' }}>
             ¿Olvidaste tu contraseña?
+          </Link>
+          <Link component={RouterLink} to="/reactivar" sx={{ fontSize: '0.875rem' }}>
+            ¿Desactivaste tu cuenta?
           </Link>
         </Box>
 

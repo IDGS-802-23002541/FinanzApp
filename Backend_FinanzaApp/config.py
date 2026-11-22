@@ -19,6 +19,9 @@ class Config:
     REFRESH_TOKEN_DIAS = int(os.getenv("REFRESH_TOKEN_DIAS", "7"))
     RECUPERACION_MINUTOS = int(os.getenv("RECUPERACION_MINUTOS", "30"))
 
+    EMAIL_CONNECTION_STRING = os.getenv("EMAIL_CONNECTION_STRING")
+    EMAIL_REMITENTE = os.getenv("EMAIL_REMITENTE")
+
     DB_SERVER = os.getenv("DB_SERVER")
     DB_PORT = os.getenv("DB_PORT", "1433")
     DB_NAME = os.getenv("DB_NAME")

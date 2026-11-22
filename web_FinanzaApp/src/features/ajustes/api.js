@@ -12,3 +12,9 @@ export async function cambiarContrasenia({ actual, nueva }) {
 export async function desactivarCuenta(contrasenia) {
   await api.post('/auth/desactivar', { contrasenia })
 }
+
+// HU-02.5b: eliminación del registro del cliente. El backend anonimiza sus
+// datos, conserva las transacciones y revoca la sesión.
+export async function eliminarCuenta(contrasenia) {
+  await api.delete('/auth/cuenta', { contrasenia })
+}

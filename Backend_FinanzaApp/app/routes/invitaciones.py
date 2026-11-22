@@ -9,7 +9,8 @@ invitaciones_bp = Blueprint("invitaciones", __name__)
 @invitaciones_bp.post("/carteras/<int:idCartera>/invitaciones")
 @jwt_required()
 def generar(idCartera):
-    payload, status = invitacion_service.generar(idCartera)
+    datos = request.get_json(silent=True) or {}
+    payload, status = invitacion_service.generar(idCartera, datos.get("correo"))
     return jsonify(payload), status
 
 

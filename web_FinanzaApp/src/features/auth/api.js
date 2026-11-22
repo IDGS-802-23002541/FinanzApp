@@ -53,3 +53,14 @@ export async function restablecerContrasenia({ correo, codigo, contrasenia }) {
   })
   return data
 }
+
+// Reactivación de una cuenta desactivada: se pide un código por correo.
+export async function solicitarCodigoReactivacion(correo) {
+  const { data } = await api.post('/auth/reactivar', { correo })
+  return data
+}
+
+export async function confirmarReactivacion({ correo, codigo }) {
+  const { data } = await api.post('/auth/reactivar/confirmar', { correo, codigo })
+  return data
+}

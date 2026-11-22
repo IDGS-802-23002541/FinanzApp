@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7f7d1c1e-96a1-4c5b-9a0e-finanzapp0002",
     "name": "FinanzApp - API",
-    "description": "Regresion del Sprint 3: autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta, notificaciones, pagos recurrentes y soporte. Incluye matriz de permisos y casos borde. Montos MXN; fechas de API en YYYY-MM-DD.",
+    "description": "Regresion del Sprint 3: autenticacion, carteras, transacciones, categorias, invitaciones, reportes, comentarios, cuenta, notificaciones, pagos recurrentes y soporte. Incluye matriz de permisos y casos borde. Montos MXN; fechas de API en YYYY-MM-DD. Sprint 4: reactivacion de cuenta y endpoints de admin.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -909,6 +909,119 @@
         },
         "url": "{{baseUrl}}/auth/login",
         "description": "Esperado: 200. data.usuario.tema = OSCURO al iniciar sesión (CA2)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "39 - Reactivar cuenta: solicitar codigo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\"}"
+        },
+        "url": "{{baseUrl}}/auth/reactivar",
+        "description": "Esperado: 200 neutro. Si la cuenta esta desactivada, manda el codigo al correo y lo guarda en codigoRecuperacion (solo en debug)."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.ok && body.data && body.data.codigo) {",
+              "  pm.collectionVariables.set('codigoRecuperacion', body.data.codigo);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "40 - Reactivar cuenta: confirmar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"codigo\":\"{{codigoRecuperacion}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/reactivar/confirmar",
+        "description": "Esperado: 200. Reactiva la cuenta desactivada. Para el caso olvido de clave + desactivada, usar 41 (restablecer reactiva en un paso)."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "41 - Restablecer reactiva cuenta desactivada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"correo\":\"prueba1@dominio.com\",\"codigo\":\"{{codigoRecuperacion}}\",\"contrasenia\":\"NuevaPassword1\"}"
+        },
+        "url": "{{baseUrl}}/auth/restablecer",
+        "description": "Esperado: 200 con mensaje de reactivada si la cuenta estaba desactivada. Caso olvido de clave + cuenta desactivada en un solo paso."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "42 - Admin: metricas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/metricas",
+        "description": "Esperado: 200 solo con token ADMIN (clientes totales/activos/inactivos, trabajadores activos, tickets por estatus). 403 con cliente o trabajador."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "43 - Admin: alta de trabajador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombreUsuario\":\"Luis\",\"apaterno\":\"Perez\",\"correo\":\"trabajador1@dominio.com\"}"
+        },
+        "url": "{{baseUrl}}/admin/trabajadores",
+        "description": "Esperado: 201 solo con token ADMIN. Devuelve contraseniaTemporal una sola vez; el trabajador debe cambiarla al entrar. 409 si el correo ya existe."
       },
       "response": [],
       "event": []
