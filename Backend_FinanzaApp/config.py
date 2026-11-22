@@ -27,6 +27,9 @@ class Config:
     DB_NAME = os.getenv("DB_NAME")
     DB_USER = os.getenv("DB_USER")
     DB_PASSWORD = os.getenv("DB_PASSWORD")
+    # Azure SQL exige cifrado; SQL Server local puede usar Encrypt=no.
+    DB_ENCRYPT = os.getenv("DB_ENCRYPT", "no")
+    DB_TRUST_CERT = os.getenv("DB_TRUST_CERT", "yes")
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
@@ -43,8 +46,8 @@ class Config:
             f"DATABASE={cls.DB_NAME};"
             f"UID={cls.DB_USER};"
             f"PWD={cls.DB_PASSWORD};"
-            "TrustServerCertificate=yes;"
-            "Encrypt=no;"
+            f"TrustServerCertificate={cls.DB_TRUST_CERT};"
+            f"Encrypt={cls.DB_ENCRYPT};"
             "Connection Timeout=30;"
         )
         return f"mssql+pyodbc:///?odbc_connect={quote_plus(connection_string)}"
