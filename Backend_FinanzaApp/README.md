@@ -43,6 +43,15 @@ flask --app run.py run --debug
 
 Variables de entorno en `.env` (nunca al repo): cadena de conexión de SQL Server y credenciales de Cloudinary.
 
+> **macOS con ODBC Driver 18:** si al conectar aparece `OpenSSL library could not be loaded`, instala OpenSSL y arranca indicando su ruta:
+>
+> ```bash
+> brew install openssl@3
+> DYLD_LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib flask --app run.py run --debug
+> ```
+>
+> En Linux y Windows no aplica.
+
 ## Recuperación de contraseña en desarrollo
 
 - En modo `--debug`, `POST /auth/recuperar` devuelve el código de 6 dígitos en `data.codigo` y lo escribe en la consola con `logger.info`.
