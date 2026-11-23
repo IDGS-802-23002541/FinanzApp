@@ -29,6 +29,9 @@
   --color-seleccion: #f7e0d8;
   --color-seleccion-texto: #a94832;
 
+  /* Borde temporal al abrir el detalle de un ticket. */
+  --color-resaltado: var(--paleta-coral);
+
   /* Degradado del panel de marca en las vistas públicas. */
   --gradiente-marca: linear-gradient(150deg, #173b45 0%, #1d4a55 35%, #0e2a32 100%);
 }
@@ -55,4 +58,7 @@
   /* Enlace activo del menú lateral en oscuro. */
   --color-seleccion: #1f4a55;
   --color-seleccion-texto: var(--paleta-coral);
+
+  /* En oscuro el coral no contrasta; se usa el verde de éxito. */
+  --color-resaltado: #8fd1b8;
 }

@@ -54,6 +54,44 @@ def metricas():
     }, 200
 
 
+def listar_trabajadores():
+    if current_user.rolGlobal not in {"ADMIN", "TRABAJADOR"}:
+        return {
+            "ok": False,
+            "mensaje": "Solo el personal de soporte puede consultar trabajadores.",
+        }, 403
+
+    try:
+        trabajadores = (
+            db.session.execute(
+                db.select(Usuario)
+                .where(
+                    Usuario.rolGlobal.in_(("ADMIN", "TRABAJADOR")),
+                    Usuario.estado == "ACTIVO",
+                )
+                .order_by(Usuario.nombreUsuario, Usuario.apaterno)
+            )
+            .scalars()
+            .all()
+        )
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {
+            "ok": False,
+            "mensaje": "No se pudieron obtener los trabajadores.",
+        }, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "trabajadores": [
+                _serializar_trabajador(trabajador) for trabajador in trabajadores
+            ]
+        },
+        "mensaje": "Trabajadores obtenidos correctamente.",
+    }, 200
+
+
 def crear_trabajador(datos):
     if current_user.rolGlobal != "ADMIN":
         return {
@@ -97,6 +135,21 @@ def crear_trabajador(datos):
         },
         "mensaje": "Trabajador creado. Comparte la contraseña temporal.",
     }, 201
+
+
+def _serializar_trabajador(trabajador):
+    partes = [
+        trabajador.nombreUsuario,
+        trabajador.apaterno,
+        getattr(trabajador, "amaterno", None),
+    ]
+    nombre = " ".join(parte for parte in partes if parte).strip()
+    return {
+        "idUsuario": trabajador.idUsuario,
+        "nombre": nombre,
+        "correo": trabajador.correo,
+        "rolGlobal": trabajador.rolGlobal,
+    }
 
 
 def _conteo_usuarios(rol):
