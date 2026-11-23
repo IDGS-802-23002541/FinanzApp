@@ -70,9 +70,25 @@ paths:
       operationId: listarTrabajadores
       security:
         - bearerAuth: []
+      parameters:
+        - name: pagina
+          in: query
+          description: Página a consultar (mínimo 1).
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: porPagina
+          in: query
+          description: Trabajadores por página (1 a 100).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         '200':
-          description: Trabajadores activos
+          description: Trabajadores activos con su ticket actual y paginación
           content:
             application/json:
               schema:
@@ -85,6 +101,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: El usuario no es personal de soporte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Parámetros de paginación inválidos
           content:
             application/json:
               schema:
@@ -4832,6 +4854,31 @@ components:
           enum:
             - ADMIN
             - TRABAJADOR
+        estatus:
+          type: string
+          enum:
+            - ACTIVO
+            - INACTIVO
+        tickets:
+          type: array
+          description: Tickets asignados de forma actual al trabajador.
+          items:
+            type: object
+            properties:
+              idTicket:
+                type: integer
+                example: 3
+              asunto:
+                type: string
+                example: No puedo entrar
+              estado:
+                type: string
+                enum:
+                  - ABIERTO
+                  - EN_PROCESO
+                  - ESPERA
+                  - RESUELTO
+                  - CERRADO
     TrabajadoresLista:
       type: object
       properties:
@@ -4845,6 +4892,21 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/TrabajadorResumen'
+        paginacion:
+          type: object
+          properties:
+            pagina:
+              type: integer
+              example: 1
+            porPagina:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 12
+            totalPaginas:
+              type: integer
+              example: 2
         mensaje:
           type: string
           example: Trabajadores obtenidos correctamente.
