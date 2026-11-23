@@ -43,9 +43,13 @@ export async function listarTickets({
   return data
 }
 
-export async function listarTrabajadores() {
-  const { data } = await api.get('/admin/trabajadores')
-  return data.trabajadores
+export async function listarTrabajadores({ pagina = 1, porPagina = 10 } = {}) {
+  const params = new URLSearchParams({
+    pagina: String(pagina),
+    porPagina: String(porPagina),
+  })
+  const { data, paginacion } = await api.get(`/admin/trabajadores?${params}`)
+  return { trabajadores: data?.trabajadores ?? [], paginacion }
 }
 
 export async function asignarTicket(
