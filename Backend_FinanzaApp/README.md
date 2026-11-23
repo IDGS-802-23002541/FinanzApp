@@ -43,6 +43,17 @@ flask --app run.py run --debug
 
 Variables de entorno en `.env` (nunca al repo): cadena de conexión de SQL Server y credenciales de Cloudinary.
 
+## Recuperación de contraseña en desarrollo
+
+- En modo `--debug`, `POST /auth/recuperar` devuelve el código de 6 dígitos en `data.codigo` y lo escribe en la consola con `logger.info`.
+- Fuera de debug el código no se expone ni se registra.
+- El correo solo se envía si `EMAIL_CONNECTION_STRING` y `EMAIL_REMITENTE` están configurados; si no, se omite y queda una advertencia en el log.
+- Para recuperar el código vigente de un correo:
+
+  ```bash
+  python scripts/recuperar_codigo.py correo@ejemplo.com
+  ```
+
 ## Reglas
 
 Ver el `AGENTS.md` raíz (ramas, commits y reglas generales).
