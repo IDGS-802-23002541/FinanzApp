@@ -193,7 +193,7 @@ def _tickets_actuales(ids_trabajadores):
         .join(Ticket, Ticket.idTicket == AsignacionTicket.ticketId)
         .where(
             AsignacionTicket.trabajadorId.in_(ids_trabajadores),
-            AsignacionTicket.esActual.is_(True),
+            AsignacionTicket.esActual == db.true(),
             Ticket.estado != "ELIMINADO",
         )
         .order_by(Ticket.fechaCreacion.desc())
