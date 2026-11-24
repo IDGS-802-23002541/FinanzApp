@@ -67,9 +67,9 @@ export const router = createBrowserRouter([
           {element: <RoleRoute roles={[ROLES.ADMIN]} />, children: [
             {path: '/admin', element: <InicioAdmin />},
             {path: '/admin/trabajadores', element: <Trabajadores />},
-            {path: '/admin/comentarios', element: <BuzonComentarios />},
           ]},
           {path: '/admin/tickets', element: <TicketsAdmin />},
+          {path: '/admin/comentarios', element: <BuzonComentarios />},
         ]},
         {path: '/ajustes', element: <Ajustes />},
       ]}

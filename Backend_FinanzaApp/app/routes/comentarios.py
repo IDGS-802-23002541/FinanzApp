@@ -10,7 +10,17 @@ comentarios_bp = Blueprint("comentarios", __name__, url_prefix="/comentarios")
 @comentarios_bp.get("")
 @jwt_required()
 def listar():
-    payload, status = comentario_service.listar_comentarios()
+    payload, status = comentario_service.listar_comentarios(
+        pagina=request.args.get("pagina", "1"),
+        por_pagina=request.args.get("porPagina", "20"),
+    )
+    return jsonify(payload), status
+
+
+@comentarios_bp.post("/<int:idComentario>/archivar")
+@jwt_required()
+def archivar(idComentario):
+    payload, status = comentario_service.archivar_comentario(idComentario)
     return jsonify(payload), status
 
 

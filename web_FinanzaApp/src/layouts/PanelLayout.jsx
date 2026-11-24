@@ -15,6 +15,7 @@ const enlacesPorRol = {
     ],
  [ROLES.TRABAJADOR]: [
     { ruta: '/admin/tickets', texto: 'Tickets', grupo: 'Principal' },
+    { ruta: '/admin/comentarios', texto: 'Buzón', grupo: 'Principal' },
     { ruta: '/ajustes', texto: 'Ajustes', grupo: 'Cuenta' },
   ],
   [ROLES.CLIENTE] : [

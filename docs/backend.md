@@ -83,6 +83,22 @@ Backend_FinanzaApp/
 - Formato JSON uniforme: `{ ok, data, mensaje }` para éxito y `{ ok: false, mensaje }` con el código HTTP correspondiente.
 - Códigos: `400` validación, `401` no autenticado, `403` sin permiso, `404` inexistente, `409` conflicto (duplicados, admin único).
 
+## Recuperación de contraseña en desarrollo
+
+El código de 6 dígitos nunca se expone fuera de desarrollo:
+
+- Con `flask --app run.py run --debug`, `POST /auth/recuperar` devuelve el código en `data.codigo` y además lo registra con `logger.info` en la consola.
+- Sin `--debug` (o bajo waitress/gunicorn) `data.codigo` es `null` y el código no se registra.
+- El envío por correo solo ocurre si `EMAIL_CONNECTION_STRING` y `EMAIL_REMITENTE` están configurados; si faltan, el envío se omite y solo queda una advertencia en el log.
+- Cada nueva solicitud invalida el código anterior: solo el token más reciente (con `fechaUso IS NULL` y vigente) sirve.
+- Para reconstruir el código vigente desde la terminal (por ejemplo, si no hubo log):
+
+  ```bash
+  python scripts/recuperar_codigo.py correo@ejemplo.com
+  ```
+
+  Después úsalo en `POST /auth/restablecer`.
+
 ## Primeros pasos
 
 ```bash

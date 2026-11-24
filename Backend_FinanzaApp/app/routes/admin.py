@@ -17,7 +17,10 @@ def metricas():
 @admin_bp.get("/trabajadores")
 @jwt_required()
 def listar_trabajadores():
-    payload, status = admin_service.listar_trabajadores()
+    payload, status = admin_service.listar_trabajadores(
+        pagina=request.args.get("pagina", "1"),
+        por_pagina=request.args.get("porPagina", "20"),
+    )
     return jsonify(payload), status
 
 

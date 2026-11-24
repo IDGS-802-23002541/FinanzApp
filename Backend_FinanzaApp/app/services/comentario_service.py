@@ -1,3 +1,4 @@
+import math
 from datetime import timedelta
 
 from flask_jwt_extended import current_user
@@ -15,19 +16,41 @@ VENTANA_MINUTOS = 10
 ROLES_BUZON = {"ADMIN", "TRABAJADOR"}
 
 
-def listar_comentarios():
+def listar_comentarios(pagina="1", por_pagina="20"):
     if current_user.rolGlobal not in ROLES_BUZON:
         return {
             "ok": False,
             "mensaje": "No tienes permisos para ver los comentarios.",
         }, 403
 
+    pagina, error = _entero("pagina", pagina, 1)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+    por_pagina, error = _entero("porPagina", por_pagina, 1, 100)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    # El buzón muestra los comentarios activos; los archivados solo se conservan.
+    filtro = ComentarioLanding.estado != "ARCHIVADO"
+
     try:
-        comentarios = db.session.execute(
-            db.select(ComentarioLanding).order_by(
-                ComentarioLanding.fechaCreacion.desc()
+        total = db.session.execute(
+            db.select(func.count()).select_from(ComentarioLanding).where(filtro)
+        ).scalar_one()
+        comentarios = (
+            db.session.execute(
+                db.select(ComentarioLanding)
+                .where(filtro)
+                .order_by(
+                    ComentarioLanding.fechaCreacion.desc(),
+                    ComentarioLanding.idComentario.desc(),
+                )
+                .offset((pagina - 1) * por_pagina)
+                .limit(por_pagina)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
     except SQLAlchemyError:
         db.session.rollback()
         return {
@@ -38,7 +61,42 @@ def listar_comentarios():
     return {
         "ok": True,
         "data": [serializar_comentario(comentario) for comentario in comentarios],
+        "paginacion": {
+            "pagina": pagina,
+            "porPagina": por_pagina,
+            "total": total,
+            "totalPaginas": math.ceil(total / por_pagina) if total else 0,
+        },
         "mensaje": "Comentarios obtenidos correctamente.",
+    }, 200
+
+
+def archivar_comentario(id_comentario):
+    if current_user.rolGlobal not in ROLES_BUZON:
+        return {
+            "ok": False,
+            "mensaje": "No tienes permisos para archivar comentarios.",
+        }, 403
+
+    comentario = db.session.get(ComentarioLanding, id_comentario)
+    if comentario is None:
+        return {"ok": False, "mensaje": "Comentario no encontrado."}, 404
+
+    # Archivar es una baja lógica: el registro se conserva con otro estado.
+    comentario.estado = "ARCHIVADO"
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {
+            "ok": False,
+            "mensaje": "No se pudo archivar el comentario.",
+        }, 503
+
+    return {
+        "ok": True,
+        "data": serializar_comentario(comentario),
+        "mensaje": "Comentario archivado correctamente.",
     }, 200
 
 
@@ -112,6 +170,17 @@ def _texto(valor):
     if not isinstance(valor, str):
         return ""
     return valor.strip()
+
+
+def _entero(nombre, valor, minimo, maximo=None):
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return None, f"El parámetro {nombre} debe ser un número entero."
+    if numero < minimo or (maximo is not None and numero > maximo):
+        rango = f"entre {minimo} y {maximo}" if maximo is not None else f"mínimo {minimo}"
+        return None, f"El parámetro {nombre} debe estar {rango}."
+    return numero, None
 
 
 def _supera_limite(ip):
