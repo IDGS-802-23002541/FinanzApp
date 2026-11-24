@@ -14,7 +14,7 @@ import CampoContrasena from '../components/CampoContrasena.jsx'
 import { iniciarSesion as iniciarSesionApi } from '../api.js'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { IconoFlechaDerecha } from '../../../components/ui/Iconos.jsx'
-import { ROLES } from '../../../utils/constantes.js'
+import { PANEL_POR_ROL } from '../../../utils/constantes.js'
 
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -60,9 +60,7 @@ function Login() {
       })
 
       iniciarSesion(sesion)
-      navegar(sesion.usuario.rol === ROLES.CLIENTE ? '/carteras' : '/admin', {
-        replace: true,
-      })
+      navegar(PANEL_POR_ROL[sesion.usuario.rol] ?? '/', { replace: true })
     } catch (err) {
       setError(
         err.status

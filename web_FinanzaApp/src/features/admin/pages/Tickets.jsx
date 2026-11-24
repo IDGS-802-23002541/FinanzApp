@@ -173,8 +173,8 @@ function TicketsAdmin() {
     const cargarTrabajadores = async () => {
       setCargandoTrabajadores(true)
       try {
-        const datos = await listarTrabajadores()
-        if (vigente) setTrabajadores(datos ?? [])
+        const datos = await listarTrabajadores({ porPagina: 100 })
+        if (vigente) setTrabajadores(datos.trabajadores ?? [])
       } catch (err) {
         if (vigente) setErrorAsignacion(err.message)
       } finally {

@@ -179,6 +179,10 @@ def solicitar_recuperacion(correo):
             email_service.enviar_codigo_recuperacion(
                 correo, codigo, current_app.config["RECUPERACION_MINUTOS"]
             )
+    # En desarrollo el correo puede no estar configurado: el log es la única
+    # forma de ver el código sin consultar la base. Nunca se registra en prod.
+    if codigo and current_app.debug:
+        current_app.logger.info("Código de recuperación para %s: %s", correo, codigo)
     datos_respuesta = {"codigo": codigo} if codigo and current_app.debug else None
     return {
         "ok": True,

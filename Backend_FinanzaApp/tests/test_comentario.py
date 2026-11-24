@@ -21,10 +21,19 @@ def _enviar(**cambios):
     return _cliente().post("/comentarios", json={**VALIDO, **cambios})
 
 
+class Staff:
+    rolGlobal = "ADMIN"
+
+
+class Cliente:
+    rolGlobal = "CLIENTE"
+
+
 def test_ruta_registrada():
     rutas = {regla.rule for regla in create_app().url_map.iter_rules()}
     assert "/comentarios" in rutas
     assert "/comentarios/comentarios" not in rutas
+    assert "/comentarios/<int:idComentario>/archivar" in rutas
 
 
 def test_crear_sin_cuerpo():
@@ -78,10 +87,28 @@ def test_listar_sin_token():
 
 
 def test_listar_rechaza_cliente(monkeypatch):
-    class Cliente:
-        rolGlobal = "CLIENTE"
-
     monkeypatch.setattr(comentario_service, "current_user", Cliente())
     payload, status = comentario_service.listar_comentarios()
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_listar_pagina_invalida(monkeypatch):
+    monkeypatch.setattr(comentario_service, "current_user", Staff())
+    payload, status = comentario_service.listar_comentarios(pagina="abc")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_listar_por_pagina_fuera_de_rango(monkeypatch):
+    monkeypatch.setattr(comentario_service, "current_user", Staff())
+    payload, status = comentario_service.listar_comentarios(por_pagina="500")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_archivar_rechaza_cliente(monkeypatch):
+    monkeypatch.setattr(comentario_service, "current_user", Cliente())
+    payload, status = comentario_service.archivar_comentario(1)
     assert status == 403
     assert payload["ok"] is False

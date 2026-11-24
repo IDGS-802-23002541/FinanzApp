@@ -1,6 +1,17 @@
 // Llamadas a la API del módulo de ajustes (usar services/apiClient.js).
 import { api } from '../../services/apiClient.js'
 
+// HU-08.1: actualiza nombre, apellidos y correo de la cuenta en sesión.
+export async function editarCuenta({ nombreUsuario, apaterno, amaterno, correo }) {
+  const { data } = await api.put('/auth/editar_cuenta', {
+    nombreUsuario: nombreUsuario.trim(),
+    apaterno: apaterno.trim(),
+    amaterno: amaterno.trim(),
+    correo: correo.trim().toLowerCase(),
+  })
+  return data
+}
+
 // HU-02.4: cambia la contraseña en sesión. El backend revoca las demás
 // sesiones y conserva la actual.
 export async function cambiarContrasenia({ actual, nueva }) {

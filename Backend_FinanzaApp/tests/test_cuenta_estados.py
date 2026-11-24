@@ -243,3 +243,32 @@ def test_restablecer_con_cuenta_eliminada_no_procede(monkeypatch):
         )
     assert status == 400
     assert payload["ok"] is False
+
+
+def test_recuperacion_en_debug_expone_y_registra_codigo(monkeypatch, caplog):
+    _con_db(monkeypatch, [ResultadoFalso(UsuarioFalso(estado="ACTIVO"))])
+    _con_correo(monkeypatch)
+    app = _app()
+    app.debug = True
+
+    with app.app_context(), caplog.at_level("INFO"):
+        payload, status = auth_service.solicitar_recuperacion("ana@ejemplo.com")
+
+    codigo = payload["data"]["codigo"]
+    assert status == 200
+    assert codigo is not None
+    assert codigo in caplog.text
+
+
+def test_recuperacion_sin_debug_no_expone_codigo(monkeypatch, caplog):
+    _con_db(monkeypatch, [ResultadoFalso(UsuarioFalso(estado="ACTIVO"))])
+    _con_correo(monkeypatch)
+    app = _app()
+    app.debug = False
+
+    with app.app_context(), caplog.at_level("INFO"):
+        payload, status = auth_service.solicitar_recuperacion("ana@ejemplo.com")
+
+    assert status == 200
+    assert payload["data"] is None
+    assert "Código de recuperación" not in caplog.text

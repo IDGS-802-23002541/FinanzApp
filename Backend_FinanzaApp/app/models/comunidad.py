@@ -45,7 +45,6 @@ class ComentarioLanding(db.Model):
             "estado IN ('PENDIENTE', 'ATENDIDO', 'ARCHIVADO')",
             name="CK_COMENTARIO_LANDING_estado",
         ),
-        db.Index("IX_COMENTARIO_LANDING_ip_fecha", "ip", "fechaCreacion"),
     )
 
     idComentario = db.Column(db.Integer, primary_key=True)

@@ -59,15 +59,52 @@ def test_serializar_trabajador_expone_datos_minimos():
     trabajador.nombreUsuario = "Diego"
     trabajador.apaterno = "Borja"
     trabajador.correo = "diego@finanzapp.com"
+    trabajador.estado = "ACTIVO"
 
-    datos = admin_service._serializar_trabajador(trabajador)
+    datos = admin_service._serializar_trabajador(
+        trabajador,
+        [{"idTicket": 3, "asunto": "No puedo entrar", "estado": "ABIERTO"}],
+    )
 
     assert datos == {
         "idUsuario": 7,
         "nombre": "Diego Borja",
         "correo": "diego@finanzapp.com",
         "rolGlobal": "TRABAJADOR",
+        "estatus": "ACTIVO",
+        "tickets": [{"idTicket": 3, "asunto": "No puedo entrar", "estado": "ABIERTO"}],
     }
+
+
+def test_serializar_trabajador_sin_tickets():
+    trabajador = UsuarioFalso("TRABAJADOR")
+    trabajador.idUsuario = 8
+    trabajador.nombreUsuario = "Ana"
+    trabajador.apaterno = "Ruiz"
+    trabajador.correo = "ana@finanzapp.com"
+    trabajador.estado = "ACTIVO"
+
+    datos = admin_service._serializar_trabajador(trabajador)
+
+    assert datos["tickets"] == []
+
+
+def test_listar_trabajadores_rechaza_pagina_invalida(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    payload, status = admin_service.listar_trabajadores(pagina="x")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_listar_trabajadores_rechaza_por_pagina_fuera_de_rango(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    payload, status = admin_service.listar_trabajadores(por_pagina="500")
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_tickets_actuales_sin_trabajadores():
+    assert admin_service._tickets_actuales([]) == {}
 
 
 def test_solo_admin_crea_trabajadores(monkeypatch):
