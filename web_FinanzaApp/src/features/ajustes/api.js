@@ -13,6 +13,17 @@ export async function desactivarCuenta(contrasenia) {
   await api.post('/auth/desactivar', { contrasenia })
 }
 
+// HU-08.3: preferencias de notificación (se guardan al instante).
+export async function obtenerPreferencias() {
+  const { data } = await api.get('/auth/preferencias')
+  return data
+}
+
+export async function guardarPreferencias(cambios) {
+  const { data } = await api.put('/auth/preferencias', cambios)
+  return data
+}
+
 // HU-02.5b: eliminación del registro del cliente. El backend anonimiza sus
 // datos, conserva las transacciones y revoca la sesión.
 export async function eliminarCuenta(contrasenia) {

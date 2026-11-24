@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
+  Alert,
   Box,
+  CircularProgress,
   Divider,
   FormControlLabel,
   Switch,
@@ -8,6 +10,7 @@ import {
 } from '@mui/material'
 import Tarjeta from './Tarjeta.jsx'
 import { useTema } from '../../../hooks/useTema.js'
+import { guardarPreferencias, obtenerPreferencias } from '../api.js'
 
 const sxEtiqueta = {
   '& .MuiFormControlLabel-label': {
@@ -21,25 +24,75 @@ const estiloSeccion = {
   color: 'var(--color-texto)',
 }
 
-// Tarjeta "Preferencias" del mockup. Apariencia funciona con la sesión
-// (HU-08.2); los avisos son maqueta de la HU-08.3.
+// Interruptores de la HU-08.3; el backend los devuelve todos en true por defecto.
+const AVISOS = [
+  { campo: 'notificacionesMovimientos', etiqueta: 'Movimientos en cartera' },
+  { campo: 'notificacionesSistema', etiqueta: 'Recordatorios del sistema' },
+  { campo: 'notificacionesPagos', etiqueta: 'Recordatorios de pagos recurrentes' },
+]
+
+const AVISOS_INICIALES = {
+  notificacionesMovimientos: true,
+  notificacionesSistema: true,
+  notificacionesPagos: true,
+}
+
+// Tarjeta "Preferencias": el tema vive en la sesión (HU-08.2) y los avisos
+// se guardan de inmediato contra /auth/preferencias (HU-08.3).
 function Preferencias() {
   const { tema, cambiarTema } = useTema()
 
-  const [avisos, setAvisos] = useState({
-    presupuesto: true,
-    resumen: false,
-  })
+  const [avisos, setAvisos] = useState(AVISOS_INICIALES)
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState('')
+  const [error, setError] = useState('')
 
-  const alternar = (clave) => (evento) => {
-    setAvisos((actual) => ({ ...actual, [clave]: evento.target.checked }))
+  useEffect(() => {
+    let vigente = true
+
+    async function cargar() {
+      try {
+        const datos = await obtenerPreferencias()
+        if (!vigente) return
+        setAvisos({
+          notificacionesMovimientos: Boolean(datos.notificacionesMovimientos),
+          notificacionesSistema: Boolean(datos.notificacionesSistema),
+          notificacionesPagos: Boolean(datos.notificacionesPagos),
+        })
+      } catch (fallo) {
+        if (!vigente) return
+        setError(fallo.message || 'No se pudieron cargar tus preferencias.')
+      } finally {
+        if (vigente) setCargando(false)
+      }
+    }
+
+    cargar()
+    return () => {
+      vigente = false
+    }
+  }, [])
+
+  const alternar = (campo) => async (evento) => {
+    const valor = evento.target.checked
+    const anterior = avisos[campo]
+
+    setError('')
+    setAvisos((actual) => ({ ...actual, [campo]: valor }))
+    setGuardando(campo)
+
+    try {
+      await guardarPreferencias({ [campo]: valor })
+    } catch (fallo) {
+      setAvisos((actual) => ({ ...actual, [campo]: anterior }))
+      setError(fallo.message || 'No se pudo guardar la preferencia.')
+    } finally {
+      setGuardando('')
+    }
   }
 
   return (
-    <Tarjeta
-      titulo="Preferencias"
-      subtitulo="Elección de tema"
-    >
+    <Tarjeta titulo="Preferencias" subtitulo="Tema y avisos">
       <FormControlLabel
         sx={sxEtiqueta}
         control={
@@ -55,41 +108,35 @@ function Preferencias() {
       <Divider sx={{ my: 1.5, borderColor: 'var(--color-borde)' }} />
 
       <Typography sx={estiloSeccion}>Avisos</Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        <FormControlLabel
-          sx={sxEtiqueta}
-          control={
-            <Switch
-              checked={avisos.presupuesto}
-              onChange={alternar('presupuesto')}
+
+      {cargando ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+          <CircularProgress size={22} />
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {AVISOS.map((aviso) => (
+            <FormControlLabel
+              key={aviso.campo}
+              sx={sxEtiqueta}
+              control={
+                <Switch
+                  checked={avisos[aviso.campo]}
+                  onChange={alternar(aviso.campo)}
+                  disabled={guardando === aviso.campo}
+                />
+              }
+              label={aviso.etiqueta}
             />
-          }
-          label="Preferencia número 1"
-        />
-        <FormControlLabel
-          sx={sxEtiqueta}
-          control={
-            <Switch checked={avisos.resumen} onChange={alternar('resumen')} />
-          }
-          label="Prefrencia número 2"
-        />
-        <FormControlLabel
-          sx={sxEtiqueta}
-          disabled
-          control={<Switch disabled />}
-          label={
-            <>
-              Notificaciones push{' '}
-              <Typography
-                component="span"
-                sx={{fontSize: '0.78125rem', color: 'var(--color-texto-terciario)',}}
-              >
-                (fase 2)
-              </Typography>
-            </>
-          }
-        />
-      </Box>
+          ))}
+        </Box>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mt: 1.5 }}>
+          {error}
+        </Alert>
+      )}
     </Tarjeta>
   )
 }

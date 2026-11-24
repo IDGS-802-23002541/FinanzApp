@@ -33,3 +33,19 @@ export async function listarTickets({ estado, pagina = 1, porPagina = 10 } = {})
 
   return data
 }
+
+// HU-09.3: el cliente solo puede editar su reporte mientras siga ABIERTO.
+export async function actualizarTicket(idTicket, { asunto, descripcion, categoria }) {
+  const { data } = await api.put(`/soporte/tickets/${idTicket}`, {
+    asunto,
+    descripcion,
+    categoria,
+  })
+
+  return data.ticket
+}
+
+// La baja es lógica: el backend marca el ticket como ELIMINADO y deja de listarse.
+export async function eliminarTicket(idTicket) {
+  await api.delete(`/soporte/tickets/${idTicket}`)
+}

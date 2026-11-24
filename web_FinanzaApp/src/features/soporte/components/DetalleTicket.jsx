@@ -1,7 +1,9 @@
 import {
   Alert,
   Box,
+  Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
@@ -17,9 +19,17 @@ const SOLO_LECTURA = ['RESUELTO', 'CERRADO']
 // Detalle de un reporte con su conversación (ticket #212).
 // El backend no tiene GET /soporte/tickets/{id}: el ticket llega del listado,
 // que ya incluye respuestas y asignación actual.
-function DetalleTicket({ abierto = false, alCerrar, ticket }) {
+function DetalleTicket({
+  abierto = false,
+  alCerrar,
+  ticket,
+  alEditar,
+  alEliminar,
+}) {
   const respuestas = ticket?.respuestas ?? []
   const soloLectura = SOLO_LECTURA.includes(ticket?.estado)
+  // HU-09.3: editar y eliminar solo mientras el reporte siga pendiente.
+  const puedeModificar = ticket?.estado === 'ABIERTO'
 
   return (
     <Dialog open={abierto} onClose={alCerrar} fullWidth maxWidth="sm">
@@ -97,6 +107,19 @@ function DetalleTicket({ abierto = false, alCerrar, ticket }) {
           )}
         </Stack>
       </DialogContent>
+
+      {puedeModificar && (alEditar || alEliminar) && (
+        <DialogActions>
+          {alEditar && (
+            <Button onClick={() => alEditar(ticket)}>Editar</Button>
+          )}
+          {alEliminar && (
+            <Button color="error" onClick={() => alEliminar(ticket)}>
+              Eliminar
+            </Button>
+          )}
+        </DialogActions>
+      )}
     </Dialog>
   )
 }
