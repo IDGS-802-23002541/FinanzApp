@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   Pagination,
@@ -32,6 +33,7 @@ function Trabajadores() {
   const [pagina, setPagina] = useState(1)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [recarga, setRecarga] = useState(0)
 
   useEffect(() => {
     let vigente = true
@@ -64,15 +66,45 @@ function Trabajadores() {
     return () => {
       vigente = false
     }
-  }, [pagina])
+  }, [pagina, recarga])
+
+  // Al volver a la pestaña se refrescan los tickets asignados.
+  useEffect(() => {
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') {
+        setRecarga((actual) => actual + 1)
+      }
+    }
+
+    document.addEventListener('visibilitychange', alVolver)
+    return () => document.removeEventListener('visibilitychange', alVolver)
+  }, [])
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Trabajadores</Typography>
-        <Typography sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
-          Personal de soporte y los tickets que tiene asignados.
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 2,
+          flexWrap: 'wrap',
+        }}
+      >
+        <Box>
+          <Typography variant="h1">Trabajadores</Typography>
+          <Typography sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
+            Personal de soporte y los tickets que tiene asignados.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => setRecarga((actual) => actual + 1)}
+          disabled={cargando}
+        >
+          Actualizar
+        </Button>
       </Box>
 
       {error && <Alert severity="error">{error}</Alert>}

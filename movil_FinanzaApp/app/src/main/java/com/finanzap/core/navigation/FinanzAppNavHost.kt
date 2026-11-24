@@ -61,9 +61,9 @@ fun FinanzAppNavHost(
         null
     }
 
-    // Al salir de una sección autenticada el menú no debe quedar abierto.
+    // El menú debe iniciar cerrado al entrar o salir de una sesión.
     LaunchedEffect(autenticada) {
-        if (!autenticada) estadoDrawer.close()
+        estadoDrawer.close()
     }
 
     // Logout o refresh rechazado: se limpia toda la pila y se vuelve al login.
