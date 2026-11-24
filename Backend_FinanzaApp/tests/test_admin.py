@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+from sqlalchemy.exc import SQLAlchemyError
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app import create_app
@@ -11,6 +13,51 @@ from app.utils import validacion
 class UsuarioFalso:
     def __init__(self, rol_global):
         self.rolGlobal = rol_global
+
+
+class ResultadoFalso:
+    def __init__(self, valor=None, filas=None):
+        self.valor = valor
+        self.filas = filas or []
+
+    def scalar_one(self):
+        return self.valor
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return self.filas
+
+
+class SesionFalsa:
+    def __init__(self, resultados):
+        self.resultados = list(resultados)
+
+    def execute(self, _consulta):
+        return self.resultados.pop(0)
+
+    def rollback(self):
+        pass
+
+
+class SesionConError:
+    def execute(self, _consulta):
+        raise SQLAlchemyError("fallo de BD")
+
+    def rollback(self):
+        pass
+
+
+def _trabajador(id_usuario, nombre, apaterno, correo, rol="TRABAJADOR"):
+    trabajador = UsuarioFalso(rol)
+    trabajador.idUsuario = id_usuario
+    trabajador.nombreUsuario = nombre
+    trabajador.apaterno = apaterno
+    trabajador.amaterno = None
+    trabajador.correo = correo
+    trabajador.estado = "ACTIVO"
+    return trabajador
 
 
 def _app():
@@ -105,6 +152,99 @@ def test_listar_trabajadores_rechaza_por_pagina_fuera_de_rango(monkeypatch):
 
 def test_tickets_actuales_sin_trabajadores():
     assert admin_service._tickets_actuales([]) == {}
+
+
+def test_listar_trabajadores_incluye_tickets_y_paginacion(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajadores = [
+        _trabajador(7, "Diego", "Borja", "diego@finanzapp.com"),
+        _trabajador(8, "Ana", "Ruiz", "ana@finanzapp.com"),
+    ]
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa(
+            [
+                ResultadoFalso(valor=2),
+                ResultadoFalso(filas=trabajadores),
+                ResultadoFalso(
+                    filas=[
+                        (7, 101, "No puedo entrar", "ABIERTO"),
+                        (7, 102, "Pago duplicado", "EN_PROCESO"),
+                    ]
+                ),
+            ]
+        ),
+    )
+
+    payload, status = admin_service.listar_trabajadores(
+        pagina="1", por_pagina="2"
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert payload["paginacion"] == {
+        "pagina": 1,
+        "porPagina": 2,
+        "total": 2,
+        "totalPaginas": 1,
+    }
+    assert payload["data"]["trabajadores"][0]["tickets"] == [
+        {"idTicket": 101, "asunto": "No puedo entrar", "estado": "ABIERTO"},
+        {"idTicket": 102, "asunto": "Pago duplicado", "estado": "EN_PROCESO"},
+    ]
+    assert payload["data"]["trabajadores"][1]["tickets"] == []
+
+
+def test_listar_trabajadores_vacio(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa([ResultadoFalso(valor=0), ResultadoFalso(filas=[])]),
+    )
+
+    payload, status = admin_service.listar_trabajadores()
+
+    assert status == 200
+    assert payload["data"]["trabajadores"] == []
+    assert payload["paginacion"]["total"] == 0
+    assert payload["paginacion"]["totalPaginas"] == 0
+
+
+def test_listar_trabajadores_error_bd_devuelve_503(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    monkeypatch.setattr(admin_service.db, "session", SesionConError())
+
+    payload, status = admin_service.listar_trabajadores()
+
+    assert status == 503
+    assert payload["ok"] is False
+
+
+def test_tickets_actuales_agrupa_por_trabajador(monkeypatch):
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa(
+            [
+                ResultadoFalso(
+                    filas=[
+                        (7, 101, "Ticket A", "ABIERTO"),
+                        (7, 102, "Ticket B", "EN_PROCESO"),
+                        (8, 103, "Ticket C", "ESPERA"),
+                    ]
+                )
+            ]
+        ),
+    )
+
+    datos = admin_service._tickets_actuales([7, 8])
+
+    assert len(datos[7]) == 2
+    assert datos[8] == [
+        {"idTicket": 103, "asunto": "Ticket C", "estado": "ESPERA"}
+    ]
 
 
 def test_solo_admin_crea_trabajadores(monkeypatch):

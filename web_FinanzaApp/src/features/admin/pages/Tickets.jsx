@@ -275,12 +275,13 @@ function TicketsAdmin() {
 
     try {
       await cerrarTicket(seleccionado.idTicket)
+      const idCerrado = seleccionado.idTicket
       setPorCerrar(false)
-      setAvisoCierre({
-        idTicket: seleccionado.idTicket,
-        mensaje: 'Ticket cerrado correctamente.',
-      })
-      setRecarga((actual) => actual + 1)
+      setTickets((actual) =>
+        actual.filter((ticket) => ticket.idTicket !== idCerrado),
+      )
+      setTotal((actual) => Math.max(0, actual - 1))
+      setSeleccionadoId(null)
     } catch (err) {
       setErrorCierre(err.message)
     } finally {
@@ -550,7 +551,7 @@ function TicketsAdmin() {
           <Typography
             sx={{ fontSize: '0.875rem', color: 'var(--color-texto-secundario)' }}
           >
-            Selecciona un ticket para ver su conversación.
+            Selecciona un ticket para atenderlo.
           </Typography>
         </Box>
       ) : (
