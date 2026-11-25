@@ -18,6 +18,8 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { listarCategorias } from '../../carteras/api.js'
 import { eliminarPago, listarPagos, marcarPagoHecho } from '../api.js'
@@ -37,7 +39,7 @@ const COLUMNAS = [
 
 const sxBoton = {
   px: 2,
-  borderRadius: '12px',
+  borderRadius: 'var(--radio-md)',
   fontSize: '0.875rem',
   fontWeight: 600,
   textTransform: 'none',
@@ -58,6 +60,8 @@ function venceHoyOAntes(fecha, hoy) {
 // Pagos recurrentes de una cartera (HU-07.1).
 function PagosCartera() {
   const { cartera, id } = useOutletContext()
+  const tema = useTheme()
+  const esMovil = useMediaQuery(tema.breakpoints.down('md'))
   const [pagos, setPagos] = useState([])
   const [categorias, setCategorias] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -230,7 +234,7 @@ function PagosCartera() {
             alignItems: 'center',
             gap: 2,
             border: '1px dashed var(--color-borde-fuerte)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
           }}
         >
           <Typography
@@ -249,11 +253,116 @@ function PagosCartera() {
             </Button>
           )}
         </Box>
+      ) : esMovil ? (
+        /* En móvil cada pago recurrente se lee como tarjeta. */
+        <Stack spacing={1.25}>
+          {pagos.map((pago) => (
+            <Box
+              key={pago.id}
+              sx={{
+                p: 2,
+                border: '1px solid var(--color-borde)',
+                borderRadius: 'var(--radio-lg)',
+                backgroundColor: 'var(--color-superficie)',
+              }}
+            >
+              <Stack
+                direction="row"
+                sx={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 1.5 }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography noWrap sx={{ fontWeight: 700 }}>
+                    {pago.nombre}
+                  </Typography>
+                  <Typography
+                    sx={{ mt: 0.25, fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
+                  >
+                    {nombreCategoria(pago.categoriaId)} · {pago.frecuencia}
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
+                  >
+                    {pago.proximaEjecucion
+                      ? `Próximo: ${formatearFecha(pago.proximaEjecucion)}`
+                      : 'Sin fecha'}
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}>
+                  {formatearMonto(pago.monto)}
+                </Typography>
+              </Stack>
+
+              <Stack
+                direction="row"
+                sx={{ alignItems: 'center', gap: 1, mt: 1.5, flexWrap: 'wrap' }}
+              >
+                <Chip
+                  label={
+                    pago.estado === 'Pendiente' &&
+                    !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                      ? 'Programado'
+                      : pago.estado
+                  }
+                  size="small"
+                  sx={{
+                    backgroundColor: 'var(--color-superficie-suave)',
+                    color:
+                      pago.estado === 'Pendiente' &&
+                      venceHoyOAntes(pago.proximaEjecucion, hoy)
+                        ? 'var(--color-primario)'
+                        : 'var(--color-texto-secundario)',
+                    fontWeight: 600,
+                  }}
+                />
+                <Box sx={{ flex: 1 }} />
+                {esPropietario && pago.estado !== 'Cancelado' && (
+                  <>
+                    {pago.estado === 'Pendiente' && (
+                      <Tooltip
+                        title={
+                          !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                            ? `Disponible el ${formatearFecha(pago.proximaEjecucion)}`
+                            : ''
+                        }
+                      >
+                        <span>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => marcarHecho(pago)}
+                            disabled={
+                              marcandoId === pago.id ||
+                              !venceHoyOAntes(pago.proximaEjecucion, hoy)
+                            }
+                            sx={sxBoton}
+                          >
+                            {marcandoId === pago.id ? 'Marcando…' : 'Marcar'}
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    )}
+                    <Button size="small" onClick={() => setEditando(pago)} sx={sxBoton}>
+                      Editar
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => abrirEliminar(pago)}
+                      sx={sxBoton}
+                    >
+                      Eliminar
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
       ) : (
         <TableContainer
           sx={{
             border: '1px solid var(--color-borde)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
             backgroundColor: 'var(--color-superficie)',
           }}
         >
@@ -263,6 +372,7 @@ function PagosCartera() {
                 {columnas.map((columna) => (
                   <TableCell
                     key={columna}
+                    align={columna === 'Monto' ? 'right' : 'left'}
                     sx={{
                       fontWeight: 700,
                       color: 'var(--color-texto-secundario)',
@@ -279,7 +389,9 @@ function PagosCartera() {
                 <TableRow key={pago.id}>
                   <TableCell sx={{ fontWeight: 600 }}>{pago.nombre}</TableCell>
                   <TableCell>{nombreCategoria(pago.categoriaId)}</TableCell>
-                  <TableCell>{formatearMonto(pago.monto)}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                    {formatearMonto(pago.monto)}
+                  </TableCell>
                   <TableCell>{pago.frecuencia}</TableCell>
                   <TableCell>
                     <Typography sx={{ fontSize: '0.875rem' }}>
@@ -442,7 +554,7 @@ function PagosCartera() {
                 p: 1.5,
                 borderLeft: '3px solid var(--color-alerta)',
                 backgroundColor: 'var(--color-superficie-suave)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radio-sm)',
               }}
             >
               <Typography
@@ -481,3 +593,4 @@ function PagosCartera() {
 }
 
 export default PagosCartera
+

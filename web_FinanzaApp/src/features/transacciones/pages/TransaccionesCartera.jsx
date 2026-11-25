@@ -21,6 +21,8 @@ import {
   TableRow,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import { eliminarTransaccion, listarTransacciones } from '../api.js'
@@ -30,6 +32,8 @@ import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 function TransaccionesCartera() {
   const { cartera, id, recarga, recargar } = useOutletContext()
+  const tema = useTheme()
+  const esMovil = useMediaQuery(tema.breakpoints.down('md'))
   const [items, setItems] = useState([])
   const [paginacion, setPaginacion] = useState({
     pagina: 1,
@@ -138,7 +142,7 @@ function TransaccionesCartera() {
       sx={{
         p: 2.5,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
     >
@@ -207,6 +211,87 @@ function TransaccionesCartera() {
         <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
           <CircularProgress size={28} />
         </Box>
+      ) : esMovil ? (
+        /* En móvil la tabla no cabe: cada movimiento se lee como tarjeta. */
+        <Stack spacing={1.25} sx={{ mt: 2 }}>
+          {items.length === 0 && (
+            <Typography
+              sx={{ py: 4, textAlign: 'center', color: 'var(--color-texto-secundario)' }}
+            >
+              Sin transacciones.
+            </Typography>
+          )}
+          {items.map((item) => (
+            <Box
+              key={item.idTransaccion}
+              sx={{
+                p: 2,
+                border: '1px solid var(--color-borde)',
+                borderRadius: 'var(--radio-lg)',
+                backgroundColor: 'var(--color-superficie)',
+              }}
+            >
+              <Stack
+                direction="row"
+                sx={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 1.5 }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography noWrap sx={{ fontWeight: 700 }}>
+                    {item.descripcion || 'Sin descripción'}
+                  </Typography>
+                  <Typography
+                    sx={{ mt: 0.25, fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
+                  >
+                    {formatearFecha(item.fecha)}
+                    {item.categoria?.nombre ? ` · ${item.categoria.nombre}` : ''}
+                  </Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    whiteSpace: 'nowrap',
+                    color:
+                      item.tipo === 'INGRESO'
+                        ? 'var(--color-primario)'
+                        : 'var(--color-negativo)',
+                  }}
+                >
+                  {item.tipo === 'INGRESO' ? '+' : '−'}
+                  {formatearMonto(item.monto)}
+                </Typography>
+              </Stack>
+
+              <Stack
+                direction="row"
+                sx={{ alignItems: 'center', gap: 1, mt: 1.5 }}
+              >
+                <Typography
+                  sx={{ flex: 1, fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
+                  noWrap
+                >
+                  {item.autor?.nombre ?? ''}
+                </Typography>
+                {puedeEditar && (
+                  <>
+                    <Button size="small" onClick={() => setEditando(item)}>
+                      Editar
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => {
+                        setErrorEliminar('')
+                        setEliminando(item)
+                      }}
+                    >
+                      Eliminar
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
       ) : (
         <>
           <TableContainer sx={{ mt: 2 }}>
