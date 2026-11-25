@@ -58,8 +58,8 @@ function DetalleResumen() {
               avatar={
                 <Avatar
                   sx={{
-                    backgroundColor: 'var(--color-primario)',
-                    color: 'var(--color-sobre-primario)',
+                    backgroundColor: 'var(--paleta-petroleo)',
+                    color: 'var(--paleta-blanco)',
                     fontSize: '0.7rem',
                     fontWeight: 700,
                   }}
@@ -111,6 +111,7 @@ function DetalleResumen() {
           monto={resumen.saldo}
           Icono={IconoEstrella}
           fondo="var(--color-acento)"
+          colorIcono="var(--paleta-petroleo)"
         />
       </Box>
 

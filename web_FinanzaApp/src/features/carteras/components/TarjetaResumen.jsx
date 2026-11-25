@@ -1,7 +1,7 @@
 import {Box, Paper, Typography} from '@mui/material'
 import { formatearMonto } from '../../../utils/formato.js'
 
-function TarjetaResumen({etiqueta, monto, Icono, fondo}){
+function TarjetaResumen({etiqueta, monto, Icono, fondo, colorIcono = 'var(--color-primario)'}){
     return(
         <Paper
         elevation={0}
@@ -38,7 +38,7 @@ function TarjetaResumen({etiqueta, monto, Icono, fondo}){
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: fondo, 
-                color: 'var(--color-primario)',
+                color: colorIcono,
                 flexShrink: 0,
             }}
             >

@@ -17,11 +17,13 @@ import {
 import TarjetaCartera from '../components/TarjetaCartera.jsx'
 import DialogoNuevaCartera from '../components/DialogoNuevaCartera.jsx'
 import { filtrarCarteras, inactivarCartera } from '../api.js'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import {
   IconoArchivo,
   IconoBuscar,
   IconoCartera,
   IconoCasa,
+  IconoCheck,
   IconoEstrella,
   IconoMas,
   IconoOtro,
@@ -46,10 +48,8 @@ const FILTROS_INICIALES = {
 }
 
 const sxBotonContorneado = {
-  minHeight: 0,
-  py: 0.5,
   px: 1.5,
-  borderRadius: '12px',
+  borderRadius: 'var(--radio-md)',
   fontSize: '0.875rem',
   fontWeight: 600,
   textTransform: 'none',
@@ -57,10 +57,8 @@ const sxBotonContorneado = {
 }
 
 const sxBotonPrimario = {
-  minHeight: 0,
-  py: 0.5,
   px: 2,
-  borderRadius: '12px',
+  borderRadius: 'var(--radio-md)',
   fontSize: '0.875rem',
   fontWeight: 600,
   textTransform: 'none',
@@ -68,10 +66,9 @@ const sxBotonPrimario = {
 }
 
 const sxChip = {
-  minHeight: 0,
-  py: 0.75,
+  height: 'var(--altura-control-sm)',
   px: 1.5,
-  borderRadius: '999px',
+  borderRadius: 'var(--radio-pill)',
   fontSize: '0.75rem',
   fontWeight: 600,
   textTransform: 'none',
@@ -226,64 +223,19 @@ function ListaCarteras() {
 
   return (
     <Stack spacing={3}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 2,
-        }}
+      <EncabezadoPagina
+        titulo="Carteras"
+        descripcion="Administra las carteras que creaste y consulta aquellas en las que participas como contribuyente."
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-          <Typography variant="h1">Carteras</Typography>
-          <Typography
-            sx={{
-              fontSize: '0.875rem',
-              color: 'var(--color-texto-terciario)',
-              maxWidth: 720,
-            }}
-          >
-            Administra las carteras que creaste y consulta aquellas en las que
-            participas como contribuyente.
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
-          <Button
-            variant={filtros.estado === 'ARCHIVADA' ? 'contained' : 'outlined'}
-            startIcon={<IconoArchivo sx={{ fontSize: 16 }} />}
-            onClick={() => alternarEstado('ARCHIVADA')}
-            sx={
-              filtros.estado === 'ARCHIVADA'
-                ? sxBotonPrimario
-                : sxBotonContorneado
-            }
-          >
-            Carteras Inactivas
-          </Button>
-          <Button
-            variant={filtros.estado === 'FINALIZADA' ? 'contained' : 'outlined'}
-            startIcon={<IconoArchivo sx={{ fontSize: 16 }} />}
-            onClick={() => alternarEstado('FINALIZADA')}
-            sx={
-              filtros.estado === 'FINALIZADA'
-                ? sxBotonPrimario
-                : sxBotonContorneado
-            }
-          >
-            Carteras Finalizadas
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<IconoMas sx={{ fontSize: 16 }} />}
-            onClick={() => setDialogoAbierto(true)}
-            sx={sxBotonPrimario}
-          >
-            Nueva cartera
-          </Button>
-        </Box>
-      </Box>
+        <Button
+          variant="contained"
+          startIcon={<IconoMas sx={{ fontSize: 16 }} />}
+          onClick={() => setDialogoAbierto(true)}
+          sx={sxBotonPrimario}
+        >
+          Nueva cartera
+        </Button>
+      </EncabezadoPagina>
 
       <Box
         sx={{
@@ -313,13 +265,14 @@ function ListaCarteras() {
               onClick={() => alternarRol(pestana.rol)}
               sx={{
                 flex: 1,
-                minHeight: 0,
-                py: 1.25,
+                height: 'var(--altura-control-md)',
                 gap: 1,
-                borderRadius: '36px',
+                px: { xs: 0.5, sm: 2 },
+                borderRadius: 'var(--radio-pill)',
                 textTransform: 'none',
                 fontWeight: 700,
-                fontSize: '0.85rem',
+                fontSize: { xs: '0.8125rem', sm: '0.85rem' },
+                whiteSpace: 'nowrap',
                 backgroundColor: activa
                   ? 'var(--color-superficie)'
                   : 'transparent',
@@ -396,14 +349,40 @@ function ListaCarteras() {
             })}
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              size="small"
+              variant={filtros.estado === 'ARCHIVADA' ? 'contained' : 'outlined'}
+              startIcon={<IconoArchivo sx={{ fontSize: 15 }} />}
+              onClick={() => alternarEstado('ARCHIVADA')}
+              sx={
+                filtros.estado === 'ARCHIVADA'
+                  ? sxBotonPrimario
+                  : sxBotonContorneado
+              }
+            >
+              Inactivas
+            </Button>
+            <Button
+              size="small"
+              variant={filtros.estado === 'FINALIZADA' ? 'contained' : 'outlined'}
+              startIcon={<IconoCheck sx={{ fontSize: 15 }} />}
+              onClick={() => alternarEstado('FINALIZADA')}
+              sx={
+                filtros.estado === 'FINALIZADA'
+                  ? sxBotonPrimario
+                  : sxBotonContorneado
+              }
+            >
+              Finalizadas
+            </Button>
             <TextField
               size="small"
               placeholder="Buscar cartera…"
               value={texto}
               onChange={(evento) => setTexto(evento.target.value)}
               sx={{
-                width: '100%',
+                width: { xs: '100%', sm: 260 },
                 maxWidth: 288,
                 '& .MuiOutlinedInput-root': { minHeight: 40 },
               }}

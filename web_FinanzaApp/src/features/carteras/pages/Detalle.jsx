@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
-import { IconoCasa } from '../../../components/ui/Iconos.jsx'
+import { IconoCasa, IconoFlechaIzquierda } from '../../../components/ui/Iconos.jsx'
 import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
 
 const SECCIONES = [
@@ -79,8 +79,11 @@ function DetalleCartera() {
 
   // Viaje/Evento son finitos: no manejan pagos recurrentes.
   const sinPagos = cartera.categoria === 'Viaje' || cartera.categoria === 'Evento'
+  // Cierre y balance solo aplica a carteras con fecha de término.
+  const esHogar = cartera.categoria === 'Hogar'
   const secciones = SECCIONES.filter(
-    (s) => s.valor !== 'pagos' || !sinPagos,
+    (s) =>
+      (s.valor !== 'pagos' || !sinPagos) && (s.valor !== 'cierre' || !esHogar),
   )
 
   const segmento = location.pathname.split('/').pop()
@@ -92,15 +95,17 @@ function DetalleCartera() {
   return (
     <Stack spacing={3}>
       <Button
+        size="small"
+        startIcon={<IconoFlechaIzquierda sx={{ fontSize: 16 }} />}
         onClick={() => navegar('/carteras')}
         sx={{
           alignSelf: 'flex-start',
-          minHeight: 0,
           px: 0,
-          color: 'var(--color-texto-terciario)',
+          color: 'var(--color-texto-secundario)',
+          fontWeight: 600,
         }}
       >
-        ← Volver a carteras
+        Volver a carteras
       </Button>
 
       <Box

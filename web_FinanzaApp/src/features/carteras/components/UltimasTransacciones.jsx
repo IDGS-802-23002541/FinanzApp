@@ -80,9 +80,7 @@ function UltimasTransacciones({ items = [], error = '' }) {
                   sx={{
                     fontWeight: 700,
                     whiteSpace: 'nowrap',
-                    color: esIngreso
-                      ? 'var(--color-exito)'
-                      : 'var(--color-texto)',
+                    color: esIngreso ? 'var(--color-primario)' : 'var(--color-negativo)',
                   }}
                 >
                   {esIngreso ? '+' : '-'}

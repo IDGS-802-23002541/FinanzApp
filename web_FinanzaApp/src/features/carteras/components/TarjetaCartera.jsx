@@ -24,12 +24,12 @@ const APARIENCIA_CATEGORIA = {
   },
   Evento: {
     fondo: 'var(--color-acento)',
-    icono: 'var(--color-texto)',
+    icono: 'var(--paleta-petroleo)',
     Icono: IconoEstrella,
   },
   Otro: {
-    fondo: 'var(--color-borde-fuerte)',
-    icono: 'var(--color-texto)',
+    fondo: 'var(--color-info)',
+    icono: 'var(--color-sobre-primario)',
     Icono: IconoOtro,
   },
 }
@@ -217,9 +217,7 @@ function TarjetaCartera({
             onClick={onAbrir}
             sx={{
               flex: 1,
-              minHeight: 0,
-              py: 0.5,
-              borderRadius: '12px',
+              borderRadius: 'var(--radio-md)',
               fontSize: '0.8125rem',
               fontWeight: 600,
               textTransform: 'none',
@@ -233,13 +231,11 @@ function TarjetaCartera({
           {puedeAdministrar && (
             <>
               <IconButton
+                size="small"
                 aria-label="Editar cartera"
                 onClick={onEditar}
                 sx={{
-                  width: 36,
-                  height: 22,
                   border: '1px solid var(--color-borde-fuerte)',
-                  borderRadius: '12px',
                   color: 'var(--color-texto-secundario)',
                 }}
               >
@@ -247,13 +243,11 @@ function TarjetaCartera({
               </IconButton>
 
               <IconButton
+                size="small"
                 aria-label="Eliminar cartera"
                 onClick={onInactivar}
                 sx={{
-                  width: 36,
-                  height: 22,
                   border: '1px solid var(--color-acento)',
-                  borderRadius: '12px',
                   color: 'var(--color-alerta)',
                 }}
               >
