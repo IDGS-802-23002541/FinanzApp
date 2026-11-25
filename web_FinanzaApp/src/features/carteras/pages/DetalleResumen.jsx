@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Alert, Avatar, Box, Chip, Stack } from '@mui/material'
+import {
+  Alert,
+  Avatar,
+  Box,
+  Chip,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { listarTransacciones } from '../../transacciones/api.js'
 import TarjetaResumen from '../components/TarjetaResumen.jsx'
 import GraficaBarras from '../components/GraficaBarras.jsx'
@@ -11,6 +20,14 @@ import {
   IconoCartera,
   IconoEstrella,
 } from '../../../components/ui/Iconos.jsx'
+
+// Opciones del filtro por periodo del resumen (vista previa, aún sin conectar).
+const RANGOS = [
+  { valor: 'mes', texto: 'Este mes' },
+  { valor: '3m', texto: 'Últimos 3 meses' },
+  { valor: '6m', texto: 'Últimos 6 meses' },
+  { valor: 'todo', texto: 'Todo el historial' },
+]
 
 function DetalleResumen() {
   const { cartera, id, recarga } = useOutletContext()
@@ -50,6 +67,44 @@ function DetalleResumen() {
 
   return (
     <Stack spacing={3}>
+      {/* Vista previa del filtro por periodo. El rango de fechas se conectará
+          cuando el backend lo calcule en el resumen; por eso aún va deshabilitado. */}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        sx={{
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 1.5,
+        }}
+      >
+        <Box>
+          <Typography
+            sx={{ fontSize: '0.875rem', color: 'var(--color-texto-secundario)' }}
+          >
+            Resumen de la cartera completa
+          </Typography>
+          <Typography
+            sx={{ fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
+          >
+            El filtro por periodo se activa al conectar el rango de fechas.
+          </Typography>
+        </Box>
+        <TextField
+          select
+          size="small"
+          label="Periodo"
+          defaultValue="todo"
+          disabled
+          sx={{ width: { xs: '100%', sm: 250 } }}
+        >
+          {RANGOS.map((rango) => (
+            <MenuItem key={rango.valor} value={rango.valor}>
+              {rango.texto}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
+
       {colaboradores.length > 0 && (
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {colaboradores.map((persona) => (
