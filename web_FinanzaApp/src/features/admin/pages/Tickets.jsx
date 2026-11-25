@@ -124,7 +124,7 @@ function TicketsAdmin() {
   const [porCerrar, setPorCerrar] = useState(false)
   const [cerrando, setCerrando] = useState(false)
   const [errorCierre, setErrorCierre] = useState('')
-  const [avisoCierre, setAvisoCierre] = useState(null)
+  const [avisoCierre, setAvisoCierre] = useState('')
 
   useEffect(() => {
     let vigente = true
@@ -216,7 +216,7 @@ function TicketsAdmin() {
     setErrorAsignacion('')
     setAvisoAsignacion('')
     setErrorCierre('')
-    setAvisoCierre(null)
+    setAvisoCierre('')
     destacarDetalle()
 
     if (idTicket === seleccionadoId) {
@@ -275,13 +275,17 @@ function TicketsAdmin() {
 
     try {
       await cerrarTicket(seleccionado.idTicket)
-      const idCerrado = seleccionado.idTicket
-      setPorCerrar(false)
-      setTickets((actual) =>
-        actual.filter((ticket) => ticket.idTicket !== idCerrado),
+      const restantes = tickets.filter(
+        (ticket) => ticket.idTicket !== seleccionado.idTicket,
       )
+      setPorCerrar(false)
+      setAvisoCierre('Ticket cerrado correctamente.')
+      setTickets(restantes)
       setTotal((actual) => Math.max(0, actual - 1))
       setSeleccionadoId(null)
+      // Página vacía: retrocede o recarga para no dejar la tabla en blanco.
+      if (restantes.length === 0 && pagina > 1) setPagina(pagina - 1)
+      else if (restantes.length === 0) setRecarga((actual) => actual + 1)
     } catch (err) {
       setErrorCierre(err.message)
     } finally {
@@ -393,6 +397,8 @@ function TicketsAdmin() {
           {error}
         </Alert>
       )}
+
+      {avisoCierre && <Alert severity="success">{avisoCierre}</Alert>}
 
       <Paper
         elevation={0}
@@ -752,12 +758,6 @@ function TicketsAdmin() {
                 Cerrar ticket
               </Button>
             </Box>
-          )}
-
-          {avisoCierre?.idTicket === seleccionado.idTicket && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              {avisoCierre.mensaje}
-            </Alert>
           )}
 
           <Divider sx={{ my: 2.5 }} />
