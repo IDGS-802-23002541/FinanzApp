@@ -28,7 +28,11 @@ export async function archivarComentario(idComentario) {
 
 export async function listarTickets({
   estado,
+  categoria,
   prioridad,
+  responsable,
+  desde,
+  hasta,
   pagina = 1,
   porPagina = 20,
 } = {}) {
@@ -37,7 +41,11 @@ export async function listarTickets({
     porPagina: String(porPagina),
   })
   if (estado) params.append('estado', estado)
+  if (categoria) params.append('categoria', categoria)
   if (prioridad) params.append('prioridad', prioridad)
+  if (responsable) params.append('responsable', responsable)
+  if (desde) params.append('desde', desde)
+  if (hasta) params.append('hasta', hasta)
 
   const { data } = await api.get(`/soporte/tickets?${params}`)
   return data

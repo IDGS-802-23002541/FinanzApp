@@ -33,6 +33,7 @@ import {
 } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
 import { useAuth } from '../../../hooks/useAuth.js'
+import { ROLES } from '../../../utils/constantes.js'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import { AvatarUsuario } from '../../../components/ui/Iconos.jsx'
@@ -68,7 +69,11 @@ const AREAS_PERSONAL = {
 
 const FILTROS_INICIALES = {
   estado: '',
+  categoria: '',
   prioridad: '',
+  responsable: '',
+  desde: '',
+  hasta: '',
 }
 
 const sxBoton = {
@@ -200,9 +205,19 @@ function TicketsAdmin() {
     tickets.find((ticket) => ticket.idTicket === seleccionadoId) ?? null
   const cerrado = seleccionado?.estado === 'CERRADO'
   const respuestas = seleccionado?.respuestas ?? []
-  const hayFiltros = Boolean(filtros.estado || filtros.prioridad)
+  const hayFiltros = Boolean(
+    filtros.estado ||
+      filtros.categoria ||
+      filtros.prioridad ||
+      filtros.responsable ||
+      filtros.desde ||
+      filtros.hasta,
+  )
   const asignadoAmi =
     seleccionado?.asignacionActual?.trabajadorId === usuario?.idUsuario
+  const esAdmin = usuario?.rol === ROLES.ADMIN
+  // HU-12.2: un trabajador solo toma tickets sin responsable.
+  const puedeTomar = !seleccionado?.asignado || asignadoAmi || esAdmin
 
   const destacarDetalle = () => {
     setResaltarDetalle(false)
@@ -364,6 +379,62 @@ function TicketsAdmin() {
           ))}
         </TextField>
 
+        <TextField
+          select
+          size="small"
+          label="Categoría"
+          value={filtros.categoria}
+          onChange={cambiarFiltro('categoria')}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">Todas</MenuItem>
+          {Object.entries(CATEGORIAS).map(([valor, texto]) => (
+            <MenuItem key={valor} value={valor}>
+              {texto}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          select
+          size="small"
+          label="Responsable"
+          value={filtros.responsable}
+          onChange={cambiarFiltro('responsable')}
+          disabled={cargandoTrabajadores}
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="">Todos</MenuItem>
+          {trabajadores.map((trabajador) => (
+            <MenuItem
+              key={trabajador.idUsuario}
+              value={String(trabajador.idUsuario)}
+            >
+              {trabajador.nombre}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          type="date"
+          size="small"
+          label="Desde"
+          value={filtros.desde}
+          onChange={cambiarFiltro('desde')}
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 160 }}
+        />
+
+        <TextField
+          type="date"
+          size="small"
+          label="Hasta"
+          value={filtros.hasta}
+          onChange={cambiarFiltro('hasta')}
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 160 }}
+        />
+
         <Button
           onClick={limpiarFiltros}
           disabled={!hayFiltros}
@@ -417,13 +488,15 @@ function TicketsAdmin() {
                 <TableCell sx={sxCabecera}>Asunto</TableCell>
                 <TableCell sx={sxCabecera}>Cliente</TableCell>
                 <TableCell sx={{ ...sxCabecera, width: 150 }}>Estatus</TableCell>
+                <TableCell sx={sxCabecera}>Categoría</TableCell>
                 <TableCell sx={sxCabecera}>Asignado</TableCell>
+                <TableCell sx={sxCabecera}>Fecha</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {cargando ? (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ py: 6, border: 0 }}>
+                  <TableCell colSpan={7} sx={{ py: 6, border: 0 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                       <CircularProgress size={32} />
                     </Box>
@@ -431,7 +504,7 @@ function TicketsAdmin() {
                 </TableRow>
               ) : tickets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ py: 5, border: 0 }}>
+                  <TableCell colSpan={7} sx={{ py: 5, border: 0 }}>
                     <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
                       <Typography
                         sx={{
@@ -513,7 +586,24 @@ function TicketsAdmin() {
                           color: 'var(--color-texto-secundario)',
                         }}
                       >
+                        {CATEGORIAS[ticket.categoria] ?? ticket.categoria}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...sxCelda,
+                          color: 'var(--color-texto-secundario)',
+                        }}
+                      >
                         {ticket.asignado || 'Sin asignar'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...sxCelda,
+                          color: 'var(--color-texto-terciario)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {formatearFecha(ticket.fechaCreacion)}
                       </TableCell>
                     </TableRow>
                   )
@@ -676,60 +766,62 @@ function TicketsAdmin() {
                 size="small"
                 variant="outlined"
                 onClick={() => asignar()}
-                disabled={asignando || asignadoAmi || cerrado}
+                disabled={asignando || asignadoAmi || cerrado || !puedeTomar}
                 sx={sxBoton}
               >
                 {asignadoAmi ? 'Ya es tuyo' : 'Tomar ticket'}
               </Button>
             </Stack>
 
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1.5}
-              sx={{ mt: 1.5, alignItems: { xs: 'stretch', sm: 'center' } }}
-            >
-              <TextField
-                select
-                size="small"
-                label="Asignar a otro trabajador"
-                value={trabajadorSeleccionado}
-                onChange={(evento) =>
-                  setTrabajadorSeleccionado(evento.target.value)
-                }
-                disabled={asignando || cerrado || cargandoTrabajadores}
-                sx={{ minWidth: 260, flex: 1 }}
-                helperText={
-                  cargandoTrabajadores
-                    ? 'Cargando trabajadores…'
-                    : trabajadores.length === 0
-                      ? 'No hay trabajadores activos.'
-                      : ' '
-                }
+            {esAdmin && (
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1.5}
+                sx={{ mt: 1.5, alignItems: { xs: 'stretch', sm: 'center' } }}
               >
-                {trabajadores.map((trabajador) => (
-                  <MenuItem
-                    key={trabajador.idUsuario}
-                    value={String(trabajador.idUsuario)}
-                  >
-                    {trabajador.nombre} ·{' '}
-                    {AREAS_PERSONAL[trabajador.rolGlobal] ??
-                      trabajador.rolGlobal}
-                  </MenuItem>
-                ))}
-              </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Asignar a otro trabajador"
+                  value={trabajadorSeleccionado}
+                  onChange={(evento) =>
+                    setTrabajadorSeleccionado(evento.target.value)
+                  }
+                  disabled={asignando || cerrado || cargandoTrabajadores}
+                  sx={{ minWidth: 260, flex: 1 }}
+                  helperText={
+                    cargandoTrabajadores
+                      ? 'Cargando trabajadores…'
+                      : trabajadores.length === 0
+                        ? 'No hay trabajadores activos.'
+                        : ' '
+                  }
+                >
+                  {trabajadores.map((trabajador) => (
+                    <MenuItem
+                      key={trabajador.idUsuario}
+                      value={String(trabajador.idUsuario)}
+                    >
+                      {trabajador.nombre} ·{' '}
+                      {AREAS_PERSONAL[trabajador.rolGlobal] ??
+                        trabajador.rolGlobal}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => asignar(Number(trabajadorSeleccionado))}
-                disabled={
-                  asignando || cerrado || !trabajadorSeleccionado.trim()
-                }
-                sx={sxBoton}
-              >
-                Asignar
-              </Button>
-            </Stack>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => asignar(Number(trabajadorSeleccionado))}
+                  disabled={
+                    asignando || cerrado || !trabajadorSeleccionado.trim()
+                  }
+                  sx={sxBoton}
+                >
+                  Asignar
+                </Button>
+              </Stack>
+            )}
 
             {errorAsignacion && (
               <Alert severity="warning" sx={{ mt: 1.5 }}>
