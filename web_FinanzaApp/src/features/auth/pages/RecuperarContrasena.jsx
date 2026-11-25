@@ -130,7 +130,7 @@ function RecuperarContrasena() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout volverA="/login" textoVolver="Volver a iniciar sesión">
       <Typography
         sx={{
           fontSize: '0.75rem',

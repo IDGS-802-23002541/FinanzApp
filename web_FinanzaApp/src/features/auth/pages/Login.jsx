@@ -125,6 +125,9 @@ function Login() {
             flexWrap: 'wrap',
             gap: 1,
             mt: 1,
+            // En pantallas angostas los dos enlaces se centran en vez de quedar
+            // uno pegado a cada borde.
+            '@media (max-width: 460px)': { justifyContent: 'center' },
           }}
         >
           <Link component={RouterLink} to="/recuperar" sx={{ fontSize: '0.875rem' }}>

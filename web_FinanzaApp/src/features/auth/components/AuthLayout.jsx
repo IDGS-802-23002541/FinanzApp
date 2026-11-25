@@ -1,5 +1,6 @@
 import { Box, Link, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
+import Logo from '../../../components/ui/Logo.jsx'
 import {
   IconoCheck,
   IconoFlechaIzquierda,
@@ -46,36 +47,16 @@ function PanelMarca() {
       </Box>
 
       <Stack
-        direction="row"
-        spacing={1.25}
         component={RouterLink}
         to="/"
         sx={{
-          alignItems: 'center',
+          alignItems: 'flex-start',
           color: 'inherit',
           textDecoration: 'none',
           width: 'fit-content',
         }}
       >
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            backgroundColor: 'var(--paleta-blanco)',
-            color: 'var(--paleta-petroleo)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '0.875rem',
-          }}
-        >
-          F
-        </Box>
-        <Typography sx={{ fontWeight: 800, fontSize: '1rem' }}>
-          FinanzApp
-        </Typography>
+        <Logo variante="blanco" alto={30} conTexto />
       </Stack>
 
       <Box sx={{ my: 'auto' }}>
@@ -133,8 +114,9 @@ function PanelMarca() {
   )
 }
 
-// Estructura común de login, registro y recuperación de contraseña.
-function AuthLayout({ children }) {
+// Estructura común de login, registro y recuperación de contraseña. El enlace de
+// regreso apunta al inicio; recuperar y reactivar lo mandan al login.
+function AuthLayout({ children, volverA = '/', textoVolver = 'Volver al inicio' }) {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* Panel de marca con características de la aplicación. Se oculta en pantallas pequeñas. */}
@@ -155,7 +137,7 @@ function AuthLayout({ children }) {
         <Box sx={{ width: '100%', maxWidth: 440 }}>
           <Link
             component={RouterLink}
-            to="/"
+            to={volverA}
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -167,7 +149,7 @@ function AuthLayout({ children }) {
             }}
           >
             <IconoFlechaIzquierda sx={{ fontSize: 16 }} />
-            Volver al inicio
+            {textoVolver}
           </Link>
 
           {children}
