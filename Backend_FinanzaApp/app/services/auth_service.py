@@ -585,13 +585,6 @@ CAMPOS_NOTIFICACION = (
 )
 
 
-CAMPOS_NOTIFICACION = (
-    "notificacionesMovimientos",
-    "notificacionesSistema",
-    "notificacionesPagos",
-)
-
-
 def obtener_preferencia():
     preferencia = db.session.get(PreferenciaUsuario, current_user.idUsuario)
     return {
