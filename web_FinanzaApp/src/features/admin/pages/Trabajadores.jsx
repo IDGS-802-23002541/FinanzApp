@@ -11,9 +11,10 @@ import {
   Typography,
 } from '@mui/material'
 import { listarTrabajadores } from '../api.js'
+import DialogoNuevoTrabajador from '../components/DialogoNuevoTrabajador.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
-import { IconoPersonas } from '../../../components/ui/Iconos.jsx'
+import { IconoMas, IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
 const POR_PAGINA = 10
 
@@ -37,6 +38,7 @@ function Trabajadores() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
+  const [altaAbierta, setAltaAbierta] = useState(false)
 
   useEffect(() => {
     let vigente = true
@@ -89,6 +91,15 @@ function Trabajadores() {
         titulo="Trabajadores"
         descripcion="Personal de soporte y los tickets que tiene asignados."
       >
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<IconoMas sx={{ fontSize: 16 }} />}
+          onClick={() => setAltaAbierta(true)}
+          sx={{ fontSize: '0.875rem', textTransform: 'none' }}
+        >
+          Nuevo trabajador
+        </Button>
         <Button
           variant="outlined"
           size="small"
@@ -221,6 +232,12 @@ function Trabajadores() {
           sx={{ alignSelf: 'center' }}
         />
       )}
+
+      <DialogoNuevoTrabajador
+        abierto={altaAbierta}
+        onCerrar={() => setAltaAbierta(false)}
+        onCreado={() => setRecarga((actual) => actual + 1)}
+      />
     </Stack>
   )
 }

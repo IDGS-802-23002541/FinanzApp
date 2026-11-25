@@ -52,6 +52,17 @@ export async function listarTrabajadores({ pagina = 1, porPagina = 10 } = {}) {
   return { trabajadores: data?.trabajadores ?? [], paginacion }
 }
 
+// Alta de personal de soporte. Devuelve la contraseña temporal para el admin.
+export async function crearTrabajador({ nombreUsuario, apaterno, amaterno, correo }) {
+  const { data } = await api.post('/admin/trabajadores', {
+    nombreUsuario,
+    apaterno,
+    amaterno,
+    correo,
+  })
+  return data
+}
+
 export async function asignarTicket(
   idTicket,
   { trabajadorId, idAsignacionActual } = {},
