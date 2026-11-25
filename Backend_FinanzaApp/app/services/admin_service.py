@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.security import generate_password_hash
 
 from app.extensions import db
-from app.models import AsignacionTicket, Ticket, Usuario
-from app.utils import validacion
+from app.models import AsignacionTicket, SesionUsuario, Ticket, Usuario
+from app.utils import seguridad, validacion
 from app.utils.serializers import serializar_usuario
 
 MAPA_ESTADO_TICKETS = {
@@ -89,7 +89,9 @@ def listar_trabajadores(pagina="1", por_pagina="20"):
             .scalars()
             .all()
         )
-        tickets = _tickets_actuales([trabajador.idUsuario for trabajador in trabajadores])
+        tickets = _tickets_actuales(
+            [trabajador.idUsuario for trabajador in trabajadores]
+        )
     except SQLAlchemyError:
         db.session.rollback()
         return {
@@ -162,6 +164,99 @@ def crear_trabajador(datos):
     }, 201
 
 
+def editar_trabajador(id_trabajador, datos):
+    if current_user.rolGlobal != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo un administrador puede editar trabajadores.",
+        }, 403
+
+    trabajador, error = _buscar_trabajador(id_trabajador)
+    if error:
+        return error
+
+    campos, error = validacion.datos_usuario(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    repetido = db.session.execute(
+        db.select(Usuario).where(
+            Usuario.correo == campos["correo"],
+            Usuario.idUsuario != trabajador.idUsuario,
+        )
+    ).scalar_one_or_none()
+    if repetido:
+        return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+
+    for campo, valor in campos.items():
+        setattr(trabajador, campo, valor)
+    trabajador.fechaActualizacion = seguridad.ahora_utc()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+
+    return {"ok": True, "mensaje": "Trabajador actualizado."}, 200
+
+
+def eliminar_trabajador(id_trabajador):
+    if current_user.rolGlobal != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo un administrador puede dar de baja trabajadores.",
+        }, 403
+
+    trabajador, error = _buscar_trabajador(id_trabajador)
+    if error:
+        return error
+
+    ahora = seguridad.ahora_utc()
+    trabajador.estado = "INACTIVO"
+    trabajador.fechaActualizacion = ahora
+
+    # Los tickets que atendía quedan libres y sus sesiones se revocan.
+    db.session.execute(
+        db.update(AsignacionTicket)
+        .where(
+            AsignacionTicket.trabajadorId == trabajador.idUsuario,
+            AsignacionTicket.esActual == db.true(),
+        )
+        .values(esActual=False, fechaFin=ahora)
+    )
+    db.session.execute(
+        db.update(SesionUsuario)
+        .where(
+            SesionUsuario.usuarioId == trabajador.idUsuario,
+            SesionUsuario.fechaRevocacion.is_(None),
+        )
+        .values(fechaRevocacion=ahora)
+    )
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo dar de baja al trabajador."}, 503
+
+    return {
+        "ok": True,
+        "mensaje": "Trabajador dado de baja. Sus tickets quedaron sin asignar.",
+    }, 200
+
+
+def _buscar_trabajador(id_trabajador):
+    entero, error = _entero("id", id_trabajador, 1)
+    if error:
+        return None, ({"ok": False, "mensaje": error}, 400)
+
+    trabajador = db.session.execute(
+        db.select(Usuario).where(Usuario.idUsuario == entero)
+    ).scalar_one_or_none()
+    if trabajador is None or trabajador.rolGlobal != "TRABAJADOR":
+        return None, ({"ok": False, "mensaje": "El trabajador no existe."}, 404)
+    return trabajador, None
+
+
 def _serializar_trabajador(trabajador, tickets=None):
     partes = [
         trabajador.nombreUsuario,
@@ -172,6 +267,9 @@ def _serializar_trabajador(trabajador, tickets=None):
     return {
         "idUsuario": trabajador.idUsuario,
         "nombre": nombre,
+        "nombreUsuario": trabajador.nombreUsuario,
+        "apaterno": trabajador.apaterno,
+        "amaterno": getattr(trabajador, "amaterno", None),
         "correo": trabajador.correo,
         "rolGlobal": trabajador.rolGlobal,
         "estatus": trabajador.estado,
@@ -213,7 +311,9 @@ def _entero(nombre, valor, minimo, maximo=None):
     except (TypeError, ValueError):
         return None, f"El parámetro {nombre} debe ser un número entero."
     if numero < minimo or (maximo is not None and numero > maximo):
-        rango = f"entre {minimo} y {maximo}" if maximo is not None else f"mínimo {minimo}"
+        rango = (
+            f"entre {minimo} y {maximo}" if maximo is not None else f"mínimo {minimo}"
+        )
         return None, f"El parámetro {nombre} debe estar {rango}."
     return numero, None
 
