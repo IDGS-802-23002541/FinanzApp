@@ -1,6 +1,6 @@
 import {
   Alert,
-  Avatar,
+  
   Box,
   Button,
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import EstadoTicket from './EstadoTicket.jsx'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
+import { AvatarUsuario } from '../../../components/ui/Iconos.jsx'
 import { formatearFecha } from '../../../utils/formato.js'
 
 // Estados en los que el reporte ya no admite cambios (CA4).
@@ -79,7 +80,7 @@ function DetalleTicket({
               sx={{
                 p: 2,
                 border: '1px dashed var(--color-borde)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radio-md)',
               }}
             >
               <Typography
@@ -106,18 +107,11 @@ function DetalleTicket({
                     spacing={1.25}
                     sx={{ alignItems: 'center', mb: 1 }}
                   >
-                    <Avatar
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        backgroundColor: 'var(--paleta-petroleo)',
-                        color: 'var(--paleta-blanco)',
-                      }}
-                    >
-                      {respuesta.iniciales ?? '·'}
-                    </Avatar>
+                    <AvatarUsuario
+                      iniciales={respuesta.iniciales}
+                      nombreUsuario={respuesta.autor}
+                      tamano={28}
+                    />
                     <Box sx={{ minWidth: 0 }}>
                       <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                         {respuesta.autor ?? 'Soporte'}
