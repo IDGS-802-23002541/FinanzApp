@@ -37,6 +37,28 @@
   --color-seleccion: #f7e0d8;
   --color-seleccion-texto: #a94832;
 
+  /* Estados de un reporte de soporte. Son colores funcionales: no se usan
+     como marca ni en gráficas. Todos cumplen AA sobre su propio fondo. */
+  --color-pendiente: #8a5a00;
+  --color-pendiente-fondo: #fbefd5;
+  --color-proceso: #2c5d6b;
+  --color-proceso-fondo: #e3eef0;
+  --color-espera: #46626a;
+  --color-espera-fondo: #efe9e4;
+  --color-resuelto: #1f6b45;
+  --color-resuelto-fondo: #deefe4;
+  --color-cerrado: #963a28;
+  --color-cerrado-fondo: #f7e2dd;
+
+  /* Series de gráficas (categorías). Orden fijo: no se reutilizan para marca
+     ni para estados. */
+  --color-serie-1: #173b45;
+  --color-serie-2: #c65d45;
+  --color-serie-3: #4a7c86;
+  --color-serie-4: #8a5a00;
+  --color-serie-5: #e7a28e;
+  --color-serie-6: #6e8a90;
+
   /* Borde temporal al abrir el detalle de un ticket. */
   --color-resaltado: var(--paleta-coral);
 
@@ -78,6 +100,26 @@
   /* Enlace activo del menú lateral en oscuro. */
   --color-seleccion: #1f4a55;
   --color-seleccion-texto: var(--paleta-coral);
+
+  /* Estados de un reporte de soporte en oscuro. */
+  --color-pendiente: #f0c179;
+  --color-pendiente-fondo: #43320f;
+  --color-proceso: #9ccbd4;
+  --color-proceso-fondo: #123a44;
+  --color-espera: #c9d6d8;
+  --color-espera-fondo: #24393e;
+  --color-resuelto: #8fd1b8;
+  --color-resuelto-fondo: #16382a;
+  --color-cerrado: #f0a491;
+  --color-cerrado-fondo: #43231d;
+
+  /* Series de gráficas en oscuro: versiones claras para el fondo petróleo. */
+  --color-serie-1: #9ccbd4;
+  --color-serie-2: #e79273;
+  --color-serie-3: #7fb3be;
+  --color-serie-4: #f0c179;
+  --color-serie-5: #e7a28e;
+  --color-serie-6: #c9d6d8;
 
   /* En oscuro el coral no contrasta; se usa el verde de éxito. */
   --color-resaltado: #8fd1b8;
