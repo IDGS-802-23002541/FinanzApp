@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import {
   Alert,
-  Avatar,
+
   Box,
   Button,
   Chip,
@@ -17,7 +17,8 @@ import {
   Typography,
 } from '@mui/material'
 import { eliminarColaborador, salirCartera } from '../api.js'
-import { IconoPapelera } from '../../../components/ui/Iconos.jsx'
+import { AvatarUsuario, IconoPapelera, IconoPersonas } from '../../../components/ui/Iconos.jsx'
+import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 function Contribuyentes() {
@@ -66,7 +67,7 @@ function Contribuyentes() {
       sx={{
         p: 2.5,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
     >
@@ -105,9 +106,11 @@ function Contribuyentes() {
         {error && <Alert severity="error">{error}</Alert>}
 
         {colaboradores.length === 0 ? (
-          <Alert severity="info">
-            Esta cartera todavía no tiene contribuyentes.
-          </Alert>
+          <EstadoVacio
+            Icono={IconoPersonas}
+            titulo="Sin contribuyentes todavía"
+            descripcion="Invita a alguien con el código QR para que registre movimientos en esta cartera."
+          />
         ) : (
           <Stack spacing={1.5}>
             {colaboradores.map((persona) => (
@@ -119,19 +122,10 @@ function Contribuyentes() {
                   gap: 1.5,
                   p: 1.5,
                   border: '1px solid var(--color-borde)',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radio-md)',
                 }}
               >
-                <Avatar
-                  sx={{
-                    backgroundColor: 'var(--color-primario)',
-                    color: 'var(--color-sobre-primario)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {persona.iniciales}
-                </Avatar>
+                <AvatarUsuario iniciales={persona.iniciales} tamano={40} />
 
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography sx={{ fontWeight: 600 }} noWrap>
@@ -238,3 +232,4 @@ function Contribuyentes() {
 }
 
 export default Contribuyentes
+

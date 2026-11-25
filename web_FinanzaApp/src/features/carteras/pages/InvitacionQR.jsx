@@ -12,6 +12,8 @@ import {
 import QRCode from 'react-qr-code'
 import { generarInvitacion, obtenerInvitacion } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
+import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
+import { IconoCandado, IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
 function InvitacionQR() {
   const { cartera, id } = useOutletContext()
@@ -61,9 +63,11 @@ function InvitacionQR() {
 
   if (!esPropietario) {
     return (
-      <Alert severity="info">
-        Solo el propietario puede ver o generar la invitación.
-      </Alert>
+      <EstadoVacio
+        Icono={IconoCandado}
+        titulo="Solo el propietario administra la invitación"
+        descripcion="Pídele al propietario de la cartera que genere el código QR o la clave."
+      />
     )
   }
 
@@ -88,7 +92,7 @@ function InvitacionQR() {
       sx={{
         p: 2.5,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
     >
@@ -138,7 +142,7 @@ function InvitacionQR() {
             <Box
               sx={{
                 p: 2,
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--paleta-blanco)',
                 borderRadius: 2,
                 justifySelf: 'center',
               }}
@@ -178,7 +182,11 @@ function InvitacionQR() {
             </Stack>
           </Box>
         ) : (
-          <Alert severity="info">Aún no hay una invitación activa.</Alert>
+          <EstadoVacio
+            Icono={IconoPersonas}
+            titulo="Aún no hay una invitación activa"
+            descripcion="Genera una invitación para compartir la cartera con un QR o una clave de 8 caracteres."
+          />
         )}
 
         <Box>
@@ -217,3 +225,4 @@ function InvitacionQR() {
 }
 
 export default InvitacionQR
+
