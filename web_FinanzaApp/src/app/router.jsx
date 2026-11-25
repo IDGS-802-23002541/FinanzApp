@@ -7,6 +7,7 @@ import Login from '../features/auth/pages/Login.jsx'
 import Registro from '../features/auth/pages/Registro.jsx'
 import RecuperarContrasena from '../features/auth/pages/RecuperarContrasena.jsx'
 import ReactivarCuenta from '../features/auth/pages/ReactivarCuenta.jsx'
+import CambioObligatorio from '../features/auth/pages/CambioObligatorio.jsx'
 import ListaCarteras from '../features/carteras/pages/Lista.jsx'
 import DetalleCartera from '../features/carteras/pages/Detalle.jsx'
 import DetalleResumen from '../features/carteras/pages/DetalleResumen.jsx'
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <ProtectedRoute/>, children: [
+      {path: '/cambiar-contrasenia', element: <CambioObligatorio />},
       {element: <PanelLayout />, children: [
         {element: <RoleRoute roles={[ROLES.CLIENTE]} />, children: [
           {path: '/carteras', element: <ListaCarteras />},

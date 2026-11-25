@@ -36,7 +36,7 @@ function validar({ actual, nueva, confirmar }) {
   return errores
 }
 
-function FormularioSeguridad() {
+function FormularioSeguridad({ alCambiar }) {
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO)
   const [errores, setErrores] = useState({})
   const [aviso, setAviso] = useState(null)
@@ -69,6 +69,7 @@ function FormularioSeguridad() {
         severidad: 'success',
         texto: 'Contraseña actualizada correctamente.',
       })
+      alCambiar?.()
     } catch (err) {
       setAviso({ severidad: 'error', texto: err.message })
     } finally {
