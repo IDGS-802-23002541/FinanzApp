@@ -9,8 +9,6 @@ import { cambiarContrasenia } from '../api.js'
 const FORMULARIO_VACIO = { actual: '', nueva: '', confirmar: '' }
 
 const sxBoton = {
-  minHeight: 0,
-  py: 0.75,
   px: 2,
   fontSize: '0.875rem',
   borderColor: 'var(--color-borde-fuerte)',

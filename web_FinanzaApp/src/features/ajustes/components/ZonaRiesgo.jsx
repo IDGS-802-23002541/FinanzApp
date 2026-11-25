@@ -16,8 +16,6 @@ import { ROLES } from '../../../utils/constantes.js'
 import { desactivarCuenta, eliminarCuenta } from '../api.js'
 
 const sxBoton = {
-  minHeight: 0,
-  py: 0.75,
   px: 2,
   fontSize: '0.875rem',
 }

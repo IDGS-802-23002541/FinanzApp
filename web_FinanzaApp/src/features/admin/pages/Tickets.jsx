@@ -70,8 +70,6 @@ const FILTROS_INICIALES = {
 }
 
 const sxBoton = {
-  minHeight: 0,
-  py: 0.75,
   px: 2,
   borderRadius: '12px',
   fontSize: '0.875rem',

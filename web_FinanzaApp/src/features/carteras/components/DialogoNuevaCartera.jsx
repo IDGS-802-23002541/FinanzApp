@@ -25,8 +25,6 @@ const FORMULARIO_VACIO = {
 }
 
 const sxBoton = {
-  minHeight: 0,
-  py: 0.75,
   px: 2,
   fontSize: '0.875rem',
   textTransform: 'none',

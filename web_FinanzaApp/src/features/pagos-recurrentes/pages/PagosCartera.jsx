@@ -36,8 +36,6 @@ const COLUMNAS = [
 ]
 
 const sxBoton = {
-  minHeight: 0,
-  py: 0.5,
   px: 2,
   borderRadius: '12px',
   fontSize: '0.875rem',
