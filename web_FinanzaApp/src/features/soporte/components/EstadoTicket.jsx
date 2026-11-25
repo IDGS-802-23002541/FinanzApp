@@ -1,45 +1,51 @@
-import { Chip } from '@mui/material'
+import { Box, Chip } from '@mui/material'
 
-// Textos visibles para el cliente. El backend devuelve el estado en mayúsculas.
+// Estados del reporte con su color. El texto visible no cambia el estado del
+// backend; solo se muestra en español.
 const ESTADOS = {
-  ABIERTO: {
-    texto: 'Pendiente',
-    fondo: 'var(--color-superficie-suave)',
-    color: 'var(--color-texto-secundario)',
-  },
-  EN_PROCESO: {
-    texto: 'En proceso',
-    fondo: 'var(--color-seleccion)',
-    color: 'var(--color-seleccion-texto)',
-  },
-  ESPERA: {
-    texto: 'En espera',
-    fondo: 'var(--color-superficie-suave)',
-    color: 'var(--color-texto-terciario)',
-  },
-  RESUELTO: {
-    texto: 'Resuelto',
-    fondo: 'var(--color-superficie-suave)',
-    color: 'var(--color-exito)',
-  },
-  CERRADO: {
-    texto: 'Cerrado',
-    fondo: 'var(--color-superficie-suave)',
-    color: 'var(--color-texto-terciario)',
-  },
+  ABIERTO: { texto: 'Pendiente', clave: 'pendiente' },
+  EN_PROCESO: { texto: 'En proceso', clave: 'proceso' },
+  ESPERA: { texto: 'En espera', clave: 'espera' },
+  RESUELTO: { texto: 'Resuelto', clave: 'resuelto' },
+  CERRADO: { texto: 'Cerrado', clave: 'cerrado' },
 }
 
+// Etiqueta del estado de un reporte: punto + fondo suave del color del estado.
+// Los tokens de color están en tema.css y son los mismos en claro y oscuro.
 function EstadoTicket({ estado }) {
   const configuracion = ESTADOS[estado]
+  const clave = configuracion?.clave
 
   return (
     <Chip
       size="small"
-      label={configuracion?.texto ?? estado}
+      label={
+        <Box
+          component="span"
+          sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
+        >
+          {clave && (
+            <Box
+              component="span"
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                backgroundColor: 'currentColor',
+                flexShrink: 0,
+              }}
+            />
+          )}
+          {configuracion?.texto ?? estado}
+        </Box>
+      }
       sx={{
-        fontWeight: 600,
-        backgroundColor: configuracion?.fondo ?? 'var(--color-superficie-suave)',
-        color: configuracion?.color ?? 'var(--color-texto-secundario)',
+        fontWeight: 700,
+        backgroundColor: clave
+          ? `var(--color-${clave}-fondo)`
+          : 'var(--color-superficie-suave)',
+        color: clave ? `var(--color-${clave})` : 'var(--color-texto-secundario)',
+        '& .MuiChip-label': { px: 1.25 },
       }}
     />
   )

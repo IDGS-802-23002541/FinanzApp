@@ -16,7 +16,7 @@ const sxTarjeta = {
   p: 2.5,
   height: '100%',
   border: '1px solid var(--color-borde)',
-  borderRadius: '14px',
+  borderRadius: 'var(--radio-lg)',
   textAlign: 'left',
   display: 'flex',
   flexDirection: 'column',

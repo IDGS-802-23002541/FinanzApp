@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Chip,
@@ -24,6 +23,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import EstadoTicket from '../../soporte/components/EstadoTicket.jsx'
 import {
   asignarTicket,
   cerrarTicket,
@@ -34,6 +34,8 @@ import {
 import { formatearFecha } from '../../../utils/formato.js'
 import { useAuth } from '../../../hooks/useAuth.js'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
+import { AvatarUsuario } from '../../../components/ui/Iconos.jsx'
 
 const ESTADOS = {
   ABIERTO: 'Abierto',
@@ -71,7 +73,7 @@ const FILTROS_INICIALES = {
 
 const sxBoton = {
   px: 2,
-  borderRadius: '12px',
+  borderRadius: 'var(--radio-md)',
   fontSize: '0.875rem',
   fontWeight: 600,
   textTransform: 'none',
@@ -313,18 +315,10 @@ function TicketsAdmin() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Tickets de soporte</Typography>
-        <Typography
-          sx={{
-            fontSize: '0.875rem',
-            color: 'var(--color-texto-terciario)',
-            mt: 0.5,
-          }}
-        >
-          Revisa las solicitudes de los clientes y responde desde aquí.
-        </Typography>
-      </Box>
+      <EncabezadoPagina
+        titulo="Tickets de soporte"
+        descripcion="Revisa las solicitudes de los clientes y responde desde aquí."
+      />
 
       <Stack
         direction={{ xs: 'column', md: 'row' }}
@@ -404,7 +398,7 @@ function TicketsAdmin() {
         elevation={0}
         sx={{
           border: '1px solid var(--color-borde)',
-          borderRadius: '16px',
+          borderRadius: 'var(--radio-lg)',
           backgroundColor: 'var(--color-superficie)',
           overflow: 'hidden',
         }}
@@ -460,7 +454,14 @@ function TicketsAdmin() {
                       key={ticket.idTicket}
                       hover
                       selected={activo}
+                      tabIndex={0}
                       onClick={() => abrirDetalle(ticket.idTicket)}
+                      onKeyDown={(evento) => {
+                        if (evento.key === 'Enter' || evento.key === ' ') {
+                          evento.preventDefault()
+                          abrirDetalle(ticket.idTicket)
+                        }
+                      }}
                       sx={{
                         cursor: 'pointer',
                         '&.Mui-selected': {
@@ -498,16 +499,7 @@ function TicketsAdmin() {
                         {ticket.cliente || '—'}
                       </TableCell>
                       <TableCell sx={sxCelda}>
-                        <Chip
-                          size="small"
-                          label={ESTADOS[ticket.estado] ?? ticket.estado}
-                          sx={{
-                            backgroundColor: 'var(--color-superficie-suave)',
-                            color: 'var(--color-texto-secundario)',
-                            fontWeight: 600,
-                            border: '1px solid var(--color-borde)',
-                          }}
-                        />
+                        <EstadoTicket estado={ticket.estado} />
                       </TableCell>
                       <TableCell
                         sx={{
@@ -542,7 +534,7 @@ function TicketsAdmin() {
           sx={{
             p: 4,
             border: '1px dashed var(--color-borde-fuerte)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
             textAlign: 'center',
           }}
         >
@@ -559,7 +551,7 @@ function TicketsAdmin() {
           onAnimationEnd={() => setResaltarDetalle(false)}
           sx={{
             border: '1px solid var(--color-borde)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
             backgroundColor: 'var(--color-superficie)',
             p: 2.5,
             scrollMarginTop: 24,
@@ -604,10 +596,7 @@ function TicketsAdmin() {
           </Typography>
 
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mt: 1.5 }}>
-            <Chip
-              size="small"
-              label={ESTADOS[seleccionado.estado] ?? seleccionado.estado}
-            />
+            <EstadoTicket estado={seleccionado.estado} />
             <Chip
               size="small"
               label={
@@ -649,7 +638,7 @@ function TicketsAdmin() {
               mt: 2.5,
               p: 2,
               border: '1px solid var(--color-borde)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radio-md)',
               backgroundColor: 'var(--color-superficie-suave)',
             }}
           >
@@ -800,18 +789,11 @@ function TicketsAdmin() {
                   key={respuesta.idRespuesta}
                   sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}
                 >
-                  <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      backgroundColor: 'var(--color-primario)',
-                      color: 'var(--color-sobre-primario)',
-                    }}
-                  >
-                    {respuesta.iniciales || 'S'}
-                  </Avatar>
+                  <AvatarUsuario
+                    iniciales={respuesta.iniciales}
+                    nombreUsuario={respuesta.autor}
+                    tamano={32}
+                  />
                   <Box sx={{ minWidth: 0 }}>
                     <Typography
                       sx={{
@@ -932,3 +914,4 @@ function TicketsAdmin() {
 }
 
 export default TicketsAdmin
+

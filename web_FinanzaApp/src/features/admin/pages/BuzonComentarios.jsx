@@ -20,6 +20,9 @@ import { archivarComentario, listarComentarios } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
 import { IconoPapelera } from '../../../components/ui/Iconos.jsx'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
+import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
+import { IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
 const POR_PAGINA = 10
 
@@ -89,12 +92,10 @@ function BuzonComentarios() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Buzón de comentarios</Typography>
-        <Typography sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
-          Comentarios enviados desde la landing.
-        </Typography>
-      </Box>
+      <EncabezadoPagina
+        titulo="Buzón de comentarios"
+        descripcion="Comentarios enviados desde la landing."
+      />
 
       {error && <Alert severity="error">{error}</Alert>}
 
@@ -103,9 +104,11 @@ function BuzonComentarios() {
           <CircularProgress size={28} />
         </Box>
       ) : comentarios.length === 0 ? (
-        <Alert severity="info">
-          Todavía no hay comentarios enviados desde la landing.
-        </Alert>
+        <EstadoVacio
+          Icono={IconoPersonas}
+          titulo="Sin comentarios todavía"
+          descripcion="Aquí aparecerán los comentarios que se envíen desde la landing."
+        />
       ) : (
         <Stack spacing={1.5}>
           {comentarios.map((comentario) => (
@@ -115,7 +118,7 @@ function BuzonComentarios() {
               sx={{
                 p: 2,
                 border: '1px solid var(--color-borde)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radio-md)',
               }}
             >
               <Box
@@ -255,3 +258,4 @@ function BuzonComentarios() {
 }
 
 export default BuzonComentarios
+

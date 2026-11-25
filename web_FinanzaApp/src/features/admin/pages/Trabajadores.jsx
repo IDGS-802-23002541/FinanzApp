@@ -11,6 +11,9 @@ import {
   Typography,
 } from '@mui/material'
 import { listarTrabajadores } from '../api.js'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
+import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
+import { IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
 const POR_PAGINA = 10
 
@@ -82,21 +85,10 @@ function Trabajadores() {
 
   return (
     <Stack spacing={3}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: 2,
-          flexWrap: 'wrap',
-        }}
+      <EncabezadoPagina
+        titulo="Trabajadores"
+        descripcion="Personal de soporte y los tickets que tiene asignados."
       >
-        <Box>
-          <Typography variant="h1">Trabajadores</Typography>
-          <Typography sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
-            Personal de soporte y los tickets que tiene asignados.
-          </Typography>
-        </Box>
         <Button
           variant="outlined"
           size="small"
@@ -105,7 +97,7 @@ function Trabajadores() {
         >
           Actualizar
         </Button>
-      </Box>
+      </EncabezadoPagina>
 
       {error && <Alert severity="error">{error}</Alert>}
 
@@ -114,7 +106,11 @@ function Trabajadores() {
           <CircularProgress size={28} />
         </Box>
       ) : trabajadores.length === 0 ? (
-        <Alert severity="info">Todavía no hay trabajadores registrados.</Alert>
+        <EstadoVacio
+          Icono={IconoPersonas}
+          titulo="Sin trabajadores registrados"
+          descripcion="Cuando se dé de alta personal de soporte aparecerá aquí con sus tickets asignados."
+        />
       ) : (
         <Stack spacing={1.5}>
           {trabajadores.map((trabajador) => {
@@ -127,7 +123,7 @@ function Trabajadores() {
                 sx={{
                   p: 2,
                   border: '1px solid var(--color-borde)',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radio-md)',
                 }}
               >
                 <Stack
@@ -230,3 +226,4 @@ function Trabajadores() {
 }
 
 export default Trabajadores
+
