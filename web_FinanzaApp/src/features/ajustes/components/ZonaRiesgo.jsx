@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Typography,
 } from '@mui/material'
 import Tarjeta from './Tarjeta.jsx'
@@ -14,6 +13,7 @@ import CampoContrasena from '../../auth/components/CampoContrasena.jsx'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { ROLES } from '../../../utils/constantes.js'
 import { desactivarCuenta, eliminarCuenta } from '../api.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const sxBoton = {
   px: 2,
@@ -127,7 +127,7 @@ function ZonaRiesgo() {
       </Box>
 
       <Dialog open={Boolean(detalle)} onClose={cancelar} maxWidth="xs" fullWidth>
-        <DialogTitle>{detalle?.titulo}</DialogTitle>
+        <DialogoTitulo alCerrar={cancelar}>{detalle?.titulo}</DialogoTitulo>
         <DialogContent>
           <Typography
             sx={{

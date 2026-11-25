@@ -6,7 +6,6 @@ import{
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
     MenuItem,
     Stack,
     TextField,
@@ -17,6 +16,7 @@ import{
 import { crearTransaccion } from '../api.js'
 import { actualizarTransaccion } from '../../transacciones/api.js'
 import SelectorCategorias from './SelectorCategorias.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const METODOS_PAGO = [
   { valor: 'EFECTIVO', etiqueta: 'Efectivo' },
@@ -110,9 +110,9 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
   return (
     <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>
+        <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar movimiento' : 'Nuevo movimiento'}
-        </DialogTitle>
+        </DialogoTitulo>
 
         <DialogContent dividers>
           <Stack spacing={2}>

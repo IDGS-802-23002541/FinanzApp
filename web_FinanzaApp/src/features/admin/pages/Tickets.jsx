@@ -10,7 +10,6 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
   Divider,
   MenuItem,
   Pagination,
@@ -34,6 +33,7 @@ import {
 } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
 import { useAuth } from '../../../hooks/useAuth.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const ESTADOS = {
   ABIERTO: 'Abierto',
@@ -894,7 +894,9 @@ function TicketsAdmin() {
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle>Cerrar ticket</DialogTitle>
+        <DialogoTitulo alCerrar={() => !cerrando && setPorCerrar(false)}>
+          Cerrar ticket
+        </DialogoTitulo>
         <DialogContent>
           <DialogContentText>
             ¿Cerrar el ticket #{seleccionado?.idTicket}? Ya no admitirá más

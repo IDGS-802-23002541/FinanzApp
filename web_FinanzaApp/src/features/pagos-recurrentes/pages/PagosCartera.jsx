@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Stack,
   Table,
   TableBody,
@@ -25,6 +24,7 @@ import { eliminarPago, listarPagos, marcarPagoHecho } from '../api.js'
 import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import DialogoNuevoPago from '../components/DialogoNuevoPago.jsx'
 import { IconoCheck, IconoMas } from '../../../components/ui/Iconos.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const COLUMNAS = [
   'Concepto',
@@ -422,7 +422,9 @@ function PagosCartera() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{ fontWeight: 700 }}>Eliminar pago recurrente</DialogTitle>
+          <DialogoTitulo alCerrar={() => setPorEliminar(null)} sx={{ fontWeight: 700 }}>
+            Eliminar pago recurrente
+          </DialogoTitulo>
           <DialogContent>
             <Typography
               sx={{

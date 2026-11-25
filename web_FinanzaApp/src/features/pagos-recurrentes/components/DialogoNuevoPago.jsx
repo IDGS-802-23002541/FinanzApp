@@ -6,13 +6,13 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   MenuItem,
   Stack,
   TextField,
 } from '@mui/material'
 import SelectorCategorias from '../../carteras/components/SelectorCategorias.jsx'
 import { crearPago, editarPago } from '../api.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const FRECUENCIAS = [
   { valor: 'DIARIO', texto: 'Diario' },
@@ -114,9 +114,9 @@ function DialogoNuevoPago({ carteraId, pago, onCerrar, onGuardado }) {
   return (
     <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>
+        <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar pago recurrente' : 'Nuevo pago recurrente'}
-        </DialogTitle>
+        </DialogoTitulo>
 
         <DialogContent dividers>
           <Stack spacing={2}>

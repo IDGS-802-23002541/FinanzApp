@@ -6,13 +6,13 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import { admitePeriodo, crearCartera, editarCartera } from '../api.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const CATEGORIAS = ['Hogar', 'Viaje', 'Evento', 'Otro']
 const FORMULARIO_VACIO = {
@@ -136,9 +136,9 @@ function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
   return (
     <Dialog open onClose={onCerrar} maxWidth="md" fullWidth>
       <Box component="form" noValidate onSubmit={enviar}>
-        <DialogTitle sx={{ fontWeight: 700 }}>
+        <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar cartera' : 'Nueva cartera'}
-        </DialogTitle>
+        </DialogoTitulo>
 
         <DialogContent dividers>
           <Typography

@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   InputAdornment,
   Stack,
   TextField,
@@ -29,6 +28,7 @@ import {
   IconoOtro,
   IconoPin,
 } from '../../../components/ui/Iconos.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 // "tipo" es el enum que espera la API; el texto es lo que ve el usuario.
 const FILTROS_TIPO = [
@@ -517,7 +517,9 @@ function ListaCarteras() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{ fontWeight: 700 }}>Eliminar cartera</DialogTitle>
+          <DialogoTitulo alCerrar={() => setPorInactivar(null)} sx={{ fontWeight: 700 }}>
+            Eliminar cartera
+          </DialogoTitulo>
           <DialogContent>
             <Typography
               sx={{

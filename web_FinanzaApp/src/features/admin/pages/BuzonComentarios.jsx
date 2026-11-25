@@ -9,7 +9,6 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
   IconButton,
   Pagination,
   Paper,
@@ -20,6 +19,7 @@ import {
 import { archivarComentario, listarComentarios } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
 import { IconoPapelera } from '../../../components/ui/Iconos.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const POR_PAGINA = 10
 
@@ -206,7 +206,9 @@ function BuzonComentarios() {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>{seleccionado?.nombre}</DialogTitle>
+        <DialogoTitulo alCerrar={() => setSeleccionado(null)}>
+          {seleccionado?.nombre}
+        </DialogoTitulo>
         <DialogContent>
           <Typography
             variant="body2"
@@ -225,7 +227,9 @@ function BuzonComentarios() {
       </Dialog>
 
       <Dialog open={Boolean(porArchivar)} onClose={() => setPorArchivar(null)}>
-        <DialogTitle>Archivar comentario</DialogTitle>
+        <DialogoTitulo alCerrar={() => setPorArchivar(null)}>
+          Archivar comentario
+        </DialogoTitulo>
         <DialogContent>
           <DialogContentText>
             ¿Deseas archivar el comentario de {porArchivar?.nombre}? Dejará de

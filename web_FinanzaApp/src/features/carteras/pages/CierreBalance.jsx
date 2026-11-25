@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Divider,
   Paper,
   Stack,
@@ -20,6 +19,7 @@ import {
 } from '@mui/material'
 import { finalizarCartera } from '../api.js'
 import { formatearMonto } from '../../../utils/formato.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 // Cierre y balance solo aplica a carteras de viaje o evento.
 const TIPOS_CERRABLES = ['Viaje', 'Evento']
@@ -264,7 +264,9 @@ function CierreBalance() {
       )}
 
       <Dialog open={confirmar} onClose={() => setConfirmar(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>¿Cerrar la cartera?</DialogTitle>
+        <DialogoTitulo alCerrar={() => setConfirmar(false)}>
+          ¿Cerrar la cartera?
+        </DialogoTitulo>
         <DialogContent>
           <Typography variant="body2">
             La cartera quedará finalizada y no se podrán registrar, editar ni eliminar

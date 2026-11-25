@@ -10,7 +10,6 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
   IconButton,
   Paper,
   Stack,
@@ -19,6 +18,7 @@ import {
 } from '@mui/material'
 import { eliminarColaborador, salirCartera } from '../api.js'
 import { IconoPapelera } from '../../../components/ui/Iconos.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 function Contribuyentes() {
   const { cartera, id, recargar } = useOutletContext()
@@ -185,7 +185,9 @@ function Contribuyentes() {
         open={confirmarSalida}
         onClose={() => setConfirmarSalida(false)}
       >
-        <DialogTitle>Salir de la cartera</DialogTitle>
+        <DialogoTitulo alCerrar={() => setConfirmarSalida(false)}>
+          Salir de la cartera
+        </DialogoTitulo>
         <DialogContent>
           <DialogContentText>
             ¿Deseas salir de esta cartera? Dejarás de tener acceso, pero tus
@@ -208,7 +210,9 @@ function Contribuyentes() {
       </Dialog>
 
       <Dialog open={Boolean(porEliminar)} onClose={() => setPorEliminar(null)}>
-        <DialogTitle>Eliminar contribuyente</DialogTitle>
+        <DialogoTitulo alCerrar={() => setPorEliminar(null)}>
+          Eliminar contribuyente
+        </DialogoTitulo>
         <DialogContent>
           <DialogContentText>
             ¿Deseas eliminar a {porEliminar?.nombre} de esta cartera? Perderá el

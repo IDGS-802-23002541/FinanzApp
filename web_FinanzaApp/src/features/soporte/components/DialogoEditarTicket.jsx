@@ -5,12 +5,12 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   MenuItem,
   Stack,
   TextField,
 } from '@mui/material'
 import { actualizarTicket } from '../api.js'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 const CATEGORIAS = [
   { valor: 'GENERAL', texto: 'General' },
@@ -61,7 +61,9 @@ function DialogoEditarTicket({ ticket, abierto, alCerrar, alGuardar }) {
 
   return (
     <Dialog open={abierto} onClose={alCerrar} fullWidth maxWidth="sm">
-      <DialogTitle>Editar reporte #{ticket?.idTicket}</DialogTitle>
+      <DialogoTitulo alCerrar={alCerrar}>
+        Editar reporte #{ticket?.idTicket}
+      </DialogoTitulo>
 
       <DialogContent dividers>
         <Stack spacing={2}>

@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   MenuItem,
   Paper,
   Stack,
@@ -27,6 +26,7 @@ import { formatearFecha, formatearMonto } from '../../../utils/formato.js'
 import { eliminarTransaccion, listarTransacciones } from '../api.js'
 import { listarPeriodos } from '../../carteras/api.js'
 import DialogoNuevaTransaccion from '../../carteras/components/DialogoNuevaTransaccion.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 
 function TransaccionesCartera() {
   const { cartera, id, recarga, recargar } = useOutletContext()
@@ -332,7 +332,9 @@ function TransaccionesCartera() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>Eliminar transacción</DialogTitle>
+          <DialogoTitulo alCerrar={() => setEliminando(null)}>
+            Eliminar transacción
+          </DialogoTitulo>
           <DialogContent>
             <Typography>
               ¿Eliminar “{eliminando.descripcion || 'Sin descripción'}” por{' '}
