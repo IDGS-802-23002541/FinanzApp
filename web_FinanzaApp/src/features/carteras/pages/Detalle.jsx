@@ -12,7 +12,8 @@ import {
   Typography,
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
-import { IconoCasa, IconoFlechaIzquierda } from '../../../components/ui/Iconos.jsx'
+import { IconoFlechaIzquierda } from '../../../components/ui/Iconos.jsx'
+import { aparienciaCategoria } from '../aparienciaCategoria.js'
 import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
 
 const SECCIONES = [
@@ -91,6 +92,7 @@ function DetalleCartera() {
     ? segmento
     : 'resumen'
   const recargar = () => setRecarga((n) => n + 1)
+  const apariencia = aparienciaCategoria(cartera.categoria)
 
   return (
     <Stack spacing={3}>
@@ -121,15 +123,15 @@ function DetalleCartera() {
             width: 48,
             height: 48,
             borderRadius: '50%',
-            backgroundColor: 'var(--color-primario)',
-            color: 'var(--color-sobre-primario)',
+            backgroundColor: apariencia.fondo,
+            color: apariencia.icono,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}
         >
-          <IconoCasa sx={{ fontSize: 22 }} />
+          <apariencia.Icono sx={{ fontSize: 22 }} />
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

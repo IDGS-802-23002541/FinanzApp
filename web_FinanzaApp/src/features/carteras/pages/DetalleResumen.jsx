@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
   Alert,
-  Avatar,
   Box,
   Chip,
   MenuItem,
@@ -12,13 +11,16 @@ import {
 } from '@mui/material'
 import { listarTransacciones } from '../../transacciones/api.js'
 import TarjetaResumen from '../components/TarjetaResumen.jsx'
+import BarraPresupuesto from '../components/BarraPresupuesto.jsx'
 import GraficaBarras from '../components/GraficaBarras.jsx'
 import GraficaDona from '../components/GraficaDona.jsx'
 import UltimasTransacciones from '../components/UltimasTransacciones.jsx'
 import {
+  AvatarUsuario,
   IconoArchivo,
   IconoCartera,
   IconoEstrella,
+  IconoPersonas,
 } from '../../../components/ui/Iconos.jsx'
 
 // Opciones del filtro por periodo del resumen (vista previa, aún sin conectar).
@@ -57,6 +59,12 @@ function DetalleResumen() {
 
   const { resumen, series, colaboradores } = cartera
   const esHogar = cartera.categoria === 'Hogar'
+  const presupuestoInicial = resumen.presupuestoInicial ?? 0
+  // En Hogar el disponible es el saldo real; en el resto es lo que queda del
+  // presupuesto (guía de gasto), sin sumar las aportaciones.
+  const disponible = esHogar
+    ? resumen.saldo
+    : presupuestoInicial - resumen.totalGastos
   const sinMovimientos =
     resumen.totalIngresos === 0 && resumen.totalGastos === 0
 
@@ -111,16 +119,7 @@ function DetalleResumen() {
             <Chip
               key={persona.idUsuario}
               avatar={
-                <Avatar
-                  sx={{
-                    backgroundColor: 'var(--paleta-petroleo)',
-                    color: 'var(--paleta-blanco)',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {persona.iniciales}
-                </Avatar>
+                <AvatarUsuario iniciales={persona.iniciales} tamano={24} />
               }
               label={`${persona.nombre} · ${persona.rol}`}
               sx={{
@@ -148,12 +147,20 @@ function DetalleResumen() {
             fondo="var(--color-superficie-suave)"
           />
         ) : (
-          <TarjetaResumen
-            etiqueta="Presupuesto"
-            monto={resumen.presupuestoInicial}
-            Icono={IconoCartera}
-            fondo="var(--color-superficie-suave)"
-          />
+          <>
+            <TarjetaResumen
+              etiqueta="Presupuesto"
+              monto={presupuestoInicial}
+              Icono={IconoCartera}
+              fondo="var(--color-superficie-suave)"
+            />
+            <TarjetaResumen
+              etiqueta="Aportado"
+              monto={resumen.totalIngresos}
+              Icono={IconoPersonas}
+              fondo="var(--color-seleccion)"
+            />
+          </>
         )}
         <TarjetaResumen
           etiqueta="Gastado"
@@ -163,7 +170,7 @@ function DetalleResumen() {
         />
         <TarjetaResumen
           etiqueta="Disponible"
-          monto={resumen.saldo}
+          monto={disponible}
           Icono={IconoEstrella}
           fondo="var(--color-acento)"
           colorIcono="var(--paleta-petroleo)"
@@ -179,26 +186,34 @@ function DetalleResumen() {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1.6fr 1fr' },
+          gridTemplateColumns: { xs: '1fr', md: esHogar ? '1.6fr 1fr' : '1fr 1fr' },
           gap: 2.5,
         }}
       >
-        <GraficaBarras
-          titulo="Últimos 6 meses"
-          grupos={gruposBarras}
-          series={[
-            {
-              clave: 'gastos',
-              nombre: 'Gastos por mes',
-              color: 'var(--color-primario)',
-            },
-            {
-              clave: 'ingresos',
-              nombre: 'Ingresos',
-              color: 'var(--color-borde-fuerte)',
-            },
-          ]}
-        />
+        {/* En Hogar el eje es el flujo por mes; en el resto, el presupuesto. */}
+        {esHogar ? (
+          <GraficaBarras
+            titulo="Últimos 6 meses"
+            grupos={gruposBarras}
+            series={[
+              {
+                clave: 'gastos',
+                nombre: 'Gastos por mes',
+                color: 'var(--color-negativo)',
+              },
+              {
+                clave: 'ingresos',
+                nombre: 'Ingresos',
+                color: 'var(--color-primario)',
+              },
+            ]}
+          />
+        ) : (
+          <BarraPresupuesto
+            presupuesto={presupuestoInicial}
+            gastado={resumen.totalGastos}
+          />
+        )}
         <GraficaDona
           titulo="Gasto por categoría"
           datos={series.gastosPorCategoria}

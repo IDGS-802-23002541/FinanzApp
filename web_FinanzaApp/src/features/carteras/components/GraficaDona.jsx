@@ -2,12 +2,12 @@ import {Box, Paper, Stack, Typography} from '@mui/material'
 import { formatearMonto } from '../../../utils/formato.js'
 
 const COLORES = [
-    'var(--color-primario)',
-    'var(--color-secundario)',
-    'var(--color-acento)',
-    'var(--color-error)',
-    'var(--color-info)',
-    'var(--color-texto-terciario)',
+    'var(--color-serie-1)',
+    'var(--color-serie-2)',
+    'var(--color-serie-3)',
+    'var(--color-serie-4)',
+    'var(--color-serie-5)',
+    'var(--color-serie-6)',
 ]
 
 const RADIO = 70 
@@ -34,7 +34,7 @@ function GraficaDona({titulo, datos}){
         sx={{
             p:2.5,
             border: '1px solid var(--color-borde)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
         }}
         >
@@ -42,12 +42,32 @@ function GraficaDona({titulo, datos}){
                 {titulo}
             </Typography>
             {total === 0 ? (
-                <Typography
-                variant='body2'
-                sx={{ mt: 3, color: 'var(--color-texto-secundario)'}}
+                <Stack
+                    spacing={1.5}
+                    sx={{ alignItems: 'center', textAlign: 'center', py: 4 }}
                 >
-                    Sin transacciones todavía.
-                </Typography>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--color-superficie-suave)',
+                            color: 'var(--color-texto-secundario)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.25rem',
+                        }}
+                    >
+                        %
+                    </Box>
+                    <Typography
+                        variant='body2'
+                        sx={{ maxWidth: 240, color: 'var(--color-texto-secundario)' }}
+                    >
+                        Aún no hay gastos registrados en esta cartera.
+                    </Typography>
+                </Stack>
             ): (
                 <Stack 
                 direction={{ xs: 'column', md: 'row'}}

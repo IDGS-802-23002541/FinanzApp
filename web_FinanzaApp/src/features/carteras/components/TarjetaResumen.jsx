@@ -12,7 +12,7 @@ function TarjetaResumen({etiqueta, monto, Icono, fondo, colorIcono = 'var(--colo
             justifyContent: 'space-between',
             gap: 2,
             border: '1px solid var(--color-borde)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
         }}  
         >

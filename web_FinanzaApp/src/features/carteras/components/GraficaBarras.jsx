@@ -11,7 +11,7 @@ function GraficaBarras({titulo, grupos, series}){
     const valores = grupos.flatMap((grupo) => series.map((serie) => grupo.valores[serie.clave] || 0))
     const maximo = Math.max(...valores, 1)
     return(
-        <Paper sx={{ p:2.5, border: '1px solid var(--color-borde)', borderRadius: '16px'}}>
+        <Paper sx={{ p:2.5, border: '1px solid var(--color-borde)', borderRadius: 'var(--radio-lg)'}}>
             <Typography variant='subtitle2' sx={{fontWeight: 700}}>{titulo}</Typography>
 
             <Stack direction="row" spacing={2} sx={{mt: 1.5}}>

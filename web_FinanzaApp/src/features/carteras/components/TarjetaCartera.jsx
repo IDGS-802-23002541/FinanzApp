@@ -1,38 +1,11 @@
 import { Box, Button, ButtonBase, IconButton, Stack, Typography } from '@mui/material'
 import {
   IconoCalendario,
-  IconoCasa,
-  IconoEstrella,
   IconoFlechaDerecha,
   IconoLapiz,
-  IconoOtro,
   IconoPapelera,
-  IconoPin,
 } from '../../../components/ui/Iconos.jsx'
-
-// Cada categoría del catálogo pinta su franja superior, su círculo y su ícono.
-const APARIENCIA_CATEGORIA = {
-  Hogar: {
-    fondo: 'var(--color-primario)',
-    icono: 'var(--color-sobre-primario)',
-    Icono: IconoCasa,
-  },
-  Viaje: {
-    fondo: 'var(--color-secundario)',
-    icono: 'var(--color-sobre-primario)',
-    Icono: IconoPin,
-  },
-  Evento: {
-    fondo: 'var(--color-acento)',
-    icono: 'var(--paleta-petroleo)',
-    Icono: IconoEstrella,
-  },
-  Otro: {
-    fondo: 'var(--color-info)',
-    icono: 'var(--color-sobre-primario)',
-    Icono: IconoOtro,
-  },
-}
+import { aparienciaCategoria } from '../aparienciaCategoria.js'
 
 // La colaboración se distingue de lo propio con el color de selección (CA2).
 const ESTILO_ROL = {
@@ -55,7 +28,7 @@ function Etiqueta({ children, sx }) {
         alignItems: 'center',
         px: 1.25,
         py: 0.5,
-        borderRadius: '999px',
+        borderRadius: 'var(--radio-pill)',
         fontSize: '0.6875rem',
         fontWeight: 700,
         lineHeight: '16.5px',
@@ -80,7 +53,7 @@ function TarjetaCartera({
   onEditar,
   onInactivar,
 }) {
-  const { fondo, icono, Icono } = APARIENCIA_CATEGORIA[categoria]
+  const { fondo, icono, Icono } = aparienciaCategoria(categoria)
   // Solo el propietario administra una cartera activa (CA5 de HU-04.5).
   const puedeAdministrar = rol === 'Propietario' && estatus === 'Activa'
 
@@ -91,7 +64,7 @@ function TarjetaCartera({
         flexDirection: 'column',
         backgroundColor: 'var(--color-superficie)',
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
         overflow: 'hidden',
       }}
@@ -101,6 +74,7 @@ function TarjetaCartera({
       {/* CA4 de HU-03.2: el cuerpo de la tarjeta abre el detalle. */}
       <ButtonBase
         onClick={onAbrir}
+        aria-label={`Abrir la cartera ${nombre}`}
         sx={{
           flex: 1,
           display: 'flex',
@@ -117,7 +91,7 @@ function TarjetaCartera({
                 width: 44,
                 height: 44,
                 flexShrink: 0,
-                borderRadius: '36px',
+                borderRadius: 'var(--radio-pill)',
                 backgroundColor: fondo,
                 color: icono,
                 display: 'flex',
@@ -261,3 +235,4 @@ function TarjetaCartera({
 }
 
 export default TarjetaCartera
+
