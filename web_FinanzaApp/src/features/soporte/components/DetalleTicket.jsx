@@ -1,16 +1,17 @@
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Divider,
   Stack,
   Typography,
 } from '@mui/material'
 import EstadoTicket from './EstadoTicket.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 import { formatearFecha } from '../../../utils/formato.js'
 
 // Estados en los que el reporte ya no admite cambios (CA4).
@@ -33,10 +34,18 @@ function DetalleTicket({
 
   return (
     <Dialog open={abierto} onClose={alCerrar} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        {ticket ? `#${ticket.idTicket} · ${ticket.asunto}` : 'Detalle del reporte'}
-        {ticket?.estado && <EstadoTicket estado={ticket.estado} />}
-      </DialogTitle>
+      <DialogoTitulo alCerrar={alCerrar}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <Typography sx={{ fontSize: '1.15rem', fontWeight: 700 }}>
+            {ticket ? `#${ticket.idTicket} · ${ticket.asunto}` : 'Detalle del reporte'}
+          </Typography>
+          {ticket?.estado && <EstadoTicket estado={ticket.estado} />}
+        </Stack>
+      </DialogoTitulo>
 
       <DialogContent dividers>
         <Stack spacing={2}>
@@ -88,18 +97,41 @@ function DetalleTicket({
                   sx={{
                     p: 2,
                     border: '1px solid var(--color-borde)',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radio-md)',
                     backgroundColor: 'var(--color-superficie-suave)',
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    sx={{ color: 'var(--color-texto-terciario)', mb: 0.5 }}
+                  <Stack
+                    direction="row"
+                    spacing={1.25}
+                    sx={{ alignItems: 'center', mb: 1 }}
                   >
-                    {respuesta.fechaCreacion
-                      ? formatearFecha(respuesta.fechaCreacion)
-                      : ''}
-                  </Typography>
+                    <Avatar
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        backgroundColor: 'var(--paleta-petroleo)',
+                        color: 'var(--paleta-blanco)',
+                      }}
+                    >
+                      {respuesta.iniciales ?? '·'}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
+                        {respuesta.autor ?? 'Soporte'}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'var(--color-texto-terciario)' }}
+                      >
+                        {respuesta.fechaCreacion
+                          ? formatearFecha(respuesta.fechaCreacion)
+                          : ''}
+                      </Typography>
+                    </Box>
+                  </Stack>
                   <Typography variant="body1">{respuesta.mensaje}</Typography>
                 </Box>
               ))}

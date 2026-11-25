@@ -23,11 +23,11 @@ const CATEGORIAS = [
 
 const VACIO = { asunto: '', descripcion: '', categoria: 'GENERAL' }
 
-// Formulario de alta de reporte de ayuda (ticket #208).
+// Formulario de alta de reporte de ayuda (ticket #208). Vive dentro del diálogo
+// "Nuevo reporte", así que el título lo pone el diálogo.
 function FormularioTicket({ alCrear }) {
   const [formulario, setFormulario] = useState(VACIO)
   const [error, setError] = useState('')
-  const [folio, setFolio] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
   const cambiar = (campo) => (evento) => {
@@ -51,8 +51,7 @@ function FormularioTicket({ alCrear }) {
         categoria: formulario.categoria,
       })
       setFormulario(VACIO)
-      setFolio(ticket?.idTicket ?? null)
-      if (alCrear) alCrear()
+      alCrear?.(ticket)
     } catch (fallo) {
       setError(fallo.message || 'No se pudo crear el reporte.')
     } finally {
@@ -62,10 +61,9 @@ function FormularioTicket({ alCrear }) {
 
   return (
     <Box component="form" noValidate onSubmit={enviar}>
-      <Typography variant="h2">Nuevo reporte de ayuda</Typography>
       <Typography
         variant="body2"
-        sx={{ color: 'var(--color-texto-terciario)', mb: 2 }}
+        sx={{ color: 'var(--color-texto-secundario)', mb: 2 }}
       >
         Cuéntanos qué pasó y te responderemos en este mismo apartado.
       </Typography>
@@ -113,13 +111,6 @@ function FormularioTicket({ alCrear }) {
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {error}
-        </Alert>
-      )}
-
-      {folio !== null && (
-        <Alert severity="success" sx={{ mt: 2 }}>
-          Tu reporte <strong>#{folio}</strong> se creó correctamente. Puedes
-          seguir su estado en la lista de abajo.
         </Alert>
       )}
 

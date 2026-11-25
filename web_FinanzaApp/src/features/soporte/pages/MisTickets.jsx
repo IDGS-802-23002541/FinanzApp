@@ -3,13 +3,13 @@ import {
   Alert,
   Box,
   Button,
+  ButtonBase,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
   Pagination,
   Paper,
   Snackbar,
@@ -17,10 +17,16 @@ import {
   Typography,
 } from '@mui/material'
 import FormularioTicket from '../components/FormularioTicket.jsx'
-import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import DetalleTicket from '../components/DetalleTicket.jsx'
 import DialogoEditarTicket from '../components/DialogoEditarTicket.jsx'
 import EstadoTicket from '../components/EstadoTicket.jsx'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
+import {
+  IconoFlechaDerecha,
+  IconoMas,
+  IconoPersonas,
+} from '../../../components/ui/Iconos.jsx'
 import { eliminarTicket, listarTickets } from '../api.js'
 import { formatearFecha } from '../../../utils/formato.js'
 
@@ -33,17 +39,27 @@ const FILTROS = [
   { valor: 'CERRADO', texto: 'Cerrado' },
 ]
 
+// Textos visibles de la categoría; el backend usa enums en mayúsculas.
+const CATEGORIAS = {
+  GENERAL: 'General',
+  CUENTA: 'Mi cuenta',
+  CARTERA: 'Carteras',
+  PAGOS: 'Pagos',
+  ERROR: 'Error de la aplicación',
+  OTRO: 'Otro',
+}
+
 const POR_PAGINA = 10
 
 const estiloPapel = {
   p: 3,
   border: '1px solid var(--color-borde)',
-  borderRadius: '16px',
+  borderRadius: 'var(--radio-lg)',
   backgroundColor: 'var(--color-superficie)',
 }
 
-// Pantalla de soporte del cliente: alta, seguimiento, edición y baja
-// de reportes pendientes (tickets #208, #212 y #288).
+// Pantalla de soporte del cliente: alta, seguimiento, edición y baja de
+// reportes (tickets #208, #212 y #288).
 function MisTickets() {
   const [filtro, setFiltro] = useState('')
   const [pagina, setPagina] = useState(1)
@@ -52,6 +68,7 @@ function MisTickets() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
+  const [formularioAbierto, setFormularioAbierto] = useState(false)
   const [seleccionado, setSeleccionado] = useState(null)
   const [editando, setEditando] = useState(null)
   const [borrando, setBorrando] = useState(null)
@@ -94,7 +111,14 @@ function MisTickets() {
     setPagina(1)
   }
 
-  const alCrear = () => {
+  const alCrear = (ticket) => {
+    setFormularioAbierto(false)
+    setAviso({
+      severidad: 'success',
+      texto: ticket?.idTicket
+        ? `El reporte #${ticket.idTicket} se creó. Ya puedes seguirlo aquí.`
+        : 'Tu reporte se creó correctamente.',
+    })
     setFiltro('')
     setPagina(1)
     setRecarga((actual) => actual + 1)
@@ -140,36 +164,83 @@ function MisTickets() {
 
   const mensajeVacio =
     filtro === ''
-      ? 'Aún no tienes reportes. Crea uno con el formulario de arriba.'
+      ? 'Aún no tienes reportes. Cuéntanos si algo no funciona o tienes una duda.'
       : 'No tienes reportes con ese estado.'
+
+  const desde = paginacion.total === 0 ? 0 : (pagina - 1) * POR_PAGINA + 1
+  const hasta = Math.min(pagina * POR_PAGINA, paginacion.total)
 
   return (
     <Stack spacing={3}>
       <EncabezadoPagina
         titulo="Soporte"
         descripcion="Reporta un problema y da seguimiento a tus solicitudes."
-      />
-
-      <Paper elevation={0} sx={estiloPapel}>
-        <FormularioTicket alCrear={alCrear} />
-      </Paper>
+      >
+        <Button
+          variant="contained"
+          startIcon={<IconoMas sx={{ fontSize: 16 }} />}
+          onClick={() => setFormularioAbierto(true)}
+        >
+          Nuevo reporte
+        </Button>
+      </EncabezadoPagina>
 
       <Box>
         <Typography variant="h2" sx={{ mb: 1.5 }}>
           Mis reportes
         </Typography>
 
-        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {FILTROS.map((opcion) => (
-            <Chip
-              key={opcion.valor || 'todos'}
-              label={opcion.texto}
-              clickable
-              onClick={() => cambiarFiltro(opcion.valor)}
-              variant={filtro === opcion.valor ? 'filled' : 'outlined'}
-              sx={{ fontWeight: 600 }}
-            />
-          ))}
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: 'space-between',
+            gap: 1.5,
+          }}
+        >
+          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
+            {FILTROS.map((opcion) => {
+              const activo = filtro === opcion.valor
+
+              return (
+                <Button
+                  key={opcion.valor || 'todos'}
+                  size="small"
+                  variant={activo ? 'contained' : 'outlined'}
+                  onClick={() => cambiarFiltro(opcion.valor)}
+                  sx={{
+                    height: 'var(--altura-control-sm)',
+                    px: 2,
+                    borderRadius: 'var(--radio-pill)',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    borderColor: activo
+                      ? 'var(--color-primario)'
+                      : 'var(--color-borde)',
+                    backgroundColor: activo
+                      ? 'var(--color-primario)'
+                      : 'var(--color-superficie)',
+                    color: activo
+                      ? 'var(--color-sobre-primario)'
+                      : 'var(--color-texto-secundario)',
+                  }}
+                >
+                  {opcion.texto}
+                </Button>
+              )
+            })}
+          </Stack>
+
+          {!cargando && !error && (
+            <Typography
+              sx={{ fontSize: '0.8125rem', color: 'var(--color-texto-secundario)' }}
+            >
+              {paginacion.total === 1
+                ? '1 reporte'
+                : `${paginacion.total} reportes`}
+            </Typography>
+          )}
         </Stack>
       </Box>
 
@@ -198,53 +269,131 @@ function MisTickets() {
         )}
 
         {!cargando && !error && tickets.length === 0 && (
-          <Typography variant="body2" sx={{ color: 'var(--color-texto-terciario)' }}>
-            {mensajeVacio}
-          </Typography>
+          <Stack
+            spacing={2}
+            sx={{ alignItems: 'center', py: 4, textAlign: 'center' }}
+          >
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-superficie-suave)',
+                color: 'var(--color-texto-secundario)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconoPersonas sx={{ fontSize: 22 }} />
+            </Box>
+            <Typography
+              sx={{ maxWidth: 380, fontSize: '0.875rem', color: 'var(--color-texto-secundario)' }}
+            >
+              {mensajeVacio}
+            </Typography>
+            {filtro === '' ? (
+              <Button
+                variant="contained"
+                startIcon={<IconoMas sx={{ fontSize: 16 }} />}
+                onClick={() => setFormularioAbierto(true)}
+              >
+                Nuevo reporte
+              </Button>
+            ) : (
+              <Button variant="outlined" onClick={() => cambiarFiltro('')}>
+                Ver todos
+              </Button>
+            )}
+          </Stack>
         )}
 
         {!cargando && !error && tickets.length > 0 && (
           <Stack spacing={1.5}>
             {tickets.map((ticket) => (
-              <Box
+              <ButtonBase
                 key={ticket.idTicket}
                 onClick={() => setSeleccionado(ticket)}
+                aria-label={`Abrir el reporte ${ticket.idTicket}: ${ticket.asunto}`}
                 sx={{
+                  display: 'block',
+                  width: '100%',
                   p: 2,
+                  textAlign: 'left',
                   border: '1px solid var(--color-borde)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'background-color 120ms ease',
-                  '&:hover': { backgroundColor: 'var(--color-superficie-suave)' },
+                  borderRadius: 'var(--radio-md)',
+                  transition: 'background-color 120ms ease, border-color 120ms ease',
+                  '&:hover': {
+                    backgroundColor: 'var(--color-superficie-suave)',
+                    borderColor: 'var(--color-borde-fuerte)',
+                  },
                 }}
               >
                 <Stack
                   direction="row"
                   spacing={1.5}
-                  sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+                  sx={{ alignItems: 'center' }}
                 >
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    #{ticket.idTicket} · {ticket.asunto}
-                  </Typography>
-                  <EstadoTicket estado={ticket.estado} />
-                </Stack>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.3 }}
+                    >
+                      #{ticket.idTicket} · {ticket.asunto}
+                    </Typography>
 
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'var(--color-texto-terciario)', mt: 0.5 }}
-                >
-                  {ticket.fechaCreacion
-                    ? `${formatearFecha(ticket.fechaCreacion)} · `
-                    : ''}
-                  {ticket.respuestas?.length ?? 0} respuesta(s)
-                </Typography>
-              </Box>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      sx={{ alignItems: 'center', flexWrap: 'wrap', mt: 0.75 }}
+                    >
+                      <EstadoTicket estado={ticket.estado} />
+                      <Chip
+                        size="small"
+                        label={CATEGORIAS[ticket.categoria] ?? ticket.categoria}
+                        sx={{
+                          backgroundColor: 'var(--color-superficie-suave)',
+                          color: 'var(--color-texto-secundario)',
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: '0.75rem',
+                          color: 'var(--color-texto-terciario)',
+                        }}
+                      >
+                        {ticket.fechaCreacion
+                          ? formatearFecha(ticket.fechaCreacion)
+                          : ''}
+                        {` · ${ticket.respuestas?.length ?? 0} respuesta(s)`}
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  <IconoFlechaDerecha
+                    sx={{ fontSize: 18, color: 'var(--color-texto-terciario)' }}
+                  />
+                </Stack>
+              </ButtonBase>
             ))}
           </Stack>
         )}
 
         {!cargando && !error && paginacion.totalPaginas > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            sx={{
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1.5,
+              mt: 2.5,
+            }}
+          >
+            <Typography
+              sx={{ fontSize: '0.8125rem', color: 'var(--color-texto-secundario)' }}
+            >
+              Mostrando {desde}–{hasta} de {paginacion.total}
+            </Typography>
             <Pagination
               count={paginacion.totalPaginas}
               page={pagina}
@@ -252,9 +401,23 @@ function MisTickets() {
               color="primary"
               size="small"
             />
-          </Box>
+          </Stack>
         )}
       </Paper>
+
+      <Dialog
+        open={formularioAbierto}
+        onClose={() => setFormularioAbierto(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogoTitulo alCerrar={() => setFormularioAbierto(false)}>
+          Nuevo reporte
+        </DialogoTitulo>
+        <DialogContent dividers>
+          <FormularioTicket alCrear={alCrear} />
+        </DialogContent>
+      </Dialog>
 
       <DetalleTicket
         abierto={Boolean(seleccionado)}
@@ -278,7 +441,9 @@ function MisTickets() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Eliminar reporte</DialogTitle>
+        <DialogoTitulo alCerrar={() => setBorrando(null)}>
+          Eliminar reporte
+        </DialogoTitulo>
         <DialogContent>
           <DialogContentText>
             ¿Seguro que quieres eliminar el reporte #{borrando?.idTicket}? Esta
