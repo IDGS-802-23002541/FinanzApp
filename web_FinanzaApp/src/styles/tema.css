@@ -1,5 +1,8 @@
 /* Paleta principal FinanzApp. Reglas: docs/paleta-colores.md */
-:root {
+:root,
+/* La landing y las vistas públicas no cambian con el tema de la cuenta:
+   este contenedor vuelve a fijar los tokens del modo claro. */
+:root .tema-claro {
   /* Valores fuente de la paleta */
   --paleta-petroleo: #173b45;
   --paleta-terracota: #c65d45;
@@ -8,22 +11,27 @@
   --paleta-blanco: #ffffff;
 
   /* Tokens semánticos — modo claro */
+  color-scheme: light;
   --color-texto: var(--paleta-petroleo);
-  --color-texto-secundario: #5b7278;
-  --color-texto-terciario: #88979a;
+  --color-texto-secundario: #46626a;
+  --color-texto-terciario: #5d7176;
   --color-fondo: var(--paleta-fondo);
   --color-superficie: var(--paleta-blanco);
   --color-superficie-suave: #f1eae5;
   --color-primario: var(--paleta-petroleo);
   --color-sobre-primario: var(--paleta-blanco);
   --color-secundario: var(--paleta-terracota);
+  /* Terracota como texto o borde de texto: el tono de marca no llega a AA. */
+  --color-secundario-texto: #b04b33;
   --color-acento: var(--paleta-coral);
   --color-borde: #e3d8d1;
   --color-borde-fuerte: #d3c4bb;
   --color-exito: var(--paleta-petroleo);
   --color-alerta: var(--paleta-terracota);
   --color-error: #a94832;
-  --color-info: var(--paleta-coral);
+  /* Signo negativo del dinero y acciones destructivas. */
+  --color-negativo: #a94832;
+  --color-info: #4a7c86;
 
   /* Enlace activo del menú lateral (fondo coral suave y texto con contraste AA). */
   --color-seleccion: #f7e0d8;
@@ -34,26 +42,38 @@
 
   /* Degradado del panel de marca en las vistas públicas. */
   --gradiente-marca: linear-gradient(150deg, #173b45 0%, #1d4a55 35%, #0e2a32 100%);
+
+  /* Escala de radios y alturas de control (usada por temaMui.js). */
+  --radio-sm: 8px;
+  --radio-md: 12px;
+  --radio-lg: 16px;
+  --radio-pill: 999px;
+  --altura-control-sm: 36px;
+  --altura-control-md: 44px;
+  --altura-control-lg: 52px;
 }
 
 /* Adaptación de la misma paleta para fondo oscuro. */
 :root[data-tema='oscuro'] {
+  color-scheme: dark;
   --color-texto: var(--paleta-fondo);
   --color-texto-secundario: #c9d6d8;
   --color-texto-terciario: #93a7ab;
-  --color-fondo: #0f2a32;
+  --color-fondo: #0b2229;
   --color-superficie: var(--paleta-petroleo);
   --color-superficie-suave: #1f4a55;
   --color-primario: var(--paleta-coral);
   --color-sobre-primario: var(--paleta-petroleo);
   --color-secundario: var(--paleta-terracota);
+  --color-secundario-texto: var(--paleta-coral);
   --color-acento: var(--paleta-coral);
   --color-borde: #2a5560;
   --color-borde-fuerte: #3b6b76;
   --color-exito: #8fd1b8;
   --color-alerta: var(--paleta-coral);
   --color-error: #e08a73;
-  --color-info: var(--paleta-coral);
+  --color-negativo: #e08a73;
+  --color-info: #8fc1cb;
 
   /* Enlace activo del menú lateral en oscuro. */
   --color-seleccion: #1f4a55;

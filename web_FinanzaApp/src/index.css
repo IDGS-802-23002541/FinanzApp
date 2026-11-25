@@ -2,6 +2,15 @@
   box-sizing: border-box;
 }
 
+/* El encabezado de la landing es fijo: los anclajes no deben quedar debajo. */
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 88px;
+}
+
 @keyframes flotar {
   0%,
   100% {
