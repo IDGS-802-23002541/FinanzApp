@@ -11,7 +11,8 @@ import {
   Typography,
 } from '@mui/material'
 import { listarTrabajadores } from '../api.js'
-import DialogoNuevoTrabajador from '../components/DialogoNuevoTrabajador.jsx'
+import DialogoTrabajador from '../components/DialogoTrabajador.jsx'
+import DialogoEliminarTrabajador from '../components/DialogoEliminarTrabajador.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
 import { IconoMas, IconoPersonas } from '../../../components/ui/Iconos.jsx'
@@ -38,7 +39,8 @@ function Trabajadores() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
-  const [altaAbierta, setAltaAbierta] = useState(false)
+  const [editor, setEditor] = useState(null)
+  const [porEliminar, setPorEliminar] = useState(null)
 
   useEffect(() => {
     let vigente = true
@@ -95,7 +97,7 @@ function Trabajadores() {
           variant="contained"
           size="small"
           startIcon={<IconoMas sx={{ fontSize: 16 }} />}
-          onClick={() => setAltaAbierta(true)}
+          onClick={() => setEditor({ trabajador: null })}
           sx={{ fontSize: '0.875rem', textTransform: 'none' }}
         >
           Nuevo trabajador
@@ -156,18 +158,40 @@ function Trabajadores() {
                       {trabajador.correo}
                     </Typography>
                   </Box>
-                  <Chip
-                    label={
-                      ESTADOS_TRABAJADOR[trabajador.estatus] ??
-                      trabajador.estatus
-                    }
-                    size="small"
-                    sx={{
-                      backgroundColor: 'var(--color-superficie-suave)',
-                      color: 'var(--color-texto-secundario)',
-                      fontWeight: 700,
-                    }}
-                  />
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: 'center', flexShrink: 0 }}
+                  >
+                    <Chip
+                      label={
+                        ESTADOS_TRABAJADOR[trabajador.estatus] ??
+                        trabajador.estatus
+                      }
+                      size="small"
+                      sx={{
+                        backgroundColor: 'var(--color-superficie-suave)',
+                        color: 'var(--color-texto-secundario)',
+                        fontWeight: 700,
+                      }}
+                    />
+                    <Button
+                      size="small"
+                      onClick={() => setEditor({ trabajador })}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      disabled={trabajador.estatus === 'INACTIVO'}
+                      onClick={() => setPorEliminar(trabajador)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Dar de baja
+                    </Button>
+                  </Stack>
                 </Stack>
 
                 <Box sx={{ mt: 1.5 }}>
@@ -233,11 +257,27 @@ function Trabajadores() {
         />
       )}
 
-      <DialogoNuevoTrabajador
-        abierto={altaAbierta}
-        onCerrar={() => setAltaAbierta(false)}
-        onCreado={() => setRecarga((actual) => actual + 1)}
-      />
+      {editor && (
+        <DialogoTrabajador
+          trabajador={editor.trabajador}
+          onCerrar={() => setEditor(null)}
+          onGuardado={() => {
+            setRecarga((actual) => actual + 1)
+            if (editor.trabajador) setEditor(null)
+          }}
+        />
+      )}
+
+      {porEliminar && (
+        <DialogoEliminarTrabajador
+          trabajador={porEliminar}
+          onCerrar={() => setPorEliminar(null)}
+          onEliminado={() => {
+            setPorEliminar(null)
+            setRecarga((actual) => actual + 1)
+          }}
+        />
+      )}
     </Stack>
   )
 }

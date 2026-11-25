@@ -63,6 +63,15 @@ export async function crearTrabajador({ nombreUsuario, apaterno, amaterno, corre
   return data
 }
 
+export async function editarTrabajador(idUsuario, trabajador) {
+  await api.patch(`/admin/trabajadores/${idUsuario}`, trabajador)
+}
+
+// Baja lógica: el trabajador queda inactivo y sus tickets se liberan.
+export async function eliminarTrabajador(idUsuario) {
+  await api.delete(`/admin/trabajadores/${idUsuario}`)
+}
+
 export async function asignarTicket(
   idTicket,
   { trabajadorId, idAsignacionActual } = {},
