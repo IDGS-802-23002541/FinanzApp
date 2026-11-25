@@ -74,6 +74,17 @@ export async function eliminarTrabajador(idUsuario) {
   await api.delete(`/admin/trabajadores/${idUsuario}`)
 }
 
+// Alta de personal de soporte. Devuelve la contraseña temporal para el admin.
+export async function crearTrabajador({ nombreUsuario, apaterno, amaterno, correo }) {
+  const { data } = await api.post('/admin/trabajadores', {
+    nombreUsuario,
+    apaterno,
+    amaterno,
+    correo,
+  })
+  return data
+}
+
 export async function catalogarTicket(idTicket, { categoria, prioridad }) {
   const cuerpo = {}
   if (categoria) cuerpo.categoria = categoria
