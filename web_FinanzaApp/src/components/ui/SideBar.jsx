@@ -1,6 +1,8 @@
-import { Box, Button, Stack, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.js'
+import { useTema } from '../../hooks/useTema.js'
+import Logo from './Logo.jsx'
 import { AvatarUsuario, IconoSalir } from './Iconos.jsx'
 
 // Une los enlaces consecutivos del mismo grupo para pintar las secciones del menú.
@@ -21,9 +23,11 @@ function agruparEnlaces(enlaces) {
   return grupos
 }
 
-// Barra lateral compartida por los layouts de cliente y admin (mockup de Figma).
-export default function SideBar({ enlaces = [] }) {
+// Barra lateral compartida por los layouts de cliente y admin. En móvil se
+// monta dentro de un Drawer (`enDrawer`), así no arrastra el alto de la ventana.
+export default function SideBar({ enlaces = [], enDrawer = false, onNavegar }) {
   const { usuario, cerrarSesion } = useAuth()
+  const { tema } = useTema()
   const navegar = useNavigate()
 
   const salir = async () => {
@@ -35,41 +39,23 @@ export default function SideBar({ enlaces = [] }) {
     <Box
       component="aside"
       sx={{
-        width: 256,
+        width: enDrawer ? '100%' : 256,
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: enDrawer ? '100%' : '100vh',
         overflowY: 'auto',
         backgroundColor: 'var(--color-superficie)',
-        borderRight: '1px solid var(--color-borde)',
+        borderRight: enDrawer ? 'none' : '1px solid var(--color-borde)',
       }}
     >
-      <Stack
-        direction="row"
-        spacing={1.25}
-        sx={{ alignItems: 'center', px: 2.5, py: 2 }}
-      >
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            backgroundColor: 'var(--color-primario)',
-            color: 'var(--color-sobre-primario)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '0.875rem',
-          }}
-        >
-          F
-        </Box>
-        <Typography sx={{ fontWeight: 800, fontSize: '1rem' }}>
-          FinanzApp
-        </Typography>
-      </Stack>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2.5, py: 2 }}>
+        <Logo
+          variante={tema === 'oscuro' ? 'blanco' : 'color'}
+          alto={30}
+          conTexto
+        />
+      </Box>
 
       <Box component="nav" sx={{ flex: 1, px: 2, pb: 2 }}>
         {agruparEnlaces(enlaces).map((grupo, indice) => (
@@ -92,7 +78,12 @@ export default function SideBar({ enlaces = [] }) {
             <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
               {grupo.enlaces.map(({ ruta, texto, exacto }) => (
                 <Box component="li" key={ruta} sx={{ mb: 0.5 }}>
-                  <NavLink to={ruta} end={exacto} style={{ textDecoration: 'none' }}>
+                  <NavLink
+                    to={ruta}
+                    end={exacto}
+                    onClick={onNavegar}
+                    style={{ textDecoration: 'none' }}
+                  >
                     {({ isActive }) => (
                       <Box
                         component="span"
@@ -101,7 +92,7 @@ export default function SideBar({ enlaces = [] }) {
                           alignItems: 'center',
                           px: 1.5,
                           py: 1,
-                          borderRadius: '10px',
+                          borderRadius: 'var(--radio-md)',
                           fontSize: '0.9375rem',
                           fontWeight: 600,
                           color: isActive
@@ -129,7 +120,23 @@ export default function SideBar({ enlaces = [] }) {
       </Box>
 
       <Box sx={{ borderTop: '1px solid var(--color-borde)', p: 2 }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        {/* El bloque de la cuenta lleva a Ajustes: es donde se cambian los datos. */}
+        <Box
+          component={NavLink}
+          to="/ajustes"
+          onClick={onNavegar}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            mx: -1,
+            p: 1,
+            borderRadius: 'var(--radio-md)',
+            color: 'inherit',
+            textDecoration: 'none',
+            '&:hover': { backgroundColor: 'var(--color-superficie-suave)' },
+          }}
+        >
           <AvatarUsuario
             nombreUsuario={usuario?.nombreUsuario}
             imagenUsuario={usuario?.foto}
@@ -150,21 +157,19 @@ export default function SideBar({ enlaces = [] }) {
               {usuario?.correo}
             </Typography>
           </Box>
-        </Stack>
+        </Box>
         <Button
           fullWidth
           size="small"
           startIcon={<IconoSalir />}
           onClick={salir}
           sx={{
-            mt: 1.5,
+            mt: 1,
             justifyContent: 'flex-start',
-            minHeight: 0,
-            py: 1,
             px: 1.5,
             color: 'var(--color-texto-secundario)',
             fontSize: '0.8125rem',
-            borderRadius: '10px',
+            borderRadius: 'var(--radio-md)',
             '&:hover': {
               backgroundColor: 'var(--color-superficie-suave)',
             },

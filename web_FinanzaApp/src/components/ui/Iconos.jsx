@@ -165,6 +165,34 @@ export function IconoEstrella(props) {
   )
 }
 
+export function IconoMenu(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="M4 7h16M4 12h16M4 17h16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </SvgIcon>
+  )
+}
+
+export function IconoCerrar(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        d="m6 6 12 12M18 6 6 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </SvgIcon>
+  )
+}
+
 export function IconoOtro(props) {
   return (
     <SvgIcon {...props}>
