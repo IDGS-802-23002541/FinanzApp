@@ -23,6 +23,9 @@ class ResultadoFalso:
     def scalar_one(self):
         return self.valor
 
+    def scalar_one_or_none(self):
+        return self.valor
+
     def scalars(self):
         return self
 
@@ -77,6 +80,8 @@ def test_rutas_admin_registradas():
     assert ("/admin/metricas", "GET") in rutas
     assert ("/admin/trabajadores", "GET") in rutas
     assert ("/admin/trabajadores", "POST") in rutas
+    assert ("/admin/trabajadores/<int:idTrabajador>", "PUT") in rutas
+    assert ("/admin/trabajadores/<int:idTrabajador>", "DELETE") in rutas
 
 
 def test_admin_requiere_token():
@@ -115,6 +120,9 @@ def test_serializar_trabajador_expone_datos_minimos():
 
     assert datos == {
         "idUsuario": 7,
+        "nombreUsuario": "Diego",
+        "apaterno": "Borja",
+        "amaterno": None,
         "nombre": "Diego Borja",
         "correo": "diego@finanzapp.com",
         "rolGlobal": "TRABAJADOR",
@@ -317,3 +325,89 @@ def test_datos_usuario_rechaza_correo_invalido():
     )
     assert campos is None
     assert "formato" in error
+
+
+class SesionTrabajadorFalsa:
+    def __init__(self, trabajador, repetido=None):
+        self.trabajador = trabajador
+        self.repetido = repetido
+        self.commits = 0
+
+    def get(self, _modelo, _id):
+        return self.trabajador
+
+    def execute(self, _consulta):
+        return ResultadoFalso(valor=self.repetido)
+
+    def commit(self):
+        self.commits += 1
+
+    def rollback(self):
+        pass
+
+
+def _datos_trabajador(correo="ana@finanzapp.com"):
+    return {
+        "nombreUsuario": "Ana",
+        "apaterno": "Ruiz",
+        "amaterno": "",
+        "correo": correo,
+    }
+
+
+def test_solo_admin_edita_trabajadores(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    payload, status = admin_service.editar_trabajador(7, _datos_trabajador())
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_solo_admin_elimina_trabajadores(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    payload, status = admin_service.eliminar_trabajador(7)
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_editar_trabajador_actualiza_datos(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Ana", "Ruiz", "vieja@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db, "session", SesionTrabajadorFalsa(trabajador)
+    )
+
+    payload, status = admin_service.editar_trabajador(7, _datos_trabajador())
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert trabajador.nombreUsuario == "Ana"
+    assert trabajador.correo == "ana@finanzapp.com"
+
+
+def test_editar_trabajador_rechaza_correo_duplicado(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Ana", "Ruiz", "vieja@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionTrabajadorFalsa(trabajador, repetido=99),
+    )
+
+    payload, status = admin_service.editar_trabajador(7, _datos_trabajador())
+
+    assert status == 409
+    assert payload["ok"] is False
+
+
+def test_eliminar_trabajador_lo_marca_inactivo(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Ana", "Ruiz", "ana@finanzapp.com")
+    sesion = SesionTrabajadorFalsa(trabajador)
+    monkeypatch.setattr(admin_service.db, "session", sesion)
+
+    payload, status = admin_service.eliminar_trabajador(7)
+
+    assert status == 200
+    assert payload["data"]["estatus"] == "INACTIVO"
+    assert trabajador.estado == "INACTIVO"
+    assert sesion.commits == 1

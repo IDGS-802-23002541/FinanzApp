@@ -35,3 +35,21 @@ def test_iniciales_colaborador():
         apaterno = "Rea"
 
     assert cartera_detalle_service._iniciales(UsuarioFalso()) == "VR"
+
+
+def test_rango_vacio_es_none():
+    assert cartera_detalle_service._validar_rango(None, None) is None
+
+
+def test_rango_rechaza_fechas_invertidas():
+    import pytest
+
+    with pytest.raises(ValueError):
+        cartera_detalle_service._validar_rango("2026-03-01", "2026-01-01")
+
+
+def test_rango_rechaza_formato_invalido():
+    import pytest
+
+    with pytest.raises(ValueError):
+        cartera_detalle_service._validar_rango("01/01/2026", None)

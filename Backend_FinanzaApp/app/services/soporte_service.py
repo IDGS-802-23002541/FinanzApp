@@ -227,6 +227,48 @@ def eliminar_ticket(id_ticket):
     }, 200
 
 
+def catalogar_ticket(id_ticket, datos):
+    if not _es_staff():
+        return {
+            "ok": False,
+            "mensaje": "Solo el personal de soporte puede catalogar tickets.",
+        }, 403
+
+    ticket, error = _buscar_ticket(id_ticket)
+    if error:
+        return error
+
+    if ticket.estado == "ELIMINADO":
+        return {"ok": False, "mensaje": "El ticket fue eliminado."}, 409
+
+    cambios, error = _validar_catalogo(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    try:
+        for campo, valor in cambios.items():
+            setattr(ticket, campo, valor)
+        ticket.fechaActualizacion = seguridad.ahora_utc()
+        db.session.commit()
+        respuestas, asignaciones, usuarios = _relaciones([ticket])
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "No se pudo catalogar el ticket."}, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "ticket": _serializar_ticket(
+                ticket,
+                respuestas.get(ticket.idTicket, []),
+                asignaciones.get(ticket.idTicket),
+                usuarios,
+            )
+        },
+        "mensaje": "Ticket catalogado correctamente.",
+    }, 200
+
+
 def crear_respuesta(id_ticket, datos):
     mensaje = _texto(datos.get("mensaje"))
     if not mensaje:
@@ -493,6 +535,33 @@ def _validar_edicion(datos):
         if len(descripcion) > 3000:
             return None, "La descripción no puede exceder los 3000 caracteres."
         cambios["descripcion"] = descripcion
+
+    if "categoria" in datos:
+        categoria = datos.get("categoria")
+        if not isinstance(categoria, str):
+            return None, "La categoría debe ser texto."
+        categoria = categoria.strip().upper()
+        if categoria not in CATEGORIAS:
+            return None, "La categoría no es válida."
+        cambios["categoria"] = categoria
+
+    if "prioridad" in datos:
+        prioridad = datos.get("prioridad")
+        if not isinstance(prioridad, str):
+            return None, "La prioridad debe ser texto."
+        prioridad = prioridad.strip().upper()
+        if prioridad not in PRIORIDADES:
+            return None, "La prioridad no es válida."
+        cambios["prioridad"] = prioridad
+
+    if not cambios:
+        return None, "No se enviaron campos para actualizar."
+
+    return cambios, None
+
+
+def _validar_catalogo(datos):
+    cambios = {}
 
     if "categoria" in datos:
         categoria = datos.get("categoria")

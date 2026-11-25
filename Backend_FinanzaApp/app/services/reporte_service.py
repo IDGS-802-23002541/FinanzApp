@@ -182,10 +182,29 @@ def _contexto(cartera_id, tipo, periodo_id, fecha_inicio, fecha_fin, cantidad):
             400,
         )
 
+    if cartera_id is None:
+        return None, (
+            {
+                "ok": False,
+                "mensaje": "Selecciona una cartera para generar el reporte.",
+            },
+            400,
+        )
+
     try:
-        carteras = _carteras_del_propietario(cartera_id, tipo)
-        if cartera_id is not None and not carteras:
+        carteras = _carteras_del_propietario(cartera_id)
+        if not carteras:
             return None, ({"ok": False, "mensaje": "Cartera no encontrada."}, 404)
+
+        # El tipo es un filtro de apoyo: debe coincidir con la cartera elegida.
+        if tipo and carteras[0].tipo != tipo_bd(tipo):
+            return None, (
+                {
+                    "ok": False,
+                    "mensaje": "La cartera no corresponde al tipo seleccionado.",
+                },
+                400,
+            )
 
         if periodo_id is not None:
             periodo = db.session.get(Periodo, periodo_id)
@@ -228,7 +247,7 @@ def _serializar_carteras(carteras):
     ]
 
 
-def _carteras_del_propietario(cartera_id, tipo):
+def _carteras_del_propietario(cartera_id):
     consulta = (
         db.select(Cartera)
         .join(MiembroCartera, MiembroCartera.carteraId == Cartera.idCartera)
@@ -242,8 +261,6 @@ def _carteras_del_propietario(cartera_id, tipo):
     )
     if cartera_id is not None:
         consulta = consulta.where(Cartera.idCartera == cartera_id)
-    if tipo:
-        consulta = consulta.where(Cartera.tipo == tipo_bd(tipo))
 
     return db.session.execute(consulta).scalars().all()
 
@@ -541,8 +558,22 @@ def _nombre_archivo(contexto, formato="CSV"):
     hoy = date.today().strftime("%Y%m%d")
     extension = "pdf" if formato == "PDF" else "csv"
     if contexto["cartera_id"] is not None:
-        return f"reporte_cartera_{contexto['cartera_id']}_{hoy}.{extension}"
-    return f"reporte_{hoy}.{extension}"
+        base = f"reporte_cartera_{contexto['cartera_id']}"
+    else:
+        base = "reporte"
+
+    if contexto["inicio"] or contexto["fin"]:
+        desde = (
+            contexto["inicio"].strftime("%Y%m%d")
+            if contexto["inicio"]
+            else "inicio"
+        )
+        hasta = (
+            contexto["fin"].strftime("%Y%m%d") if contexto["fin"] else hoy
+        )
+        return f"{base}_{desde}_{hasta}.{extension}"
+
+    return f"{base}_{hoy}.{extension}"
 
 
 def _entero_opcional(nombre, valor, por_defecto=None, maximo=None):

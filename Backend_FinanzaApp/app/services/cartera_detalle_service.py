@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func
@@ -111,12 +111,16 @@ def _balance_por_participante(filtros):
     return sorted(resultado, key=lambda item: item["nombre"])
 
 
-def resumen_y_series(cartera, periodo_id=None):
+def resumen_y_series(cartera, periodo_id=None, desde=None, hasta=None):
     periodo = _validar_periodo(cartera, periodo_id)
+    rango = None if periodo else _validar_rango(desde, hasta)
+
     filtros = [
         Transaccion.carteraId == cartera.idCartera,
         Transaccion.estado == "ACTIVO",
     ]
+    if rango:
+        filtros = filtros + _filtros_rango(rango)
 
     ingresos, gastos = _sumas(filtros)
     resumen = {
@@ -131,7 +135,11 @@ def resumen_y_series(cartera, periodo_id=None):
     resumen_periodo = None
     filtros_categoria = filtros
     if periodo:
-        filtros_periodo = filtros + _filtros_fechas(periodo)
+        filtros_periodo = [
+            Transaccion.carteraId == cartera.idCartera,
+            Transaccion.estado == "ACTIVO",
+            *_filtros_fechas(periodo),
+        ]
         ingresos_periodo, gastos_periodo = _sumas(filtros_periodo)
         resumen_periodo = {
             "periodoId": periodo.idPeriodo,
@@ -148,7 +156,9 @@ def resumen_y_series(cartera, periodo_id=None):
         "resumen": resumen,
         "resumenPeriodo": resumen_periodo,
         "series": {
-            "ingresosVsEgresos": _serie_ingresos_egresos(cartera),
+            "ingresosVsEgresos": _serie_ingresos_egresos(
+                cartera, periodo, rango
+            ),
             "gastosPorCategoria": _gastos_por_categoria(filtros_categoria),
         },
     }
@@ -165,6 +175,27 @@ def _validar_periodo(cartera, periodo_id):
     if periodo is None or periodo.carteraId != cartera.idCartera:
         raise ValueError("El periodo no es válido para esta cartera.")
     return periodo
+
+
+def _validar_rango(desde, hasta):
+    inicio = _fecha(desde) if desde not in (None, "") else None
+    fin = _fecha(hasta) if hasta not in (None, "") else None
+    if inicio and fin and fin < inicio:
+        raise ValueError(
+            "La fecha desde no puede ser posterior a la fecha hasta."
+        )
+    if inicio is None and fin is None:
+        return None
+    return (inicio, fin)
+
+
+def _fecha(valor):
+    if not isinstance(valor, str) or len(valor) != 10:
+        raise ValueError("Las fechas deben tener formato YYYY-MM-DD.")
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        raise ValueError("Las fechas deben tener formato YYYY-MM-DD.")
 
 
 def _sumas(filtros):
@@ -192,34 +223,71 @@ def _filtros_fechas(periodo):
     ]
 
 
-def _serie_ingresos_egresos(cartera):
-    periodos = db.session.execute(
+def _filtros_rango(rango):
+    inicio, fin = rango
+    filtros = []
+    if inicio:
+        filtros.append(
+            Transaccion.fechaTransaccion
+            >= datetime.combine(inicio, time.min)
+        )
+    if fin:
+        filtros.append(
+            Transaccion.fechaTransaccion
+            < datetime.combine(fin + timedelta(days=1), time.min)
+        )
+    return filtros
+
+
+def _serie_ingresos_egresos(cartera, periodo=None, rango=None):
+    # Con periodoId se conserva el agrupado por los periodos de la cartera.
+    if periodo is not None:
+        return _serie_por_periodos(cartera)
+
+    # Sin rango se mantiene el comportamiento histórico: periodos si existen.
+    if rango is None and _periodos(cartera):
+        return _serie_por_periodos(cartera)
+
+    filtros = [
+        Transaccion.carteraId == cartera.idCartera,
+        Transaccion.estado == "ACTIVO",
+    ]
+    if rango:
+        filtros = filtros + _filtros_rango(rango)
+    return _serie_mensual(filtros)
+
+
+def _periodos(cartera):
+    return db.session.execute(
         db.select(Periodo)
         .where(Periodo.carteraId == cartera.idCartera)
         .order_by(Periodo.fechaInicio)
     ).scalars().all()
 
-    if periodos:
-        serie = []
-        for periodo in periodos:
-            filtros = [
-                Transaccion.carteraId == cartera.idCartera,
-                Transaccion.estado == "ACTIVO",
-                *_filtros_fechas(periodo),
-            ]
-            ingresos, gastos = _sumas(filtros)
-            serie.append(
-                {
-                    "periodoId": periodo.idPeriodo,
-                    "nombre": periodo.nombre,
-                    "fechaInicio": periodo.fechaInicio.isoformat(),
-                    "fechaFin": periodo.fechaFin.isoformat(),
-                    "ingresos": float(ingresos),
-                    "gastos": float(gastos),
-                }
-            )
-        return serie
 
+def _serie_por_periodos(cartera):
+    serie = []
+    for periodo in _periodos(cartera):
+        filtros = [
+            Transaccion.carteraId == cartera.idCartera,
+            Transaccion.estado == "ACTIVO",
+            *_filtros_fechas(periodo),
+        ]
+        ingresos, gastos = _sumas(filtros)
+        serie.append(
+            {
+                "periodoId": periodo.idPeriodo,
+                "nombre": periodo.nombre,
+                "fechaInicio": periodo.fechaInicio.isoformat(),
+                "fechaFin": periodo.fechaFin.isoformat(),
+                "ingresos": float(ingresos),
+                "gastos": float(gastos),
+            }
+        )
+    return serie
+
+
+def _serie_mensual(filtros):
     filas = db.session.execute(
         db.select(
             func.year(Transaccion.fechaTransaccion),
@@ -227,10 +295,7 @@ def _serie_ingresos_egresos(cartera):
             Transaccion.tipo,
             func.coalesce(func.sum(Transaccion.monto), 0),
         )
-        .where(
-            Transaccion.carteraId == cartera.idCartera,
-            Transaccion.estado == "ACTIVO",
-        )
+        .where(*filtros)
         .group_by(
             func.year(Transaccion.fechaTransaccion),
             func.month(Transaccion.fechaTransaccion),

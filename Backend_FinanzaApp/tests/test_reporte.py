@@ -83,3 +83,42 @@ def test_rango_de_fechas_invertido():
     )
     assert status == 400
     assert "anterior" in payload["mensaje"].lower()
+
+
+def test_vista_previa_requiere_cartera():
+    payload, status = reporte_service.vista_previa()
+
+    assert status == 400
+    assert "cartera" in payload["mensaje"].lower()
+
+
+def test_contexto_rechaza_tipo_de_otra_cartera(monkeypatch):
+    class CarteraFalsa:
+        tipo = "HOGAR"
+
+    monkeypatch.setattr(
+        reporte_service,
+        "_carteras_del_propietario",
+        lambda _cartera_id: [CarteraFalsa()],
+    )
+
+    payload, status = reporte_service.vista_previa(
+        cartera_id="1", tipo="VIAJE"
+    )
+
+    assert status == 400
+    assert "tipo" in payload["mensaje"].lower()
+
+
+def test_nombre_archivo_incluye_cartera_y_rango():
+    from datetime import date
+
+    contexto = {
+        "cartera_id": 5,
+        "inicio": date(2026, 1, 1),
+        "fin": date(2026, 3, 31),
+    }
+
+    nombre = reporte_service._nombre_archivo(contexto, "CSV")
+
+    assert nombre == "reporte_cartera_5_20260101_20260331.csv"

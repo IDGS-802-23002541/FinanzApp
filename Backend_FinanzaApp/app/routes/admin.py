@@ -32,3 +32,20 @@ def crear_trabajador():
         return error("El cuerpo debe ser un objeto JSON.")
     payload, status = admin_service.crear_trabajador(datos)
     return jsonify(payload), status
+
+
+@admin_bp.put("/trabajadores/<int:idTrabajador>")
+@jwt_required()
+def editar_trabajador(idTrabajador):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = admin_service.editar_trabajador(idTrabajador, datos)
+    return jsonify(payload), status
+
+
+@admin_bp.delete("/trabajadores/<int:idTrabajador>")
+@jwt_required()
+def eliminar_trabajador(idTrabajador):
+    payload, status = admin_service.eliminar_trabajador(idTrabajador)
+    return jsonify(payload), status

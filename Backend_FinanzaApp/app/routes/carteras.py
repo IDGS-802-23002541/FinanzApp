@@ -39,7 +39,12 @@ def listar_periodos(idCartera):
 @carteras_bp.get("/<int:idCartera>")
 @jwt_required()
 def obtener(idCartera):
-    payload, status = cartera_service.detalle(idCartera, request.args.get("periodoId"))
+    payload, status = cartera_service.detalle(
+        idCartera,
+        request.args.get("periodoId"),
+        request.args.get("desde"),
+        request.args.get("hasta"),
+    )
     return jsonify(payload), status
 
 

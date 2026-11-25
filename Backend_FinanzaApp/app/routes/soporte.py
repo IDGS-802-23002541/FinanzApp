@@ -50,6 +50,16 @@ def eliminar_ticket(idTicket):
     return jsonify(payload), status
 
 
+@soporte_bp.post("/tickets/<int:idTicket>/catalogar")
+@jwt_required()
+def catalogar_ticket(idTicket):
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return error("El cuerpo debe ser un objeto JSON.")
+    payload, status = soporte_service.catalogar_ticket(idTicket, datos)
+    return jsonify(payload), status
+
+
 @soporte_bp.post("/tickets/<int:idTicket>/respuestas")
 @jwt_required()
 def crear_respuesta(idTicket):

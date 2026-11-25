@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash
 
 from app.extensions import db
 from app.models import AsignacionTicket, Ticket, Usuario
-from app.utils import validacion
+from app.utils import seguridad, validacion
 from app.utils.serializers import serializar_usuario
 
 MAPA_ESTADO_TICKETS = {
@@ -162,6 +162,99 @@ def crear_trabajador(datos):
     }, 201
 
 
+def editar_trabajador(id_trabajador, datos):
+    if current_user.rolGlobal != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo un administrador puede editar trabajadores.",
+        }, 403
+
+    trabajador, error = _buscar_trabajador(id_trabajador)
+    if error:
+        return error
+
+    campos, error = validacion.datos_usuario(datos)
+    if error:
+        return {"ok": False, "mensaje": error}, 400
+
+    repetido = db.session.execute(
+        db.select(Usuario.idUsuario).where(
+            Usuario.correo == campos["correo"],
+            Usuario.idUsuario != id_trabajador,
+        )
+    ).scalar_one_or_none()
+    if repetido is not None:
+        return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+
+    for campo, valor in campos.items():
+        setattr(trabajador, campo, valor)
+    trabajador.fechaActualizacion = seguridad.ahora_utc()
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return {"ok": False, "mensaje": "El correo ya está registrado."}, 409
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {
+            "ok": False,
+            "mensaje": "No se pudo actualizar el trabajador.",
+        }, 503
+
+    return {
+        "ok": True,
+        "data": {"trabajador": _serializar_trabajador(trabajador)},
+        "mensaje": "Trabajador actualizado correctamente.",
+    }, 200
+
+
+def eliminar_trabajador(id_trabajador):
+    if current_user.rolGlobal != "ADMIN":
+        return {
+            "ok": False,
+            "mensaje": "Solo un administrador puede dar de baja trabajadores.",
+        }, 403
+
+    trabajador, error = _buscar_trabajador(id_trabajador)
+    if error:
+        return error
+
+    trabajador.estado = "INACTIVO"
+    trabajador.fechaActualizacion = seguridad.ahora_utc()
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return {
+            "ok": False,
+            "mensaje": "No se pudo dar de baja al trabajador.",
+        }, 503
+
+    return {
+        "ok": True,
+        "data": {
+            "idUsuario": trabajador.idUsuario,
+            "estatus": trabajador.estado,
+        },
+        "mensaje": "Trabajador dado de baja correctamente.",
+    }, 200
+
+
+def _buscar_trabajador(id_trabajador):
+    trabajador = db.session.get(Usuario, id_trabajador)
+    if (
+        trabajador is None
+        or trabajador.rolGlobal not in {"ADMIN", "TRABAJADOR"}
+    ):
+        return None, (
+            {"ok": False, "mensaje": "El trabajador no existe."},
+            404,
+        )
+    return trabajador, None
+
+
 def _serializar_trabajador(trabajador, tickets=None):
     partes = [
         trabajador.nombreUsuario,
@@ -171,6 +264,9 @@ def _serializar_trabajador(trabajador, tickets=None):
     nombre = " ".join(parte for parte in partes if parte).strip()
     return {
         "idUsuario": trabajador.idUsuario,
+        "nombreUsuario": trabajador.nombreUsuario,
+        "apaterno": trabajador.apaterno,
+        "amaterno": getattr(trabajador, "amaterno", None),
         "nombre": nombre,
         "correo": trabajador.correo,
         "rolGlobal": trabajador.rolGlobal,

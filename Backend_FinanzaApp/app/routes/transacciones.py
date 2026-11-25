@@ -14,6 +14,8 @@ def listar(idCartera):
         pagina=request.args.get("pagina", "1"),
         por_pagina=request.args.get("porPagina", "20"),
         periodo_id=request.args.get("periodoId"),
+        desde=request.args.get("desde"),
+        hasta=request.args.get("hasta"),
     )
     return jsonify(payload), status
 

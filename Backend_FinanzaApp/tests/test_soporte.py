@@ -70,6 +70,7 @@ def test_rutas_soporte_registradas():
     assert ("/soporte/tickets/<int:idTicket>", "PUT") in rutas
     assert ("/soporte/tickets/<int:idTicket>", "DELETE") in rutas
     assert ("/soporte/tickets/<int:idTicket>/respuestas", "POST") in rutas
+    assert ("/soporte/tickets/<int:idTicket>/catalogar", "POST") in rutas
     assert ("/soporte/tickets/<int:idTicket>/asignar", "POST") in rutas
     assert ("/soporte/tickets/<int:idTicket>/cerrar", "POST") in rutas
 
@@ -82,6 +83,7 @@ def test_rutas_soporte_requieren_token():
         cliente.put("/soporte/tickets/1", json={}),
         cliente.delete("/soporte/tickets/1"),
         cliente.post("/soporte/tickets/1/respuestas", json={}),
+        cliente.post("/soporte/tickets/1/catalogar", json={}),
         cliente.post("/soporte/tickets/1/asignar", json={}),
         cliente.post("/soporte/tickets/1/cerrar", json={}),
     ]
@@ -544,3 +546,42 @@ def test_filtros_tickets_combinan_categoria_prioridad_responsable_y_fecha():
 
 def test_filtros_tickets_vacios_sin_parametros():
     assert soporte_service._filtros_tickets(None, None, None, None, None) == []
+
+
+def test_cliente_no_puede_catalogar(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+
+    payload, status = soporte_service.catalogar_ticket(1, {"categoria": "PAGOS"})
+
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_catalogar_rechaza_categoria_invalida(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    _ticket_para_busqueda(monkeypatch)
+
+    payload, status = soporte_service.catalogar_ticket(
+        1, {"categoria": "INVENCIBLE"}
+    )
+
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_staff_cataloga_categoria_y_prioridad(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=9)
+    _ticket_para_busqueda(monkeypatch)
+    monkeypatch.setattr(soporte_service.db, "session", SesionFalsa())
+    monkeypatch.setattr(
+        soporte_service, "_relaciones", lambda _tickets: ({}, {}, {})
+    )
+
+    payload, status = soporte_service.catalogar_ticket(
+        1, {"categoria": "pagos", "prioridad": "alta"}
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert payload["data"]["ticket"]["categoria"] == "PAGOS"
+    assert payload["data"]["ticket"]["prioridad"] == "ALTA"

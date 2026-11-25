@@ -81,7 +81,14 @@ def crear(id_cartera, datos):
     }, 201
 
 
-def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
+def listar(
+    id_cartera,
+    pagina="1",
+    por_pagina="20",
+    periodo_id=None,
+    desde=None,
+    hasta=None,
+):
     pagina, error = entero_parametro("pagina", pagina, 1)
     if error:
         return {"ok": False, "mensaje": error}, 400
@@ -135,6 +142,31 @@ def listar(id_cartera, pagina="1", por_pagina="20", periodo_id=None):
                 time.min,
             )
         )
+
+    if desde not in (None, "") or hasta not in (None, ""):
+        try:
+            inicio = date.fromisoformat(desde) if desde else None
+            fin = date.fromisoformat(hasta) if hasta else None
+        except (TypeError, ValueError):
+            return {
+                "ok": False,
+                "mensaje": "Las fechas deben tener formato YYYY-MM-DD.",
+            }, 400
+        if inicio and fin and fin < inicio:
+            return {
+                "ok": False,
+                "mensaje": "La fecha desde no puede ser posterior a hasta.",
+            }, 400
+        if inicio:
+            filtros.append(
+                Transaccion.fechaTransaccion
+                >= datetime.combine(inicio, time.min)
+            )
+        if fin:
+            filtros.append(
+                Transaccion.fechaTransaccion
+                < datetime.combine(fin + timedelta(days=1), time.min)
+            )
 
     try:
         total = db.session.execute(

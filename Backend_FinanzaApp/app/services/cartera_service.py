@@ -551,7 +551,7 @@ def obtener(id_cartera):
     }, 200
 
 
-def detalle(id_cartera, periodo_id=None):
+def detalle(id_cartera, periodo_id=None, desde=None, hasta=None):
     fila = _membresia(id_cartera)
     if fila is None:
         return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
@@ -561,7 +561,7 @@ def detalle(id_cartera, periodo_id=None):
 
         try:
             detalle = cartera_detalle_service.resumen_y_series(
-                cartera, periodo_id
+                cartera, periodo_id, desde, hasta
             )
         except ValueError as exc:
             return {"ok": False, "mensaje": str(exc)}, 400
