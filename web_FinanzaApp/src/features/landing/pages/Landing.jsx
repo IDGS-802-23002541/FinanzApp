@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   Accordion,
   AccordionDetails,
@@ -5,31 +6,54 @@ import {
   Box,
   Button,
   Chip,
+  Divider,
+  Drawer,
+  IconButton,
   Link,
   Stack,
+  ThemeProvider,
   Tooltip,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink, Navigate } from 'react-router-dom'
+import { Link as RouterLink, Navigate, useLocation } from 'react-router-dom'
 import FormularioComentarios from '../components/FormularioComentarios.jsx'
 import Revelar from '../components/Revelar.jsx'
+import Logo from '../../../components/ui/Logo.jsx'
+import { crearTemaClaro } from '../../../styles/temaMui.js'
 import { useAuth } from '../../../hooks/useAuth.js'
 import { formatearMonto } from '../../../utils/formato.js'
 import { PANEL_POR_ROL } from '../../../utils/constantes.js'
 import {
   IconoCalendario,
   IconoCartera,
+  IconoCerrar,
   IconoCheck,
   IconoEstrella,
+  IconoMenu,
   IconoPersonas,
 } from '../../../components/ui/Iconos.jsx'
 
 const APK_URL = import.meta.env.VITE_APK_URL ?? ''
 
+// Material temporal de demostración. Al entregar el video propio se cambian
+// estas dos rutas por /media/demo-finanzapp.mp4 y su poster (public/media/).
+const VIDEO_DEMO =
+  'https://videos.pexels.com/video-files/6700653/6700653-hd_1280_720_25fps.mp4'
+const POSTER_DEMO =
+  'https://images.pexels.com/videos/6700653/accountant-accounting-adult-banknote-6700653.jpeg?auto=compress&cs=tinysrgb&w=1280'
+
 const PETROLEO = 'var(--paleta-petroleo)'
 const BLANCO = 'var(--paleta-blanco)'
 const TEXTO_SOBRE_OSCURO = 'rgba(255, 255, 255, 0.72)'
 const BORDE_SOBRE_OSCURO = 'rgba(255, 255, 255, 0.16)'
+const FONDO_HOVER_OSCURO = 'rgba(255, 255, 255, 0.08)'
+
+const ENLACES_NAV = [
+  { texto: 'Producto', href: '#producto' },
+  { texto: 'Ejemplos', href: '#ejemplos' },
+  { texto: 'Dudas', href: '#dudas' },
+  { texto: 'Contacto', href: '#contacto' },
+]
 
 const contenedor = {
   width: '100%',
@@ -212,6 +236,34 @@ function Tarjeta({ children, sx }) {
   return <Box sx={{ ...sxTarjeta, ...sx }}>{children}</Box>
 }
 
+// Signo del acordeón: "+" cerrado y "−" abierto. Se dibuja con dos barras para
+// que al abrirse desaparezca la vertical en lugar de girar una cruz.
+function IconoAcordeon() {
+  return (
+    <Box
+      aria-hidden="true"
+      sx={{
+        position: 'relative',
+        width: 16,
+        height: 16,
+        color: 'var(--color-secundario-texto)',
+        '&::before, &::after': {
+          content: '""',
+          position: 'absolute',
+          backgroundColor: 'currentColor',
+          borderRadius: 2,
+          transition: 'transform 0.2s ease',
+        },
+        '&::before': { top: '7px', left: 0, width: 16, height: 2 },
+        '&::after': { top: 0, left: '7px', width: 2, height: 16 },
+        '.Mui-expanded &': {
+          '&::after': { transform: 'scaleY(0)' },
+        },
+      }}
+    />
+  )
+}
+
 function ListaBeneficios({ items }) {
   return (
     <Stack component="ul" spacing={1.25} sx={{ mt: 2.5, pl: 0, listStyle: 'none' }}>
@@ -301,7 +353,7 @@ function SimulacionCartera() {
           backgroundColor: 'var(--paleta-fondo)',
         }}
       >
-        <Typography variant="body2" sx={{ opacity: 0.7 }}>
+        <Typography variant="body2" sx={{ color: 'var(--color-texto-secundario)' }}>
           Disponible
         </Typography>
         <Typography sx={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
@@ -325,7 +377,7 @@ function SimulacionCartera() {
               <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }} noWrap>
                 {movimiento.nombre}
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.65 }}>
+              <Typography variant="caption" sx={{ color: 'var(--color-texto-terciario)' }}>
                 {movimiento.fecha}
               </Typography>
             </Box>
@@ -588,6 +640,20 @@ function IlustracionEjemplo({ tipo }) {
 
 function Landing() {
   const { usuario } = useAuth()
+  const { hash } = useLocation()
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  // La landing es siempre clara: tema propio aunque la cuenta esté en oscuro.
+  const [temaClaro] = useState(() => crearTemaClaro())
+
+  const cerrarMenu = () => setMenuAbierto(false)
+
+  // El navegador intenta saltar al ancla antes de que React pinte las secciones,
+  // así que un enlace compartido como /#dudas se quedaría al inicio.
+  useEffect(() => {
+    if (!hash) return
+    const seccion = document.getElementById(hash.slice(1))
+    if (seccion) seccion.scrollIntoView({ behavior: 'instant', block: 'start' })
+  }, [hash])
 
   // CA4: con sesión activa se va directo al inicio del rol.
   if (usuario) {
@@ -595,71 +661,51 @@ function Landing() {
   }
 
   return (
-    <Box sx={{ backgroundColor: 'var(--color-fondo)', color: 'var(--color-texto)' }}>
+    <ThemeProvider theme={temaClaro}>
+      {/* La landing es siempre clara. El encabezado y su menú usan los tonos de
+        marca fijos, así que no heredan el modo oscuro de la cuenta. */}
       <Box
         component="header"
-        sx={{ backgroundColor: PETROLEO, color: BLANCO }}
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          backgroundColor: PETROLEO,
+          color: BLANCO,
+          borderBottom: `1px solid ${BORDE_SOBRE_OSCURO}`,
+        }}
       >
-        <Box sx={{ ...contenedor, pt: { xs: 2.5, md: 3.5 }, pb: { xs: 8, md: 11 } }}>
+        <Box sx={{ ...contenedor, py: 1.5 }}>
           <Stack
             direction="row"
             sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2 }}
           >
-            <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  backgroundColor: BLANCO,
-                  color: PETROLEO,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                }}
-              >
-                F
-              </Box>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.05rem' }}>
-                FinanzApp
-              </Typography>
-            </Stack>
+            <Box
+              component={RouterLink}
+              to="/"
+              sx={{ display: 'flex', color: 'inherit', textDecoration: 'none' }}
+            >
+              <Logo variante="blanco" alto={32} conTexto />
+            </Box>
 
             <Stack
               direction="row"
-              spacing={{ xs: 1, sm: 2 }}
-              sx={{
-                alignItems: 'center',
-                '& .MuiButton-root': {
-                  minHeight: { xs: 38, sm: 50 },
-                  px: { xs: 1.5, sm: 2.5 },
-                  fontSize: { xs: '0.8rem', sm: '0.9375rem' },
-                },
-              }}
+              spacing={3}
+              sx={{ display: { xs: 'none', md: 'flex' } }}
             >
-              <Link
-                href="#producto"
-                underline="none"
-                sx={{
-                  display: { xs: 'none', md: 'inline' },
-                  color: 'inherit',
-                  fontWeight: 600,
-                }}
-              >
-                Producto
-              </Link>
-              <Link
-                href="#ejemplos"
-                underline="none"
-                sx={{
-                  display: { xs: 'none', md: 'inline' },
-                  color: 'inherit',
-                  fontWeight: 600,
-                }}
-              >
-                Ejemplos
-              </Link>
+              {ENLACES_NAV.map((enlace) => (
+                <Link
+                  key={enlace.href}
+                  href={enlace.href}
+                  underline="none"
+                  sx={{ color: 'inherit', fontWeight: 600 }}
+                >
+                  {enlace.texto}
+                </Link>
+              ))}
+            </Stack>
+
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <Link
                 component={RouterLink}
                 to="/login"
@@ -684,153 +730,286 @@ function Landing() {
               >
                 Registrarme
               </Button>
+              <IconButton
+                aria-label="Abrir menú"
+                onClick={() => setMenuAbierto(true)}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, color: BLANCO }}
+              >
+                <IconoMenu />
+              </IconButton>
             </Stack>
           </Stack>
+        </Box>
+      </Box>
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' },
-              gap: { xs: 6, md: 8 },
-              alignItems: 'center',
-              mt: { xs: 5, md: 8 },
-            }}
+      <Drawer
+        anchor="right"
+        open={menuAbierto}
+        onClose={cerrarMenu}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 288,
+              maxWidth: '85vw',
+              p: 2,
+              backgroundColor: PETROLEO,
+              color: BLANCO,
+            },
+          },
+        }}
+      >
+        <Stack spacing={2} sx={{ height: '100%' }}>
+          <Stack
+            direction="row"
+            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <Revelar>
-              <Typography
-                sx={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-acento)',
-                }}
-              >
-                Finanzas compartidas sin enredos
-              </Typography>
-              <Typography
-                component="h1"
-                sx={{
-                  mt: 2,
-                  fontSize: { xs: '2.4rem', md: '3.5rem' },
-                  fontWeight: 800,
-                  lineHeight: 1.05,
-                  letterSpacing: '-0.035em',
-                }}
-              >
-                Las cuentas claras también{' '}
-                <Box component="span" sx={{ color: 'var(--color-acento)' }}>
-                  se ven bien
-                </Box>
-              </Typography>
-              <Typography
-                sx={{
-                  mt: 2.5,
-                  maxWidth: 500,
-                  fontSize: '1.1rem',
-                  color: TEXTO_SOBRE_OSCURO,
-                }}
-              >
-                Organiza carteras de hogar, viajes y eventos. Invita a quien
-                quieras, registra cada movimiento y cierra con el balance exacto.
-              </Typography>
+            <Logo variante="blanco" alto={28} conTexto />
+            <IconButton
+              aria-label="Cerrar menú"
+              onClick={cerrarMenu}
+              sx={{ color: BLANCO }}
+            >
+              <IconoCerrar />
+            </IconButton>
+          </Stack>
 
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5}
-                sx={{ mt: 3.5, alignItems: { xs: 'stretch', sm: 'center' } }}
+          <Divider sx={{ borderColor: BORDE_SOBRE_OSCURO }} />
+
+          <Stack component="nav" spacing={0.5}>
+            {ENLACES_NAV.map((enlace) => (
+              <Link
+                key={enlace.href}
+                href={enlace.href}
+                underline="none"
+                onClick={cerrarMenu}
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  borderRadius: 'var(--radio-md)',
+                  color: BLANCO,
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: FONDO_HOVER_OSCURO },
+                }}
               >
-                <Button
-                  component={RouterLink}
-                  to="/registro"
+                {enlace.texto}
+              </Link>
+            ))}
+          </Stack>
+
+          <Divider sx={{ borderColor: BORDE_SOBRE_OSCURO }} />
+
+          <Stack spacing={1.5} sx={{ mt: 'auto' }}>
+            <Button
+              component={RouterLink}
+              to="/login"
+              variant="outlined"
+              onClick={cerrarMenu}
+              sx={{
+                color: BLANCO,
+                borderColor: BORDE_SOBRE_OSCURO,
+                '&:hover': { borderColor: BLANCO },
+              }}
+            >
+              Iniciar sesión
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/registro"
+              onClick={cerrarMenu}
+              sx={{ backgroundColor: BLANCO, color: PETROLEO }}
+            >
+              Crear cuenta gratis
+            </Button>
+          </Stack>
+        </Stack>
+      </Drawer>
+
+      <Box
+        component="main"
+        className="tema-claro"
+        sx={{ backgroundColor: 'var(--color-fondo)', color: 'var(--color-texto)' }}
+      >
+        <Box sx={{ backgroundColor: PETROLEO, color: BLANCO }}>
+          <Box sx={{ ...contenedor, pt: { xs: 4, md: 6 }, pb: { xs: 8, md: 11 } }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' },
+                gap: { xs: 6, md: 8 },
+                alignItems: 'center',
+              }}
+            >
+              <Revelar>
+                <Typography
                   sx={{
-                    backgroundColor: BLANCO,
-                    color: PETROLEO,
+                    fontSize: '0.75rem',
                     fontWeight: 700,
-                    '&:hover': { backgroundColor: 'var(--color-acento)' },
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-acento)',
                   }}
                 >
-                  Crear cuenta gratis
-                </Button>
-                {APK_URL ? (
+                  Finanzas compartidas sin enredos
+                </Typography>
+                <Typography
+                  component="h1"
+                  sx={{
+                    mt: 2,
+                    fontSize: { xs: '2.4rem', md: '3.5rem' },
+                    fontWeight: 800,
+                    lineHeight: 1.05,
+                    letterSpacing: '-0.035em',
+                  }}
+                >
+                  Las cuentas claras también{' '}
+                  <Box component="span" sx={{ color: 'var(--color-acento)' }}>
+                    se ven bien
+                  </Box>
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 2.5,
+                    maxWidth: 500,
+                    fontSize: '1.1rem',
+                    color: TEXTO_SOBRE_OSCURO,
+                  }}
+                >
+                  Organiza carteras de hogar, viajes y eventos. Invita a quien
+                  quieras, registra cada movimiento y cierra con el balance exacto.
+                </Typography>
+
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  sx={{ mt: 3.5, alignItems: { xs: 'stretch', sm: 'center' } }}
+                >
                   <Button
-                    component="a"
-                    href={APK_URL}
-                    variant="outlined"
-                    download
+                    component={RouterLink}
+                    to="/registro"
                     sx={{
-                      color: BLANCO,
-                      borderColor: BORDE_SOBRE_OSCURO,
-                      '&:hover': { borderColor: BLANCO },
+                      backgroundColor: BLANCO,
+                      color: PETROLEO,
+                      fontWeight: 700,
+                      '&:hover': { backgroundColor: 'var(--color-acento)' },
                     }}
                   >
-                    Descargar app
+                    Crear cuenta gratis
                   </Button>
-                ) : (
-                  <Tooltip title="La descarga estará disponible pronto.">
-                    <Chip
-                      label="App Android: próximamente"
+                  {APK_URL ? (
+                    <Button
+                      component="a"
+                      href={APK_URL}
+                      variant="outlined"
+                      download
                       sx={{
-                        height: 44,
                         color: BLANCO,
-                        border: `1px dashed ${BORDE_SOBRE_OSCURO}`,
-                        backgroundColor: 'transparent',
-                        fontWeight: 600,
+                        borderColor: BORDE_SOBRE_OSCURO,
+                        '&:hover': { borderColor: BLANCO },
                       }}
-                    />
-                  </Tooltip>
-                )}
-              </Stack>
-
-              <Stack
-                direction="row"
-                sx={{ mt: 4, flexWrap: 'wrap', gap: 2.5 }}
-              >
-                {['Carteras ilimitadas', 'Invitación con QR', 'Balance automático'].map(
-                  (texto) => (
-                    <Stack
-                      key={texto}
-                      direction="row"
-                      spacing={0.75}
-                      sx={{ alignItems: 'center' }}
                     >
-                      <IconoCheck sx={{ fontSize: 16, color: 'var(--color-acento)' }} />
-                      <Typography variant="body2" sx={{ color: BLANCO }}>
-                        {texto}
-                      </Typography>
-                    </Stack>
-                  ),
-                )}
-              </Stack>
-            </Revelar>
+                      Descargar app
+                    </Button>
+                  ) : (
+                    <Tooltip title="La descarga estará disponible pronto.">
+                      <Chip
+                        label="App Android: próximamente"
+                        sx={{
+                          height: 44,
+                          color: BLANCO,
+                          border: `1px dashed ${BORDE_SOBRE_OSCURO}`,
+                          backgroundColor: 'transparent',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                </Stack>
 
-            <Revelar
-              delay={140}
-              sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
-            >
-              <SimulacionCartera />
-              <Box
-                sx={{
-                  display: { xs: 'none', sm: 'flex' },
-                  position: 'absolute',
-                  top: -16,
-                  left: { sm: -8, md: -16 },
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.5,
-                  py: 0.75,
-                  borderRadius: '10px',
-                  backgroundColor: BLANCO,
-                  color: PETROLEO,
-                  border: '1px solid var(--color-borde)',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.16)',
-                }}
+                <Stack
+                  direction="row"
+                  sx={{ mt: 4, flexWrap: 'wrap', gap: 2.5 }}
+                >
+                  {['Carteras ilimitadas', 'Invitación con QR', 'Balance automático'].map(
+                    (texto) => (
+                      <Stack
+                        key={texto}
+                        direction="row"
+                        spacing={0.75}
+                        sx={{ alignItems: 'center' }}
+                      >
+                        <IconoCheck sx={{ fontSize: 16, color: 'var(--color-acento)' }} />
+                        <Typography variant="body2" sx={{ color: BLANCO }}>
+                          {texto}
+                        </Typography>
+                      </Stack>
+                    ),
+                  )}
+                </Stack>
+              </Revelar>
+
+              <Revelar
+                delay={140}
+                sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
               >
+                <SimulacionCartera />
                 <Box
                   sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
+                    display: { xs: 'none', sm: 'flex' },
+                    position: 'absolute',
+                    top: -16,
+                    left: { sm: -8, md: -16 },
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: '10px',
+                    backgroundColor: BLANCO,
+                    color: PETROLEO,
+                    border: '1px solid var(--color-borde)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.16)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--color-seleccion)',
+                      color: 'var(--color-seleccion-texto)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <IconoCheck sx={{ fontSize: 13 }} />
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    Gasto registrado
+                  </Typography>
+                </Box>
+              </Revelar>
+            </Box>
+          </Box>
+        </Box>
+
+        <Box
+          component="section"
+          sx={{
+            ...contenedor,
+            py: { xs: 8, md: 10 },
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 2.5,
+          }}
+        >
+          {BENEFICIOS.map(({ titulo, Icono, texto, detalle }, indice) => (
+            <Revelar key={titulo} delay={indice * 90} sx={{ height: '100%' }}>
+              <Tarjeta>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '12px',
                     backgroundColor: 'var(--color-seleccion)',
                     color: 'var(--color-seleccion-texto)',
                     display: 'flex',
@@ -838,497 +1017,436 @@ function Landing() {
                     justifyContent: 'center',
                   }}
                 >
-                  <IconoCheck sx={{ fontSize: 13 }} />
+                  <Icono sx={{ fontSize: 22 }} />
                 </Box>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                  Gasto registrado
+                <Typography sx={{ mt: 2.5, fontWeight: 700, fontSize: '1.1rem' }}>
+                  {titulo}
                 </Typography>
-              </Box>
-            </Revelar>
-          </Box>
-        </Box>
-      </Box>
-
-      <Box
-        component="section"
-        sx={{
-          ...contenedor,
-          py: { xs: 8, md: 10 },
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 2.5,
-        }}
-      >
-        {BENEFICIOS.map(({ titulo, Icono, texto, detalle }, indice) => (
-          <Revelar key={titulo} delay={indice * 90} sx={{ height: '100%' }}>
-            <Tarjeta>
-              <Box
-                sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--color-seleccion)',
-                  color: 'var(--color-seleccion-texto)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icono sx={{ fontSize: 22 }} />
-              </Box>
-              <Typography sx={{ mt: 2.5, fontWeight: 700, fontSize: '1.1rem' }}>
-                {titulo}
-              </Typography>
-              <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
-                {texto}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 2,
-                  pt: 1.5,
-                  borderTop: '1px solid var(--color-borde)',
-                  color: 'var(--color-seleccion-texto)',
-                  fontWeight: 700,
-                }}
-              >
-                {detalle}
-              </Typography>
-            </Tarjeta>
-          </Revelar>
-        ))}
-      </Box>
-
-      <Box
-        component="section"
-        id="producto"
-        sx={{
-          ...contenedor,
-          py: { xs: 6, md: 9 },
-          borderTop: '1px solid var(--color-borde)',
-        }}
-      >
-        <Encabezado
-          etiqueta="Producto"
-          titulo="Web y móvil, cada una para lo suyo"
-          texto="Administra desde la computadora y registra gastos desde el celular."
-        />
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2.5,
-            mt: 4,
-          }}
-        >
-          {COMPARATIVA.map((columna, indice) => (
-            <Revelar key={columna.titulo} delay={indice * 120} sx={{ height: '100%' }}>
-              <Tarjeta>
-                <Stack
-                  direction="row"
-                  sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2 }}
+                <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+                  {texto}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 2,
+                    pt: 1.5,
+                    borderTop: '1px solid var(--color-borde)',
+                    color: 'var(--color-seleccion-texto)',
+                    fontWeight: 700,
+                  }}
                 >
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
-                    {columna.titulo}
-                  </Typography>
-                  <Chip
-                    label={columna.etiqueta}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'var(--color-superficie-suave)',
-                      color: 'var(--color-texto-secundario)',
-                      fontWeight: 600,
-                    }}
-                  />
-                </Stack>
-                <ListaBeneficios items={columna.items} />
-                {indice === 0 ? <MockNavegador /> : <MockTelefono />}
+                  {detalle}
+                </Typography>
               </Tarjeta>
             </Revelar>
           ))}
         </Box>
-      </Box>
 
-      <Box
-        component="section"
-        sx={{
-          backgroundColor: PETROLEO,
-          color: BLANCO,
-          borderBottom: `1px solid ${BORDE_SOBRE_OSCURO}`,
-        }}
-      >
         <Box
+          component="section"
+          id="producto"
           sx={{
             ...contenedor,
-            py: { xs: 5, md: 6 },
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 3,
+            py: { xs: 6, md: 9 },
+            borderTop: '1px solid var(--color-borde)',
           }}
         >
-          {DATOS.map((dato, indice) => (
-            <Revelar key={dato.texto} delay={indice * 90}>
-              <Box
-                sx={{
-                  pl: { md: indice === 0 ? 0 : 3 },
-                  borderLeft: {
-                    md: indice === 0 ? 'none' : `1px solid ${BORDE_SOBRE_OSCURO}`,
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: { xs: '2rem', md: '2.75rem' },
-                    fontWeight: 800,
-                    lineHeight: 1,
-                    letterSpacing: '-0.03em',
-                    color: 'var(--color-acento)',
-                  }}
-                >
-                  {dato.valor}
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1, color: TEXTO_SOBRE_OSCURO }}>
-                  {dato.texto}
-                </Typography>
-              </Box>
-            </Revelar>
-          ))}
-        </Box>
-      </Box>
-
-      <Box
-        component="section"
-        sx={{ backgroundColor: PETROLEO, color: BLANCO }}
-      >
-        <Box sx={{ ...contenedor, py: { xs: 8, md: 10 } }}>
           <Encabezado
-            etiqueta="Empezar"
-            titulo="Así de fácil es empezar"
-            texto="Tres pasos y tu cartera queda lista."
-            oscuro
+            etiqueta="Producto"
+            titulo="Web y móvil, cada una para lo suyo"
+            texto="Administra desde la computadora y registra gastos desde el celular."
           />
+
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
               gap: 2.5,
               mt: 4,
             }}
           >
-            {PASOS.map((paso, indice) => (
-              <Revelar key={paso.numero} delay={indice * 90} sx={{ height: '100%' }}>
-                <Tarjeta
-                  sx={{
-                    backgroundColor: BLANCO,
-                    color: PETROLEO,
-                    borderColor: 'transparent',
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: '2rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                      color: 'var(--paleta-terracota)',
-                    }}
+            {COMPARATIVA.map((columna, indice) => (
+              <Revelar key={columna.titulo} delay={indice * 120} sx={{ height: '100%' }}>
+                <Tarjeta>
+                  <Stack
+                    direction="row"
+                    sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2 }}
                   >
-                    {paso.numero}
-                  </Typography>
-                  <Typography sx={{ mt: 2, fontWeight: 700 }}>{paso.titulo}</Typography>
-                  <Typography sx={{ mt: 1, opacity: 0.75 }}>{paso.texto}</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                      {columna.titulo}
+                    </Typography>
+                    <Chip
+                      label={columna.etiqueta}
+                      size="small"
+                      sx={{
+                        backgroundColor: 'var(--color-superficie-suave)',
+                        color: 'var(--color-texto-secundario)',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </Stack>
+                  <ListaBeneficios items={columna.items} />
+                  {indice === 0 ? <MockNavegador /> : <MockTelefono />}
                 </Tarjeta>
               </Revelar>
             ))}
           </Box>
         </Box>
-      </Box>
 
-      <Box
-        component="section"
-        sx={{
-          ...contenedor,
-          py: { xs: 6, md: 9 },
-          borderTop: '1px solid var(--color-borde)',
-        }}
-      >
-        <Encabezado
-          etiqueta="En la práctica"
-          titulo="Así se siente tener tus cuentas en orden"
-          texto="Planea, registra y comparte tus gastos sin perder el control."
-        />
-        <Revelar distancia={32} sx={{ mt: 4 }}>
-          <Box
-            sx={{
-              p: { xs: 1, sm: 1.5 },
-              backgroundColor: 'var(--color-superficie)',
-              border: '1px solid var(--color-borde)',
-              borderRadius: '16px',
-            }}
-          >
-            <Box
-              component="video"
-              controls
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster="https://images.pexels.com/videos/6700653/accountant-accounting-adult-banknote-6700653.jpeg?auto=compress&cs=tinysrgb&w=1280"
-              src="https://videos.pexels.com/video-files/6700653/6700653-hd_1280_720_25fps.mp4"
-              aria-label="Video de una persona organizando sus finanzas"
-              sx={{
-                display: 'block',
-                width: '100%',
-                aspectRatio: '16 / 9',
-                objectFit: 'cover',
-                borderRadius: '10px',
-              }}
-            />
-          </Box>
-        </Revelar>
-        <Typography
-          variant="caption"
-          sx={{ display: 'block', mt: 1.5, color: 'var(--color-texto-secundario)' }}
-        >
-          Video: Tima Miroshnichenko / Pexels
-        </Typography>
-      </Box>
-
-      <Box
-        component="section"
-        id="ejemplos"
-        sx={{
-          ...contenedor,
-          py: { xs: 6, md: 9 },
-          borderTop: '1px solid var(--color-borde)',
-        }}
-      >
-        <Encabezado
-          etiqueta="Carteras"
-          titulo="Una cartera para cada plan"
-          texto="Elige el tipo de cartera según lo que quieras organizar."
-        />
         <Box
+          component="section"
           sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: 2.5,
-            mt: 4,
-          }}
-        >
-          {EJEMPLOS.map(({ titulo, ilustracion, descripcion, ejemplos }, indice) => (
-            <Revelar key={titulo} delay={indice * 90} sx={{ height: '100%' }}>
-              <Tarjeta>
-                <Box
-                  sx={{
-                    borderRadius: '10px',
-                    backgroundColor: 'var(--color-superficie-suave)',
-                    p: 1,
-                  }}
-                >
-                  <IlustracionEjemplo tipo={ilustracion} />
-                </Box>
-                <Typography sx={{ mt: 2, fontWeight: 700 }}>{titulo}</Typography>
-                <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
-                  {descripcion}
-                </Typography>
-                <Stack spacing={0.75} sx={{ mt: 2 }}>
-                  {ejemplos.map((ejemplo) => (
-                    <Typography
-                      key={ejemplo}
-                      variant="body2"
-                      sx={{ color: 'var(--color-texto-secundario)' }}
-                    >
-                      · {ejemplo}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Tarjeta>
-            </Revelar>
-          ))}
-        </Box>
-      </Box>
-
-      <Box
-        component="section"
-        sx={{
-          ...contenedor,
-          py: { xs: 6, md: 9 },
-          borderTop: '1px solid var(--color-borde)',
-        }}
-      >
-        <Encabezado
-          etiqueta="Dudas"
-          titulo="Preguntas frecuentes"
-          texto="Lo que más nos preguntan antes de empezar."
-        />
-        <Stack spacing={1.5} sx={{ mt: 4 }}>
-          {PREGUNTAS.map((item) => (
-            <Accordion
-              key={item.pregunta}
-              elevation={0}
-              disableGutters
-              sx={{
-                border: '1px solid var(--color-borde)',
-                borderRadius: '12px !important',
-                backgroundColor: 'var(--color-superficie)',
-                '&::before': { display: 'none' },
-                '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-                  transform: 'rotate(135deg)',
-                },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: 'var(--color-secundario)',
-                      fontSize: '1.25rem',
-                      lineHeight: 1,
-                    }}
-                  >
-                    +
-                  </Typography>
-                }
-              >
-                <Typography sx={{ fontWeight: 600 }}>{item.pregunta}</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography sx={{ color: 'var(--color-texto-secundario)' }}>
-                  {item.respuesta}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Stack>
-      </Box>
-
-      <Box
-        component="section"
-        id="contacto"
-        sx={{
-          ...contenedor,
-          py: { xs: 6, md: 9 },
-          borderTop: '1px solid var(--color-borde)',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '0.9fr 1.1fr' },
-            gap: { xs: 4, md: 6 },
-            alignItems: 'start',
-          }}
-        >
-          <Revelar>
-            <Encabezado
-              etiqueta="Contacto"
-              titulo="¿Tienes una idea o una duda?"
-              texto="Escríbenos. Leemos todos los comentarios para mejorar FinanzApp."
-            />
-            <ListaBeneficios
-              items={[
-                'No necesitas crear una cuenta',
-                'Tu correo solo se usa para responderte',
-                'Nos ayuda a priorizar nuevas funciones',
-              ]}
-            />
-          </Revelar>
-          <Revelar delay={120}>
-            <FormularioComentarios />
-          </Revelar>
-        </Box>
-      </Box>
-
-      <Box component="section" sx={{ ...contenedor, pb: { xs: 8, md: 10 } }}>
-        <Box
-          sx={{
-            p: { xs: 3, md: 5 },
             backgroundColor: PETROLEO,
             color: BLANCO,
-            border: `1px solid ${BORDE_SOBRE_OSCURO}`,
-            borderRadius: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 3,
-            flexWrap: 'wrap',
+            borderBottom: `1px solid ${BORDE_SOBRE_OSCURO}`,
           }}
         >
-          <Box>
-            <Typography
-              component="h2"
-              sx={{
-                fontSize: { xs: '1.5rem', md: '2rem' },
-                fontWeight: 800,
-                lineHeight: 1.15,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Empieza a organizar tus cuentas hoy
-            </Typography>
-            <Typography sx={{ mt: 1, color: TEXTO_SOBRE_OSCURO }}>
-              Crear tu primera cartera toma menos de un minuto.
-            </Typography>
-          </Box>
-          <Button
-            component={RouterLink}
-            to="/registro"
+          <Box
             sx={{
-              backgroundColor: BLANCO,
-              color: PETROLEO,
-              fontWeight: 700,
-              '&:hover': { backgroundColor: 'var(--color-acento)' },
+              ...contenedor,
+              py: { xs: 5, md: 6 },
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+              gap: { xs: 0, sm: 3 },
             }}
           >
-            Crear cuenta gratis
-          </Button>
+            {DATOS.map((dato, indice) => (
+              <Revelar key={dato.texto} delay={indice * 90}>
+                <Box
+                  sx={{
+                    py: { xs: 2.5, sm: 0 },
+                    textAlign: { xs: 'center', sm: 'left' },
+                    borderTop: {
+                      xs: indice === 0 ? 'none' : `1px solid ${BORDE_SOBRE_OSCURO}`,
+                      sm: 'none',
+                    },
+                    pl: { sm: indice === 0 ? 0 : 3 },
+                    borderLeft: {
+                      sm: indice === 0 ? 'none' : `1px solid ${BORDE_SOBRE_OSCURO}`,
+                    },
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '2rem', md: '2.75rem' },
+                      fontWeight: 800,
+                      lineHeight: 1,
+                      letterSpacing: '-0.03em',
+                      color: 'var(--color-acento)',
+                    }}
+                  >
+                    {dato.valor}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1, color: TEXTO_SOBRE_OSCURO }}>
+                    {dato.texto}
+                  </Typography>
+                </Box>
+              </Revelar>
+            ))}
+          </Box>
         </Box>
-      </Box>
 
-      <Box
-        component="footer"
-        sx={{ backgroundColor: PETROLEO, color: BLANCO }}
-      >
         <Box
-          sx={{
-            ...contenedor,
-            py: 4,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 2,
-            flexWrap: 'wrap',
-          }}
+          component="section"
+          sx={{ backgroundColor: PETROLEO, color: BLANCO }}
         >
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Box sx={{ ...contenedor, py: { xs: 8, md: 10 } }}>
+            <Encabezado
+              etiqueta="Empezar"
+              titulo="Así de fácil es empezar"
+              texto="Tres pasos y tu cartera queda lista."
+              oscuro
+            />
             <Box
               sx={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                backgroundColor: BLANCO,
-                color: PETROLEO,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: '0.75rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                gap: 2.5,
+                mt: 4,
               }}
             >
-              F
+              {PASOS.map((paso, indice) => (
+                <Revelar key={paso.numero} delay={indice * 90} sx={{ height: '100%' }}>
+                  <Tarjeta
+                    sx={{
+                      backgroundColor: BLANCO,
+                      color: PETROLEO,
+                      borderColor: 'transparent',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                        lineHeight: 1,
+                        color: 'var(--paleta-terracota)',
+                      }}
+                    >
+                      {paso.numero}
+                    </Typography>
+                    <Typography sx={{ mt: 2, fontWeight: 700 }}>{paso.titulo}</Typography>
+                    <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+                      {paso.texto}
+                    </Typography>
+                  </Tarjeta>
+                </Revelar>
+              ))}
             </Box>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              FinanzApp
-            </Typography>
-          </Stack>
-          <Typography variant="body2" sx={{ color: TEXTO_SOBRE_OSCURO }}>
-            Hecho para que las cuentas no se vuelvan un problema.
+          </Box>
+        </Box>
+
+        <Box
+          component="section"
+          id="demostracion"
+          sx={{
+            ...contenedor,
+            py: { xs: 6, md: 9 },
+            borderTop: '1px solid var(--color-borde)',
+          }}
+        >
+          <Encabezado
+            etiqueta="En la práctica"
+            titulo="Así se siente tener tus cuentas en orden"
+            texto="Planea, registra y comparte tus gastos sin perder el control."
+          />
+          <Revelar distancia={32} sx={{ mt: 4 }}>
+            <Box
+              sx={{
+                p: { xs: 1, sm: 1.5 },
+                backgroundColor: 'var(--color-superficie)',
+                border: '1px solid var(--color-borde)',
+                borderRadius: 'var(--radio-lg)',
+              }}
+            >
+              <Box
+                component="video"
+                controls
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster={POSTER_DEMO}
+                src={VIDEO_DEMO}
+                aria-label="Video de cómo funciona FinanzApp"
+                sx={{
+                  display: 'block',
+                  width: '100%',
+                  aspectRatio: '16 / 9',
+                  objectFit: 'cover',
+                  borderRadius: 'var(--radio-sm)',
+                }}
+              />
+            </Box>
+          </Revelar>
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', mt: 1.5, color: 'var(--color-texto-secundario)' }}
+          >
+            Video: Tima Miroshnichenko / Pexels
           </Typography>
         </Box>
+
+        <Box
+          component="section"
+          id="ejemplos"
+          sx={{
+            ...contenedor,
+            py: { xs: 6, md: 9 },
+            borderTop: '1px solid var(--color-borde)',
+          }}
+        >
+          <Encabezado
+            etiqueta="Carteras"
+            titulo="Una cartera para cada plan"
+            texto="Elige el tipo de cartera según lo que quieras organizar."
+          />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: 2.5,
+              mt: 4,
+            }}
+          >
+            {EJEMPLOS.map(({ titulo, ilustracion, descripcion, ejemplos }, indice) => (
+              <Revelar key={titulo} delay={indice * 90} sx={{ height: '100%' }}>
+                <Tarjeta>
+                  <Box
+                    sx={{
+                      borderRadius: '10px',
+                      backgroundColor: 'var(--color-superficie-suave)',
+                      p: 1,
+                    }}
+                  >
+                    <IlustracionEjemplo tipo={ilustracion} />
+                  </Box>
+                  <Typography sx={{ mt: 2, fontWeight: 700 }}>{titulo}</Typography>
+                  <Typography sx={{ mt: 1, color: 'var(--color-texto-secundario)' }}>
+                    {descripcion}
+                  </Typography>
+                  <Stack spacing={0.75} sx={{ mt: 2 }}>
+                    {ejemplos.map((ejemplo) => (
+                      <Typography
+                        key={ejemplo}
+                        variant="body2"
+                        sx={{ color: 'var(--color-texto-secundario)' }}
+                      >
+                        · {ejemplo}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Tarjeta>
+              </Revelar>
+            ))}
+          </Box>
+        </Box>
+
+        <Box
+          component="section"
+          id="dudas"
+          sx={{
+            ...contenedor,
+            py: { xs: 6, md: 9 },
+            borderTop: '1px solid var(--color-borde)',
+          }}
+        >
+          <Encabezado
+            etiqueta="Dudas"
+            titulo="Preguntas frecuentes"
+            texto="Lo que más nos preguntan antes de empezar."
+          />
+          <Stack spacing={1.5} sx={{ mt: 4 }}>
+            {PREGUNTAS.map((item) => (
+              <Accordion
+                key={item.pregunta}
+                elevation={0}
+                disableGutters
+                sx={{
+                  border: '1px solid var(--color-borde)',
+                  borderRadius: 'var(--radio-md) !important',
+                  backgroundColor: 'var(--color-superficie)',
+                  '&::before': { display: 'none' },
+                }}
+              >
+                <AccordionSummary expandIcon={<IconoAcordeon />}>
+                  <Typography sx={{ fontWeight: 600 }}>{item.pregunta}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography sx={{ color: 'var(--color-texto-secundario)' }}>
+                    {item.respuesta}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </Box>
+
+        <Box
+          component="section"
+          id="contacto"
+          sx={{
+            ...contenedor,
+            py: { xs: 6, md: 9 },
+            borderTop: '1px solid var(--color-borde)',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '0.9fr 1.1fr' },
+              gap: { xs: 4, md: 6 },
+              alignItems: 'start',
+            }}
+          >
+            <Revelar>
+              <Encabezado
+                etiqueta="Contacto"
+                titulo="¿Tienes una idea o una duda?"
+                texto="Escríbenos. Leemos todos los comentarios para mejorar FinanzApp."
+              />
+              <ListaBeneficios
+                items={[
+                  'No necesitas crear una cuenta',
+                  'Tu correo solo se usa para responderte',
+                  'Nos ayuda a priorizar nuevas funciones',
+                ]}
+              />
+            </Revelar>
+            <Revelar delay={120}>
+              <FormularioComentarios />
+            </Revelar>
+          </Box>
+        </Box>
+
+        <Box component="section" sx={{ ...contenedor, pb: { xs: 8, md: 10 } }}>
+          <Box
+            sx={{
+              p: { xs: 3, md: 5 },
+              backgroundColor: PETROLEO,
+              color: BLANCO,
+              border: `1px solid ${BORDE_SOBRE_OSCURO}`,
+              borderRadius: '20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 3,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Box>
+              <Typography
+                component="h2"
+                sx={{
+                  fontSize: { xs: '1.5rem', md: '2rem' },
+                  fontWeight: 800,
+                  lineHeight: 1.15,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Empieza a organizar tus cuentas hoy
+              </Typography>
+              <Typography sx={{ mt: 1, color: TEXTO_SOBRE_OSCURO }}>
+                Crear tu primera cartera toma menos de un minuto.
+              </Typography>
+            </Box>
+            <Button
+              component={RouterLink}
+              to="/registro"
+              sx={{
+                backgroundColor: BLANCO,
+                color: PETROLEO,
+                fontWeight: 700,
+                '&:hover': { backgroundColor: 'var(--color-acento)' },
+              }}
+            >
+              Crear cuenta gratis
+            </Button>
+          </Box>
+        </Box>
+
+        <Box
+          component="footer"
+          sx={{ backgroundColor: PETROLEO, color: BLANCO }}
+        >
+          <Box
+            sx={{
+              ...contenedor,
+              py: 4,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Logo variante="blanco" alto={26} conTexto />
+            <Typography variant="body2" sx={{ color: TEXTO_SOBRE_OSCURO }}>
+              Hecho para que las cuentas no se vuelvan un problema.
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   )
 }
 

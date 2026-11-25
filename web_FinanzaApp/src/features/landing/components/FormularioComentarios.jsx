@@ -85,7 +85,7 @@ function FormularioComentarios() {
       sx={{
         p: { xs: 2.5, md: 4 },
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
       }}
     >
