@@ -13,6 +13,7 @@ import {
 import { filtrarCarteras, listarPeriodos } from '../../carteras/api.js'
 import GraficaBarras from '../../carteras/components/GraficaBarras.jsx'
 import GraficaDona from '../../carteras/components/GraficaDona.jsx'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import { formatearMonto } from '../../../utils/formato.js'
 import { descargarReporte, obtenerVistaPreviaReporte } from '../api.js'
 
@@ -157,13 +158,10 @@ function Reportes() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Reportes</Typography>
-        <Typography variant="body2" sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
-          Filtra tus carteras, revisa la vista previa y descarga el reporte en CSV o PDF.
-        </Typography>
-      </Box>
-
+      <EncabezadoPagina
+        titulo="Reportes"
+        descripcion="Filtra tus carteras, revisa la vista previa y descarga el reporte en CSV o PDF."
+      />
       <Paper
         elevation={0}
         sx={{

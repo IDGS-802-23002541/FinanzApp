@@ -10,8 +10,6 @@ import { CORREO_VALIDO } from '../../../utils/constantes.js'
 
 const sxCampo = { gridColumn: '1 / -1' }
 const sxBoton = {
-  minHeight: 0,
-  py: 0.75,
   px: 2,
   fontSize: '0.875rem',
 }
@@ -120,7 +118,13 @@ function FormularioPerfil() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            // Los tres apellidos/nombres en una fila cuando cabe; el correo ocupa
+            // el ancho completo para que no quede una celda vacía.
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: 'repeat(3, minmax(0, 1fr))',
+            },
             gap: 2,
           }}
         >

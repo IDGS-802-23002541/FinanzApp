@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 import FormularioTicket from '../components/FormularioTicket.jsx'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import DetalleTicket from '../components/DetalleTicket.jsx'
 import DialogoEditarTicket from '../components/DialogoEditarTicket.jsx'
 import EstadoTicket from '../components/EstadoTicket.jsx'
@@ -144,12 +145,10 @@ function MisTickets() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Soporte</Typography>
-        <Typography variant="body2" sx={{ color: 'var(--color-texto-terciario)' }}>
-          Reporta un problema y da seguimiento a tus solicitudes.
-        </Typography>
-      </Box>
+      <EncabezadoPagina
+        titulo="Soporte"
+        descripcion="Reporta un problema y da seguimiento a tus solicitudes."
+      />
 
       <Paper elevation={0} sx={estiloPapel}>
         <FormularioTicket alCrear={alCrear} />

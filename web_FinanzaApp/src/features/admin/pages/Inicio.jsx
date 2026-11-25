@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material'
 import { obtenerMetricas } from '../api.js'
+import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 
 const sxTarjeta = {
   p: 2.5,
@@ -127,12 +128,10 @@ function InicioAdmin() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h1">Inicio admin</Typography>
-        <Typography sx={{ mt: 0.5, color: 'var(--color-texto-secundario)' }}>
-          Resumen del uso de la plataforma y de la capacidad de soporte.
-        </Typography>
-      </Box>
+      <EncabezadoPagina
+        titulo="Inicio"
+        descripcion="Resumen del uso de la plataforma y de la capacidad de soporte."
+      />
 
       <Box>
         <Typography variant="h2" sx={{ mb: 1.5 }}>
