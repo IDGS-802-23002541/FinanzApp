@@ -3,13 +3,15 @@ import { api } from '../../services/apiClient.js'
 
 export async function listarTransacciones(
   idCartera,
-  { pagina = 1, porPagina = 20, periodoId } = {},
+  { pagina = 1, porPagina = 20, periodoId, desde, hasta } = {},
 ) {
   const query = new URLSearchParams({
     pagina: String(pagina),
     porPagina: String(porPagina),
   })
   if (periodoId) query.append('periodoId', String(periodoId))
+  if (desde) query.append('desde', desde)
+  if (hasta) query.append('hasta', hasta)
   const { data } = await api.get(
     `/carteras/${idCartera}/transacciones?${query}`,
   )

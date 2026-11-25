@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { obtenerCartera } from '../api.js'
 import { IconoFlechaIzquierda } from '../../../components/ui/Iconos.jsx'
+import { fechasDePreset } from '../../../utils/formato.js'
 import { aparienciaCategoria } from '../aparienciaCategoria.js'
 import DialogoNuevaTransaccion from '../components/DialogoNuevaTransaccion.jsx'
 
@@ -34,6 +35,7 @@ function DetalleCartera() {
   const [error, setError] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [recarga, setRecarga] = useState(0)
+  const [rango, setRango] = useState('todo')
   const primeraCarga = useRef(true)
 
   useEffect(() => {
@@ -44,7 +46,8 @@ function DetalleCartera() {
       setError('')
 
       try {
-        const datos = await obtenerCartera(id)
+        const fechas = fechasDePreset(rango) ?? {}
+        const datos = await obtenerCartera(id, fechas)
         if (vigente) setCartera(datos)
       } catch (err) {
         if (vigente) setError(err.message)
@@ -60,7 +63,7 @@ function DetalleCartera() {
     return () => {
       vigente = false
     }
-  }, [id, recarga])
+  }, [id, recarga, rango])
 
   if (cargando) {
     return (
@@ -180,7 +183,16 @@ function DetalleCartera() {
         ))}
       </Tabs>
 
-      <Outlet context={{ cartera, id, recarga, recargar }} />
+      <Outlet
+        context={{
+          cartera,
+          id,
+          recarga,
+          recargar,
+          rango,
+          cambiarRango: setRango,
+        }}
+      />
 
       {modalAbierto && (
         <DialogoNuevaTransaccion

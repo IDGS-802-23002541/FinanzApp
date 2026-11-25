@@ -22,8 +22,9 @@ import {
   IconoEstrella,
   IconoPersonas,
 } from '../../../components/ui/Iconos.jsx'
+import { fechasDePreset } from '../../../utils/formato.js'
 
-// Opciones del filtro por periodo del resumen (vista previa, aún sin conectar).
+// Opciones del filtro por periodo del resumen.
 const RANGOS = [
   { valor: 'mes', texto: 'Este mes' },
   { valor: '3m', texto: 'Últimos 3 meses' },
@@ -32,7 +33,7 @@ const RANGOS = [
 ]
 
 function DetalleResumen() {
-  const { cartera, id, recarga } = useOutletContext()
+  const { cartera, id, recarga, rango, cambiarRango } = useOutletContext()
   const [ultimas, setUltimas] = useState([])
   const [errorUltimas, setErrorUltimas] = useState('')
 
@@ -42,7 +43,11 @@ function DetalleResumen() {
     const cargar = async () => {
       setErrorUltimas('')
       try {
-        const datos = await listarTransacciones(id, { porPagina: 5 })
+        const fechas = fechasDePreset(rango) ?? {}
+        const datos = await listarTransacciones(id, {
+          porPagina: 5,
+          ...fechas,
+        })
         if (vigente) setUltimas(datos?.items ?? [])
       } catch (err) {
         if (vigente) setErrorUltimas(err.message)
@@ -53,7 +58,7 @@ function DetalleResumen() {
     return () => {
       vigente = false
     }
-  }, [id, recarga])
+  }, [id, recarga, rango])
 
   if (!cartera) return null
 
@@ -75,8 +80,6 @@ function DetalleResumen() {
 
   return (
     <Stack spacing={3}>
-      {/* Vista previa del filtro por periodo. El rango de fechas se conectará
-          cuando el backend lo calcule en el resumen; por eso aún va deshabilitado. */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         sx={{
@@ -89,25 +92,25 @@ function DetalleResumen() {
           <Typography
             sx={{ fontSize: '0.875rem', color: 'var(--color-texto-secundario)' }}
           >
-            Resumen de la cartera completa
+            Resumen por periodo
           </Typography>
           <Typography
             sx={{ fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
           >
-            El filtro por periodo se activa al conectar el rango de fechas.
+            Elige el rango para recalcular el resumen y las transacciones.
           </Typography>
         </Box>
         <TextField
           select
           size="small"
           label="Periodo"
-          defaultValue="todo"
-          disabled
+          value={rango}
+          onChange={(evento) => cambiarRango(evento.target.value)}
           sx={{ width: { xs: '100%', sm: 250 } }}
         >
-          {RANGOS.map((rango) => (
-            <MenuItem key={rango.valor} value={rango.valor}>
-              {rango.texto}
+          {RANGOS.map((opcion) => (
+            <MenuItem key={opcion.valor} value={opcion.valor}>
+              {opcion.texto}
             </MenuItem>
           ))}
         </TextField>

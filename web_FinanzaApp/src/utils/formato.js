@@ -23,3 +23,26 @@ export function formatearFecha(fecha) {
   }
   return formateadorFecha.format(new Date(fecha))
 }
+
+function fechaISO(fecha) {
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}-${dia}`
+}
+
+// Traduce un preset de periodo a un rango de fechas local (YYYY-MM-DD).
+// Devuelve null para "todo" o "personalizado".
+export function fechasDePreset(preset) {
+  if (preset === 'todo' || preset === 'personalizado') return null
+
+  const hoy = new Date()
+  const hasta = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  const desde = new Date(hasta)
+
+  if (preset === 'mes') desde.setDate(desde.getDate() - 30)
+  else if (preset === '3m') desde.setMonth(desde.getMonth() - 3)
+  else if (preset === '6m') desde.setMonth(desde.getMonth() - 6)
+  else return null
+
+  return { desde: fechaISO(desde), hasta: fechaISO(hasta) }
+}

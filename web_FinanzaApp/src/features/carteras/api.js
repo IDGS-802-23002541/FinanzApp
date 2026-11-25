@@ -80,8 +80,13 @@ function aVistaDetalle(cartera) {
   }
 }
 
-export async function obtenerCartera(id) {
-  const { data } = await api.get(`/carteras/${id}`)
+export async function obtenerCartera(id, { desde, hasta } = {}) {
+  const params = new URLSearchParams()
+  if (desde) params.append('desde', desde)
+  if (hasta) params.append('hasta', hasta)
+  const query = params.toString()
+
+  const { data } = await api.get(`/carteras/${id}${query ? `?${query}` : ''}`)
   return aVistaDetalle(data)
 }
 

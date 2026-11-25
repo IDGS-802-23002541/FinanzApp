@@ -5,13 +5,24 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
   Pagination,
   Paper,
+  Snackbar,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
-import { listarTrabajadores } from '../api.js'
+import {
+  editarTrabajador,
+  eliminarTrabajador,
+  listarTrabajadores,
+} from '../api.js'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
+import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
 import { IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
@@ -37,6 +48,13 @@ function Trabajadores() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
+  const [editando, setEditando] = useState(null)
+  const [formulario, setFormulario] = useState(null)
+  const [errorFormulario, setErrorFormulario] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [borrando, setBorrando] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [aviso, setAviso] = useState('')
 
   useEffect(() => {
     let vigente = true
@@ -82,6 +100,65 @@ function Trabajadores() {
     document.addEventListener('visibilitychange', alVolver)
     return () => document.removeEventListener('visibilitychange', alVolver)
   }, [])
+
+  const abrirEdicion = (trabajador) => {
+    setEditando(trabajador)
+    setErrorFormulario('')
+    setFormulario({
+      nombreUsuario: trabajador.nombreUsuario ?? '',
+      apaterno: trabajador.apaterno ?? '',
+      amaterno: trabajador.amaterno ?? '',
+      correo: trabajador.correo ?? '',
+    })
+  }
+
+  const cambiarCampo = (campo) => (evento) => {
+    setErrorFormulario('')
+    setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
+  }
+
+  const guardarEdicion = async () => {
+    if (!editando || guardando) return
+
+    if (
+      !formulario.nombreUsuario.trim() ||
+      !formulario.apaterno.trim() ||
+      !formulario.correo.trim()
+    ) {
+      setErrorFormulario('Completa nombre, apellido paterno y correo.')
+      return
+    }
+
+    setGuardando(true)
+    setErrorFormulario('')
+    try {
+      await editarTrabajador(editando.idUsuario, formulario)
+      setEditando(null)
+      setAviso('Trabajador actualizado correctamente.')
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorFormulario(err.message)
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const confirmarBaja = async () => {
+    if (!borrando || eliminando) return
+
+    setEliminando(true)
+    try {
+      await eliminarTrabajador(borrando.idUsuario)
+      setBorrando(null)
+      setAviso('Trabajador dado de baja correctamente.')
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setError(err.message)
+      setBorrando(null)
+    } finally {
+      setEliminando(false)
+    }
+  }
 
   return (
     <Stack spacing={3}>
@@ -145,18 +222,31 @@ function Trabajadores() {
                       {trabajador.correo}
                     </Typography>
                   </Box>
-                  <Chip
-                    label={
-                      ESTADOS_TRABAJADOR[trabajador.estatus] ??
-                      trabajador.estatus
-                    }
-                    size="small"
-                    sx={{
-                      backgroundColor: 'var(--color-superficie-suave)',
-                      color: 'var(--color-texto-secundario)',
-                      fontWeight: 700,
-                    }}
-                  />
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <Chip
+                      label={
+                        ESTADOS_TRABAJADOR[trabajador.estatus] ??
+                        trabajador.estatus
+                      }
+                      size="small"
+                      sx={{
+                        backgroundColor: 'var(--color-superficie-suave)',
+                        color: 'var(--color-texto-secundario)',
+                        fontWeight: 700,
+                      }}
+                    />
+                    <Button size="small" onClick={() => abrirEdicion(trabajador)}>
+                      Editar
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => setBorrando(trabajador)}
+                      disabled={trabajador.estatus === 'INACTIVO'}
+                    >
+                      Eliminar
+                    </Button>
+                  </Stack>
                 </Stack>
 
                 <Box sx={{ mt: 1.5 }}>
@@ -221,6 +311,102 @@ function Trabajadores() {
           sx={{ alignSelf: 'center' }}
         />
       )}
+
+      <Dialog
+        open={Boolean(editando)}
+        onClose={() => (guardando ? null : setEditando(null))}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogoTitulo alCerrar={() => !guardando && setEditando(null)}>
+          Editar trabajador
+        </DialogoTitulo>
+        <DialogContent dividers>
+          {formulario && (
+            <Stack spacing={2}>
+              <TextField
+                label="Nombre"
+                size="small"
+                value={formulario.nombreUsuario}
+                onChange={cambiarCampo('nombreUsuario')}
+                slotProps={{ htmlInput: { maxLength: 80 } }}
+              />
+              <TextField
+                label="Apellido paterno"
+                size="small"
+                value={formulario.apaterno}
+                onChange={cambiarCampo('apaterno')}
+                slotProps={{ htmlInput: { maxLength: 80 } }}
+              />
+              <TextField
+                label="Apellido materno"
+                size="small"
+                value={formulario.amaterno}
+                onChange={cambiarCampo('amaterno')}
+                slotProps={{ htmlInput: { maxLength: 80 } }}
+              />
+              <TextField
+                label="Correo electrónico"
+                type="email"
+                size="small"
+                value={formulario.correo}
+                onChange={cambiarCampo('correo')}
+                slotProps={{ htmlInput: { maxLength: 254 } }}
+              />
+              {errorFormulario && <Alert severity="error">{errorFormulario}</Alert>}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditando(null)} disabled={guardando}>
+            Cancelar
+          </Button>
+          <Button variant="contained" onClick={guardarEdicion} disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(borrando)}
+        onClose={() => (eliminando ? null : setBorrando(null))}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogoTitulo alCerrar={() => !eliminando && setBorrando(null)}>
+          Dar de baja trabajador
+        </DialogoTitulo>
+        <DialogContent>
+          <DialogContentText>
+            ¿Dar de baja a {borrando?.nombre}? Su cuenta quedará inactiva y no
+            podrá iniciar sesión.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBorrando(null)} disabled={eliminando}>
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={confirmarBaja}
+            disabled={eliminando}
+          >
+            {eliminando ? 'Dando de baja…' : 'Dar de baja'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={Boolean(aviso)}
+        autoHideDuration={4000}
+        onClose={() => setAviso('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" variant="filled" onClose={() => setAviso('')}>
+          {aviso}
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

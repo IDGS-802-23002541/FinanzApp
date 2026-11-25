@@ -26,6 +26,7 @@ import {
 import EstadoTicket from '../../soporte/components/EstadoTicket.jsx'
 import {
   asignarTicket,
+  catalogarTicket,
   cerrarTicket,
   listarTickets,
   listarTrabajadores,
@@ -130,6 +131,10 @@ function TicketsAdmin() {
   const [cerrando, setCerrando] = useState(false)
   const [errorCierre, setErrorCierre] = useState('')
   const [avisoCierre, setAvisoCierre] = useState('')
+  const [catalogo, setCatalogo] = useState(null)
+  const [guardandoCatalogo, setGuardandoCatalogo] = useState(false)
+  const [errorCatalogo, setErrorCatalogo] = useState('')
+  const [avisoCatalogo, setAvisoCatalogo] = useState('')
 
   useEffect(() => {
     let vigente = true
@@ -218,6 +223,11 @@ function TicketsAdmin() {
   const esAdmin = usuario?.rol === ROLES.ADMIN
   // HU-12.2: un trabajador solo toma tickets sin responsable.
   const puedeTomar = !seleccionado?.asignado || asignadoAmi || esAdmin
+  // Catálogo local con los valores actuales del ticket seleccionado.
+  const catalogoActual = catalogo ?? {
+    categoria: seleccionado?.categoria ?? 'GENERAL',
+    prioridad: seleccionado?.prioridad ?? 'MEDIA',
+  }
 
   const destacarDetalle = () => {
     setResaltarDetalle(false)
@@ -232,6 +242,9 @@ function TicketsAdmin() {
     setAvisoAsignacion('')
     setErrorCierre('')
     setAvisoCierre('')
+    setCatalogo(null)
+    setErrorCatalogo('')
+    setAvisoCatalogo('')
     destacarDetalle()
 
     if (idTicket === seleccionadoId) {
@@ -279,6 +292,24 @@ function TicketsAdmin() {
       if (err.status === 409) setRecarga((actual) => actual + 1)
     } finally {
       setAsignando(false)
+    }
+  }
+
+  const guardarCatalogo = async () => {
+    if (!seleccionado || guardandoCatalogo || cerrado) return
+
+    setGuardandoCatalogo(true)
+    setErrorCatalogo('')
+    setAvisoCatalogo('')
+    try {
+      await catalogarTicket(seleccionado.idTicket, catalogoActual)
+      setCatalogo(null)
+      setAvisoCatalogo('Ticket catalogado correctamente.')
+      setRecarga((actual) => actual + 1)
+    } catch (err) {
+      setErrorCatalogo(err.message)
+    } finally {
+      setGuardandoCatalogo(false)
     }
   }
 
@@ -728,6 +759,78 @@ function TicketsAdmin() {
           >
             {seleccionado.descripcion}
           </Typography>
+
+          {!cerrado && (
+            <Box sx={{ mt: 2 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1.5}
+                sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Categoría"
+                  value={catalogoActual.categoria}
+                  onChange={(evento) =>
+                    setCatalogo((actual) => ({
+                      ...actual,
+                      categoria: evento.target.value,
+                    }))
+                  }
+                  disabled={guardandoCatalogo}
+                  sx={{ minWidth: 180 }}
+                >
+                  {Object.entries(CATEGORIAS).map(([valor, texto]) => (
+                    <MenuItem key={valor} value={valor}>
+                      {texto}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  size="small"
+                  label="Prioridad"
+                  value={catalogoActual.prioridad}
+                  onChange={(evento) =>
+                    setCatalogo((actual) => ({
+                      ...actual,
+                      prioridad: evento.target.value,
+                    }))
+                  }
+                  disabled={guardandoCatalogo}
+                  sx={{ minWidth: 160 }}
+                >
+                  {Object.entries(PRIORIDADES).map(([valor, texto]) => (
+                    <MenuItem key={valor} value={valor}>
+                      {texto}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={guardarCatalogo}
+                  disabled={guardandoCatalogo}
+                  sx={sxBoton}
+                >
+                  {guardandoCatalogo ? 'Guardando…' : 'Guardar catálogo'}
+                </Button>
+              </Stack>
+              {errorCatalogo && (
+                <Alert severity="error" sx={{ mt: 1.5 }}>
+                  {errorCatalogo}
+                </Alert>
+              )}
+              {avisoCatalogo && (
+                <Alert severity="success" sx={{ mt: 1.5 }}>
+                  {avisoCatalogo}
+                </Alert>
+              )}
+            </Box>
+          )}
 
           <Box
             sx={{

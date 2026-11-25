@@ -10,11 +10,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { filtrarCarteras, listarPeriodos } from '../../carteras/api.js'
+import { filtrarCarteras } from '../../carteras/api.js'
 import GraficaBarras from '../../carteras/components/GraficaBarras.jsx'
 import GraficaDona from '../../carteras/components/GraficaDona.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
-import { formatearMonto } from '../../../utils/formato.js'
+import { fechasDePreset, formatearMonto } from '../../../utils/formato.js'
 import { descargarReporte, obtenerVistaPreviaReporte } from '../api.js'
 
 const TIPOS = [
@@ -25,10 +25,17 @@ const TIPOS = [
   { valor: 'OTRO', etiqueta: 'Otro' },
 ]
 
+const PRESETS = [
+  { valor: 'mes', etiqueta: 'Último mes' },
+  { valor: '3m', etiqueta: 'Últimos 3 meses' },
+  { valor: '6m', etiqueta: 'Últimos 6 meses' },
+  { valor: 'personalizado', etiqueta: 'Personalizado' },
+]
+
 const FILTROS_INICIALES = {
-  carteraId: '',
   tipo: '',
-  periodoId: '',
+  carteraId: '',
+  preset: 'mes',
   fechaInicio: '',
   fechaFin: '',
 }
@@ -57,7 +64,6 @@ function TarjetaIndicador({ etiqueta, valor }) {
 
 function Reportes() {
   const [carteras, setCarteras] = useState([])
-  const [periodos, setPeriodos] = useState([])
   const [filtros, setFiltros] = useState(FILTROS_INICIALES)
   const [reporte, setReporte] = useState(null)
   const [cargando, setCargando] = useState(false)
@@ -89,29 +95,27 @@ function Reportes() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!filtros.carteraId) return undefined
+  const carterasFiltradas = filtros.tipo
+    ? carteras.filter((cartera) => cartera.tipo === filtros.tipo)
+    : carteras
 
-    let vigente = true
-    listarPeriodos(filtros.carteraId)
-      .then((lista) => {
-        if (vigente) setPeriodos(lista)
-      })
-      .catch(() => {
-        if (vigente) setPeriodos([])
-      })
-
-    return () => {
-      vigente = false
+  const conFechas = () => {
+    const rango = fechasDePreset(filtros.preset)
+    return {
+      ...filtros,
+      fechaInicio: rango?.desde ?? '',
+      fechaFin: rango?.hasta ?? '',
     }
-  }, [filtros.carteraId])
+  }
 
   const cargarVistaPrevia = async () => {
+    if (!filtros.carteraId) return
+
     setCargando(true)
     setError('')
 
     try {
-      const datos = await obtenerVistaPreviaReporte(filtros)
+      const datos = await obtenerVistaPreviaReporte(conFechas())
       setReporte(datos)
     } catch (err) {
       setError(err.message)
@@ -123,12 +127,21 @@ function Reportes() {
 
   const cambiarFiltro = (campo) => (evento) => {
     const valor = evento.target.value
-    if (campo === 'carteraId') setPeriodos([])
-    setFiltros((actuales) => ({
-      ...actuales,
-      [campo]: valor,
-      ...(campo === 'carteraId' ? { periodoId: '' } : {}),
-    }))
+    setReporte(null)
+    setError('')
+    setFiltros((actual) => {
+      if (campo === 'tipo') {
+        return {
+          ...actual,
+          tipo: valor,
+          carteraId: '',
+          preset: 'mes',
+          fechaInicio: '',
+          fechaFin: '',
+        }
+      }
+      return { ...actual, [campo]: valor }
+    })
   }
 
   const exportar = async (formato) => {
@@ -136,7 +149,7 @@ function Reportes() {
     setError('')
 
     try {
-      await descargarReporte(filtros, formato)
+      await descargarReporte(conFechas(), formato)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -160,7 +173,7 @@ function Reportes() {
     <Stack spacing={3}>
       <EncabezadoPagina
         titulo="Reportes"
-        descripcion="Filtra tus carteras, revisa la vista previa y descarga el reporte en CSV o PDF."
+        descripcion="Elige tipo, cartera y periodo; revisa la vista previa y descarga en CSV o PDF."
       />
       <Paper
         elevation={0}
@@ -180,21 +193,6 @@ function Reportes() {
           >
             <TextField
               select
-              label="Cartera"
-              value={filtros.carteraId}
-              onChange={cambiarFiltro('carteraId')}
-              size="small"
-            >
-              <MenuItem value="">Todas mis carteras</MenuItem>
-              {carteras.map((cartera) => (
-                <MenuItem key={cartera.id} value={cartera.id}>
-                  {cartera.nombre}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
               label="Tipo"
               value={filtros.tipo}
               onChange={cambiarFiltro('tipo')}
@@ -209,41 +207,65 @@ function Reportes() {
 
             <TextField
               select
-              label="Periodo"
-              value={filtros.periodoId}
-              onChange={cambiarFiltro('periodoId')}
+              label="Cartera"
+              value={filtros.carteraId}
+              onChange={cambiarFiltro('carteraId')}
               size="small"
-              disabled={!filtros.carteraId || periodos.length === 0}
+              helperText={
+                carterasFiltradas.length === 0
+                  ? 'No hay carteras de este tipo.'
+                  : 'Elige una cartera.'
+              }
             >
-              <MenuItem value="">Sin periodo</MenuItem>
-              {periodos.map((periodo) => (
-                <MenuItem key={periodo.idPeriodo} value={periodo.idPeriodo}>
-                  {periodo.nombre}
+              {carterasFiltradas.map((cartera) => (
+                <MenuItem key={cartera.id} value={cartera.id}>
+                  {cartera.nombre}
                 </MenuItem>
               ))}
             </TextField>
 
             <TextField
-              label="Desde"
-              type="date"
-              value={filtros.fechaInicio}
-              onChange={cambiarFiltro('fechaInicio')}
+              select
+              label="Periodo"
+              value={filtros.preset}
+              onChange={cambiarFiltro('preset')}
               size="small"
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            >
+              {PRESETS.map((preset) => (
+                <MenuItem key={preset.valor} value={preset.valor}>
+                  {preset.etiqueta}
+                </MenuItem>
+              ))}
+            </TextField>
 
-            <TextField
-              label="Hasta"
-              type="date"
-              value={filtros.fechaFin}
-              onChange={cambiarFiltro('fechaFin')}
-              size="small"
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            {filtros.preset === 'personalizado' && (
+              <>
+                <TextField
+                  label="Desde"
+                  type="date"
+                  value={filtros.fechaInicio}
+                  onChange={cambiarFiltro('fechaInicio')}
+                  size="small"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+                <TextField
+                  label="Hasta"
+                  type="date"
+                  value={filtros.fechaFin}
+                  onChange={cambiarFiltro('fechaFin')}
+                  size="small"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              </>
+            )}
           </Box>
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button variant="contained" onClick={cargarVistaPrevia} disabled={cargando}>
+            <Button
+              variant="contained"
+              onClick={cargarVistaPrevia}
+              disabled={cargando || !filtros.carteraId}
+            >
               {cargando ? 'Consultando...' : 'Actualizar vista previa'}
             </Button>
             <Button
@@ -268,7 +290,9 @@ function Reportes() {
 
       {!cargando && !reporte && !error && (
         <Alert severity="info">
-          Selecciona los filtros y presiona "Actualizar vista previa".
+          {filtros.carteraId
+            ? 'Presiona "Actualizar vista previa" para consultar el reporte.'
+            : 'Selecciona una cartera para generar el reporte.'}
         </Alert>
       )}
 

@@ -60,6 +60,32 @@ export async function listarTrabajadores({ pagina = 1, porPagina = 10 } = {}) {
   return { trabajadores: data?.trabajadores ?? [], paginacion }
 }
 
+export async function editarTrabajador(idUsuario, datos) {
+  const { data } = await api.put(`/admin/trabajadores/${idUsuario}`, {
+    nombreUsuario: datos.nombreUsuario.trim(),
+    apaterno: datos.apaterno.trim(),
+    amaterno: datos.amaterno.trim(),
+    correo: datos.correo.trim().toLowerCase(),
+  })
+  return data.trabajador
+}
+
+export async function eliminarTrabajador(idUsuario) {
+  await api.delete(`/admin/trabajadores/${idUsuario}`)
+}
+
+export async function catalogarTicket(idTicket, { categoria, prioridad }) {
+  const cuerpo = {}
+  if (categoria) cuerpo.categoria = categoria
+  if (prioridad) cuerpo.prioridad = prioridad
+
+  const { data } = await api.post(
+    `/soporte/tickets/${idTicket}/catalogar`,
+    cuerpo,
+  )
+  return data.ticket
+}
+
 export async function asignarTicket(
   idTicket,
   { trabajadorId, idAsignacionActual } = {},
