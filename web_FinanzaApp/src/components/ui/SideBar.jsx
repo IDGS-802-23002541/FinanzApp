@@ -35,6 +35,15 @@ export default function SideBar({ enlaces = [], enDrawer = false, onNavegar }) {
     navegar('/login', { replace: true })
   }
 
+  // El recuadro de cuenta muestra nombre y apellidos, no solo el nombre.
+  const nombreVisible = [
+    usuario?.nombreUsuario,
+    usuario?.apaterno,
+    usuario?.amaterno,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <Box
       component="aside"
@@ -142,8 +151,12 @@ export default function SideBar({ enlaces = [], enDrawer = false, onNavegar }) {
             imagenUsuario={usuario?.foto}
           />
           <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
-              {usuario?.nombreUsuario}
+            <Typography
+              noWrap
+              title={nombreVisible}
+              sx={{ fontSize: '0.8125rem', fontWeight: 700 }}
+            >
+              {nombreVisible}
             </Typography>
             <Typography
               sx={{

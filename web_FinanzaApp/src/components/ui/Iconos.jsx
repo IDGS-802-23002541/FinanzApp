@@ -281,23 +281,26 @@ export function IconoCalendario(props) {
   )
 }
 
-// Avatar del usuario en la barra lateral: foto si existe, si no las iniciales.
+// Burbuja de una cuenta: foto si existe, si no la inicial o las iniciales.
+// Es el único componente de avatar del proyecto (barra lateral, aportantes,
+// conversaciones y contribuyentes).
 export function AvatarUsuario({ imagenUsuario, nombreUsuario, iniciales, tamano = 36 }) {
   const texto =
     iniciales ??
-    (nombreUsuario ? nombreUsuario.charAt(0).toUpperCase() : '')
+    (nombreUsuario ? nombreUsuario.trim().charAt(0).toUpperCase() : '')
 
   return (
     <Avatar
       src={imagenUsuario}
-      alt="Avatar del usuario"
+      alt=""
       sx={{
         width: tamano,
         height: tamano,
-        fontSize: '0.875rem',
+        fontSize: tamano <= 28 ? '0.6875rem' : '0.875rem',
         fontWeight: 700,
         backgroundColor: 'var(--color-primario)',
         color: 'var(--color-sobre-primario)',
+        flexShrink: 0,
       }}
     >
       {texto}
