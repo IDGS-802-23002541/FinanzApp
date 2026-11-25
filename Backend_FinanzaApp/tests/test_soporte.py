@@ -215,6 +215,41 @@ def test_asignar_permite_si_la_asignacion_actual_coincide(monkeypatch):
     assert payload["data"]["asignacion"]["trabajadorId"] == 9
 
 
+def test_trabajador_no_puede_tomar_ticket_ajeno(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR", id_usuario=8)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 8, "idAsignacionActual": 3}
+    )
+
+    assert status == 409
+    assert payload["ok"] is False
+    assert "responsable" in payload["mensaje"]
+
+
+def test_admin_puede_reasignar_ticket_ajeno(monkeypatch):
+    _como(monkeypatch, "ADMIN", id_usuario=1)
+    monkeypatch.setattr(
+        soporte_service, "_buscar_ticket", lambda _id: (TicketFalso(), None)
+    )
+    monkeypatch.setattr(
+        soporte_service.db, "session", SesionAsignacionFalsa(AsignacionFalso())
+    )
+
+    payload, status = soporte_service.asignar_ticket(
+        1, {"trabajadorId": 9, "idAsignacionActual": 3}
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+
+
 def test_cliente_no_puede_asignar(monkeypatch):
     _como(monkeypatch, "CLIENTE")
     payload, status = soporte_service.asignar_ticket(1, {})

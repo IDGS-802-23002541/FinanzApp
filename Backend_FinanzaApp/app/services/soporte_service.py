@@ -317,6 +317,12 @@ def asignar_ticket(id_ticket, datos):
     if error:
         return error
 
+    # CA2: solo el admin elige a otro trabajador; un trabajador solo se toma
+    # el ticket para sí mismo.
+    es_admin = current_user.rolGlobal == "ADMIN"
+    if not es_admin:
+        trabajador_id = current_user.idUsuario
+
     ahora = seguridad.ahora_utc()
     try:
         trabajador = db.session.get(Usuario, trabajador_id)
@@ -336,6 +342,17 @@ def asignar_ticket(id_ticket, datos):
                 AsignacionTicket.esActual == db.true(),
             )
         ).scalar_one_or_none()
+
+        # CA3: si ya tiene responsable, otro trabajador no puede tomarlo.
+        if (
+            not es_admin
+            and actual is not None
+            and actual.trabajadorId != current_user.idUsuario
+        ):
+            return {
+                "ok": False,
+                "mensaje": "El ticket ya tiene un responsable asignado.",
+            }, 409
 
         if validar_actual:
             actual_id = actual.idAsignacion if actual is not None else None
