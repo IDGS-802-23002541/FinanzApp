@@ -14,7 +14,7 @@ function Tarjeta({ titulo, subtitulo, avatar, children }) {
       sx={{
         backgroundColor: 'var(--color-superficie)',
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
         p: 2.5,
       }}

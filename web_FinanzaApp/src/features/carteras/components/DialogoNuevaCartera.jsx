@@ -10,6 +10,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { admitePeriodo, crearCartera, editarCartera } from '../api.js'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
@@ -79,6 +81,9 @@ function validar({ nombre, categoria, presupuesto, fechaInicio, fechaFin }) {
 // Formulario de crear/editar cartera (HU-03.1 y HU-04.5). Se monta al abrir el
 // modal; si recibe cartera precarga los datos y guarda contra la API.
 function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
+  const tema = useTheme()
+  // En pantallas chicas el formulario ocupa toda la pantalla.
+  const pantallaChica = useMediaQuery(tema.breakpoints.down('sm'))
   const esEdicion = Boolean(cartera)
   const [formulario, setFormulario] = useState(() => valoresIniciales(cartera))
   const [errores, setErrores] = useState({})
@@ -134,7 +139,7 @@ function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
   }
 
   return (
-    <Dialog open onClose={onCerrar} maxWidth="md" fullWidth>
+    <Dialog open onClose={onCerrar} maxWidth="md" fullWidth fullScreen={pantallaChica}>
       <Box component="form" noValidate onSubmit={enviar}>
         <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar cartera' : 'Nueva cartera'}

@@ -97,7 +97,7 @@ function ZonaRiesgo() {
         sx={{
           borderLeft: '3px solid var(--color-alerta)',
           backgroundColor: 'var(--color-superficie-suave)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radio-sm)',
           p: 1.5,
         }}
       >

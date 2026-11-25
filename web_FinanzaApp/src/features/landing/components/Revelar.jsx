@@ -32,7 +32,8 @@ export default function Revelar({ children, delay = 0, distancia = 24, sx, ...pr
         opacity: visible ? 1 : 0,
         transform: visible ? 'none' : `translateY(${distancia}px)`,
         transition: `opacity 0.7s ease ${delay}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-        willChange: 'opacity, transform',
+        // Solo mientras falta revelarse: mantenerlo siempre cuesta memoria en móvil.
+        willChange: visible ? 'auto' : 'opacity, transform',
         ...sx,
       }}
       {...props}

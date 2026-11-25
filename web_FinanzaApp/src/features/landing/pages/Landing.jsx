@@ -67,7 +67,7 @@ const sxTarjeta = {
   p: { xs: 2.5, md: 3 },
   backgroundColor: 'var(--color-superficie)',
   border: '1px solid var(--color-borde)',
-  borderRadius: '14px',
+  borderRadius: 'var(--radio-lg)',
   transition: 'border-color 0.2s ease, transform 0.2s ease',
   '&:hover': {
     borderColor: 'var(--color-borde-fuerte)',
@@ -309,7 +309,7 @@ function SimulacionCartera() {
         backgroundColor: BLANCO,
         color: PETROLEO,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
       }}
     >
@@ -318,7 +318,7 @@ function SimulacionCartera() {
           sx={{
             width: 44,
             height: 44,
-            borderRadius: '12px',
+            borderRadius: 'var(--radio-md)',
             backgroundColor: 'var(--paleta-fondo)',
             color: PETROLEO,
             display: 'flex',
@@ -349,7 +349,7 @@ function SimulacionCartera() {
         sx={{
           mt: 2.5,
           p: 2,
-          borderRadius: '12px',
+          borderRadius: 'var(--radio-md)',
           backgroundColor: 'var(--paleta-fondo)',
         }}
       >
@@ -409,7 +409,7 @@ function MockNavegador() {
       sx={{
         mt: 3,
         border: '1px solid var(--color-borde)',
-        borderRadius: '12px',
+        borderRadius: 'var(--radio-md)',
         backgroundColor: 'var(--color-superficie)',
         overflow: 'hidden',
       }}
@@ -457,7 +457,7 @@ function MockNavegador() {
             sx={{
               flex: 1,
               height: 8,
-              borderRadius: '999px',
+              borderRadius: 'var(--radio-pill)',
               backgroundColor: 'var(--color-superficie-suave)',
             }}
           />
@@ -465,7 +465,7 @@ function MockNavegador() {
             sx={{
               width: 40,
               height: 8,
-              borderRadius: '999px',
+              borderRadius: 'var(--radio-pill)',
               backgroundColor: 'var(--color-seleccion)',
             }}
           />
@@ -492,7 +492,7 @@ function MockTelefono() {
         sx={{
           width: 48,
           height: 5,
-          borderRadius: '999px',
+          borderRadius: 'var(--radio-pill)',
           backgroundColor: 'var(--color-borde)',
           mx: 'auto',
           mb: 1.5,
@@ -501,7 +501,7 @@ function MockTelefono() {
       <Box
         sx={{
           p: 1.25,
-          borderRadius: '10px',
+          borderRadius: 'var(--radio-md)',
           backgroundColor: 'var(--color-superficie-suave)',
         }}
       >
@@ -962,7 +962,7 @@ function Landing() {
                     gap: 1,
                     px: 1.5,
                     py: 0.75,
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radio-md)',
                     backgroundColor: BLANCO,
                     color: PETROLEO,
                     border: '1px solid var(--color-borde)',
@@ -1009,7 +1009,7 @@ function Landing() {
                   sx={{
                     width: 44,
                     height: 44,
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radio-md)',
                     backgroundColor: 'var(--color-seleccion)',
                     color: 'var(--color-seleccion-texto)',
                     display: 'flex',
@@ -1273,7 +1273,7 @@ function Landing() {
                 <Tarjeta>
                   <Box
                     sx={{
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radio-md)',
                       backgroundColor: 'var(--color-superficie-suave)',
                       p: 1,
                     }}
@@ -1385,7 +1385,7 @@ function Landing() {
               backgroundColor: PETROLEO,
               color: BLANCO,
               border: `1px solid ${BORDE_SOBRE_OSCURO}`,
-              borderRadius: '20px',
+              borderRadius: 'var(--radio-lg)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',

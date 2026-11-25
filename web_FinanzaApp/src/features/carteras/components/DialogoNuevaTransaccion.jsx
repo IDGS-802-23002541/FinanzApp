@@ -12,6 +12,8 @@ import{
     ToggleButton,
     ToggleButtonGroup,
     Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { crearTransaccion } from '../api.js'
 import { actualizarTransaccion } from '../../transacciones/api.js'
@@ -49,6 +51,8 @@ function validar({ tipo, monto, fecha, categoriaId }) {
 
 // formulario de ingreso/gasto (HU-05.1). Se monta limpio en cada apertura.
 function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion }) {
+  const tema = useTheme()
+  const pantallaChica = useMediaQuery(tema.breakpoints.down('sm'))
   const [formulario, setFormulario] = useState({
     tipo: transaccion?.tipo ?? 'GASTO',
     monto: transaccion?.monto != null ? String(transaccion.monto) : '',
@@ -108,7 +112,7 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
   }
 
   return (
-    <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
+    <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth fullScreen={pantallaChica}>
       <Box component="form" noValidate onSubmit={enviar}>
         <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar movimiento' : 'Nuevo movimiento'}

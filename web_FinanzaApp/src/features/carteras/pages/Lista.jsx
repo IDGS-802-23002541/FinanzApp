@@ -244,7 +244,7 @@ function ListaCarteras() {
           p: 0.75,
           display: 'flex',
           gap: 0.75,
-          borderRadius: '48px',
+          borderRadius: 'var(--radio-pill)',
           backgroundColor: 'var(--color-superficie-suave)',
         }}
       >
@@ -290,7 +290,7 @@ function ListaCarteras() {
                   sx={{
                     px: 1,
                     py: 0.25,
-                    borderRadius: '999px',
+                    borderRadius: 'var(--radio-pill)',
                     fontSize: '0.6875rem',
                     fontWeight: 800,
                     backgroundColor: activa
@@ -441,7 +441,7 @@ function ListaCarteras() {
               gap: 2,
               py: 6,
               border: '1px dashed var(--color-borde-fuerte)',
-              borderRadius: '16px',
+              borderRadius: 'var(--radio-lg)',
             }}
           >
             <Typography
@@ -537,7 +537,7 @@ function ListaCarteras() {
                 p: 1.5,
                 borderLeft: '3px solid var(--color-alerta)',
                 backgroundColor: 'var(--color-superficie-suave)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radio-sm)',
               }}
             >
               <Typography

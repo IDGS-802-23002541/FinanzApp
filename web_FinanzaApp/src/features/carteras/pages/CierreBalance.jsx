@@ -48,7 +48,7 @@ function TarjetaBalance({ etiqueta, valor, destacada = false }) {
         flex: 1,
         minWidth: 160,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
         backgroundColor: destacada
           ? 'var(--color-superficie-suave)'
           : 'var(--color-superficie)',
@@ -71,7 +71,7 @@ function TablaBalance({ titulo, columnas, filas, vacio }) {
       sx={{
         p: 2.5,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
       }}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -175,7 +175,7 @@ function CierreBalance() {
           sx={{
             p: 2.5,
             border: '1px solid var(--color-borde)',
-            borderRadius: '16px',
+            borderRadius: 'var(--radio-lg)',
           }}
         >
           <Stack spacing={2}>

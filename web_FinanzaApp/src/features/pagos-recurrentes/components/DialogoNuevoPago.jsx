@@ -75,6 +75,8 @@ function valoresIniciales(pago) {
 
 // Alta/edicion de pago recurrente (HU-07.1 y HU-07.2).
 function DialogoNuevoPago({ carteraId, pago, onCerrar, onGuardado }) {
+  const tema = useTheme()
+  const pantallaChica = useMediaQuery(tema.breakpoints.down('sm'))
   const esEdicion = Boolean(pago)
   const [formulario, setFormulario] = useState(() => valoresIniciales(pago))
   const [errores, setErrores] = useState({})
@@ -112,7 +114,7 @@ function DialogoNuevoPago({ carteraId, pago, onCerrar, onGuardado }) {
   }
 
   return (
-    <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth>
+    <Dialog open onClose={onCerrar} maxWidth="sm" fullWidth fullScreen={pantallaChica}>
       <Box component="form" noValidate onSubmit={enviar}>
         <DialogoTitulo alCerrar={onCerrar} sx={{ fontWeight: 700 }}>
           {esEdicion ? 'Editar pago recurrente' : 'Nuevo pago recurrente'}

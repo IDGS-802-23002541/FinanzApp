@@ -42,7 +42,7 @@ function TarjetaIndicador({ etiqueta, valor }) {
         flex: 1,
         minWidth: 150,
         border: '1px solid var(--color-borde)',
-        borderRadius: '16px',
+        borderRadius: 'var(--radio-lg)',
       }}
     >
       <Typography variant="caption" sx={{ color: 'var(--color-texto-terciario)' }}>
@@ -167,7 +167,7 @@ function Reportes() {
         sx={{
           p: 2.5,
           border: '1px solid var(--color-borde)',
-          borderRadius: '16px',
+          borderRadius: 'var(--radio-lg)',
         }}
       >
         <Stack spacing={2}>
