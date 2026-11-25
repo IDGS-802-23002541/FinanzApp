@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" width="640" height="180" fill="none">
+  
+  <circle cx="96" cy="54" r="24" fill="#F9D857" stroke="#F4C430" stroke-width="4" />
+  
+  <circle cx="72" cy="64" r="24" fill="#F4C430" stroke="#E0AD1B" stroke-width="4" />
+
+  
+  <path d="M24 72C24 63.1634 31.1634 56 40 56H122C130.837 56 138 63.1634 138 72V132C138 143.046 129.046 152 118 152H44C32.9543 152 24 143.046 24 132V72Z" fill="#173B45" />
+  
+  
+  <path d="M34 64H128" stroke="#F8F3EF" stroke-width="5" stroke-linecap="round" />
+
+  
+  <rect x="106" y="92" width="40" height="28" rx="14" fill="#173B45" stroke="#F8F3EF" stroke-width="5" />
+  <circle cx="120" cy="106" r="4.5" fill="#F8F3EF" />
+
+  
+  <text x="172" y="122" fill="#173B45" font-family="&#39;Plus Jakarta Sans&#39;, &#39;Nunito&#39;, &#39;Quicksand&#39;, &#39;Inter&#39;, -apple-system, BlinkMacSystemFont, sans-serif" font-size="66" font-weight="700" letter-spacing="-1.5">
+    FinanzApp
+  </text>
+</svg>

@@ -1,0 +1,28 @@
+<svg width="210" height="210" viewBox="0 0 210 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+    <mask id="isotipo-cutouts">
+      <rect width="210" height="210" fill="white" />
+      
+      <rect x="42" y="74" width="118" height="6.5" rx="3.25" fill="black" />
+      
+      <path d="M 169 108 H 142 A 19 19 0 0 0 142 146 H 169" stroke="black" stroke-width="6" stroke-linecap="round" fill="none" />
+    </mask>
+  </defs>
+
+  
+  <g mask="url(#isotipo-cutouts)">
+    
+    <circle cx="118" cy="62" r="29" fill="#FFFFFF" />
+    
+    <circle cx="87" cy="73" r="31.5" fill="black" />
+    
+    <circle cx="87" cy="73" r="28" fill="#FFFFFF" />
+
+    
+    <rect x="32" y="66" width="139" height="116" rx="23" fill="#FFFFFF" />
+  </g>
+
+  
+  <circle cx="144" cy="127" r="4.8" fill="#FFFFFF" />
+</svg>
