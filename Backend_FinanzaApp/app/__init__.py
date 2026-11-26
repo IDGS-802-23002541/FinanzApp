@@ -9,11 +9,12 @@ a la base de datos SQL Server mediante SQLAlchemy y registrar los modelos y ruta
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, g, jsonify, send_from_directory
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db, jwt
+from app.observabilidad import configurar_logs
 
 
 def create_app():
@@ -22,6 +23,7 @@ def create_app():
 
     db.init_app(app)
     jwt.init_app(app)
+    configurar_logs(app)
 
     from app import models
     from app.routes.admin import admin_bp
@@ -80,6 +82,35 @@ def create_app():
     @jwt.revoked_token_loader
     def token_revocado(_jwt_header, _jwt_payload):
         return jsonify({"ok": False, "mensaje": "Sesión cerrada o inválida."}), 401
+
+    @app.get("/salud")
+    def salud():
+        try:
+            base = db.session.execute(text("SELECT DB_NAME()")).scalar_one()
+            db.session.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "db": None,
+                        "version": app.config.get("APP_VERSION", "1.0"),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "request_id": getattr(g, "request_id", None),
+                    }
+                ),
+                503,
+            )
+
+        return jsonify(
+            {
+                "ok": True,
+                "db": base,
+                "version": app.config.get("APP_VERSION", "1.0"),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "request_id": getattr(g, "request_id", None),
+            }
+        )
 
     # La puse de prueba para ver si todo salia bien con la coneccion a BD
     @app.get("/prueba")

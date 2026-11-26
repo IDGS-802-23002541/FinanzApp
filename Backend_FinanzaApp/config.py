@@ -11,6 +11,7 @@ load_dotenv(BASE_DIR / ".env")
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev")
+    APP_VERSION = os.getenv("APP_VERSION", "1.0")
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(

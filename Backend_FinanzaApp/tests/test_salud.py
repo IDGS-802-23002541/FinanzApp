@@ -24,3 +24,12 @@ def test_ruta_del_spa_responde_200():
     app = create_app()
     respuesta = app.test_client().get("/login")
     assert respuesta.status_code == 200
+
+
+def test_salud_responde_json_con_campos():
+    app = create_app()
+    respuesta = app.test_client().get("/salud")
+    assert respuesta.status_code in (200, 503)
+    datos = respuesta.get_json()
+    for campo in ("ok", "version", "timestamp", "request_id"):
+        assert campo in datos

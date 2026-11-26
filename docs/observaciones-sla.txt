@@ -1,0 +1,62 @@
+FinanzApp - Observaciones y acuerdos del SLA (implementacion)
+Actualizado: 25/11/2026
+Referencia: SLA Ruiz v1.0 (08/11/2026)
+
+URLS VERIFICADAS (25/11/2026):
+  - Portal (usuarios): https://finanzapp.vellumdigitall.online/  -> 200 (HTML)
+  - Origen Azure: https://finanzapp-efaydwe0heemd0ad.mexicocentral-01.azurewebsites.net/ -> 200
+  - Health API + BD: /prueba -> 200, base db71911, 19 tablas
+  - Conclusion: el dominio propio redirige a la misma app de Azure. Para usuarios usar el dominio propio;
+    para monitoreo directo usar el hostname de Azure.
+
+ALCANCE ELEGIDO (5 procedimientos -> SLI del SLA):
+  1. Disponibilidad del portal        -> SLI-02 (>= 99 %)
+  2. Consulta de carteras             -> SLI-06 (T(2000) >= 95 %)
+  3. Abrir / visualizar cartera       -> SLI-06 (+ SLI-08 >= 99 %)
+  4. Crear transaccion                -> SLI-04 (T(1500) >= 95 %) + SLI-05 (errores <= 0.2 %)
+  5. Soporte / ticket                 -> SLI-15 y SLI-16 (>= 95 % por severidad)
+
+OBSERVACIONES A CORREGIR / VERIFICAR (checklist):
+  [ ] 1. Severidad S1-S4 vs prioridad del ticket (BAJA/MEDIA/ALTA/URGENTE).
+         Mapear: URGENTE=S1, ALTA=S2, MEDIA=S3, BAJA=S4. Documentarlo en el SLA.
+  [ ] 2. "Acuse/respuesta" no tiene campo propio en TICKET.
+         Redefinir: acuse = primera RespuestaTicket (o agregar fechaAcuse). Documentarlo.
+  [x] 3. SLI-02 mide el portal (/), no la API. El deploy hoy valida /prueba (API + BD).
+         RESUELTO 25/11/2026: se agrego /salud para API + BD y el monitor mide / (portal).
+         /prueba se conserva.
+  [x] 4. Disponibilidad: 1 prueba por minuto; se declara falla tras 3 fallos consecutivos.
+         RESUELTO 25/11/2026: monitoreo_sla.py mide 1/min y calcular_sli.py aplica la regla
+         de 3 fallos consecutivos.
+  [ ] 5. Volumen (50 usuarios, 1000 tx/dia, 200 rpm) es aspiracional.
+         Agregar columna "medido en el periodo" para no falsear el reporte.
+  [ ] 6. Exclusiones (E): caida de Azure y mantenimiento avisado se restan a mano con evidencia.
+  [ ] 7. SLI-09, 10, 11, 12, 13, 14 y 17 NO se miden en esta entrega.
+         Anotar en el reporte que la cobertura es parcial y por que.
+  [x] 8. Confirmar URL oficial del portal (dominio propio vs hostname de Azure).
+         RESUELTO 25/11/2026: ambas sirven la misma app; el dominio propio redirige al hostname de Azure.
+         Portal publico: https://finanzapp.vellumdigitall.online/ ; monitoreo directo: hostname de Azure.
+  [ ] 9. Alinear el reporte mensual en CSV con los logs JSON que se generen.
+
+PRUEBAS QUE SI SE INCLUYEN (solo lo medido):
+  P-01 Disponibilidad del portal
+  P-02 Consulta de carteras
+  P-03 Abrir / visualizar cartera
+  P-04 Crear transaccion valida
+  P-05 Crear transaccion invalida
+  P-06 Crear ticket
+  P-07 Responder y cerrar ticket
+  Detalle en: Formato_Pruebas_SLA_FinanzApp.docx
+
+PRUEBAS QUE NO SE INCLUYEN (no se miden en esta entrega):
+  admin, pagos, email, notificacion, invitaciones, cuenta, categorias,
+  comentarios, miembros, reportes, cierre de cartera.
+
+IMPLEMENTADO (25/11/2026) - plan barato:
+  - GET /salud (API + BD + version + request_id). /prueba se conserva.
+  - Log de accesos JSON a stdout (app/observabilidad.py); sin costo de ingesta.
+  - Monitor scripts/monitoreo_sla.py (1 prueba por minuto, regla de 3 fallos).
+  - Calculo scripts/calcular_sli.py -> CSV mensual.
+  - Workflow .github/workflows/monitoreo-sla.yml; repo publico = minutos gratis.
+  - Test de /salud en tests/test_salud.py.
+  - Detalle de uso en docs/pruebas.md.
+  - Pendiente: log de detalle de movimiento (tipo/monto) y SLI-15/16 desde la BD.

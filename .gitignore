@@ -60,6 +60,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Salidas del monitor de SLA (evidencia local, no se versiona)
+Backend_FinanzaApp/metricas/
+Backend_FinanzaApp/reportes/
+
 # =========================
 # Temporales
 # =========================
