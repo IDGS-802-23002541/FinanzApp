@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-const BACKEND = 'http://127.0.0.1:5000'
+const BACKEND = process.env.VITE_BACKEND_URL ?? 'http://127.0.0.1:5000'
 
 // Las rutas del panel (/admin, /carteras, /soporte…) se llaman igual que los
 // prefijos de la API. Al recargar el navegador pide HTML y se sirve el SPA;
