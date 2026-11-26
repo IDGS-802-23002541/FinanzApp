@@ -5,25 +5,15 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
   Pagination,
   Paper,
-  Snackbar,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material'
-import {
-  editarTrabajador,
-  eliminarTrabajador,
-  listarTrabajadores,
-} from '../api.js'
-import DialogoNuevoTrabajador from '../components/DialogoNuevoTrabajador.jsx'
+import { listarTrabajadores } from '../api.js'
+import DialogoTrabajador from '../components/DialogoTrabajador.jsx'
+import DialogoEliminarTrabajador from '../components/DialogoEliminarTrabajador.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
-import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
 import { IconoMas, IconoPersonas } from '../../../components/ui/Iconos.jsx'
 
@@ -49,14 +39,8 @@ function Trabajadores() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [recarga, setRecarga] = useState(0)
-  const [editando, setEditando] = useState(null)
-  const [formulario, setFormulario] = useState(null)
-  const [errorFormulario, setErrorFormulario] = useState('')
-  const [guardando, setGuardando] = useState(false)
-  const [borrando, setBorrando] = useState(null)
-  const [eliminando, setEliminando] = useState(false)
-  const [aviso, setAviso] = useState('')
-  const [altaAbierta, setAltaAbierta] = useState(false)
+  const [editor, setEditor] = useState(null)
+  const [porEliminar, setPorEliminar] = useState(null)
 
   useEffect(() => {
     let vigente = true
@@ -103,65 +87,6 @@ function Trabajadores() {
     return () => document.removeEventListener('visibilitychange', alVolver)
   }, [])
 
-  const abrirEdicion = (trabajador) => {
-    setEditando(trabajador)
-    setErrorFormulario('')
-    setFormulario({
-      nombreUsuario: trabajador.nombreUsuario ?? '',
-      apaterno: trabajador.apaterno ?? '',
-      amaterno: trabajador.amaterno ?? '',
-      correo: trabajador.correo ?? '',
-    })
-  }
-
-  const cambiarCampo = (campo) => (evento) => {
-    setErrorFormulario('')
-    setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
-  }
-
-  const guardarEdicion = async () => {
-    if (!editando || guardando) return
-
-    if (
-      !formulario.nombreUsuario.trim() ||
-      !formulario.apaterno.trim() ||
-      !formulario.correo.trim()
-    ) {
-      setErrorFormulario('Completa nombre, apellido paterno y correo.')
-      return
-    }
-
-    setGuardando(true)
-    setErrorFormulario('')
-    try {
-      await editarTrabajador(editando.idUsuario, formulario)
-      setEditando(null)
-      setAviso('Trabajador actualizado correctamente.')
-      setRecarga((actual) => actual + 1)
-    } catch (err) {
-      setErrorFormulario(err.message)
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  const confirmarBaja = async () => {
-    if (!borrando || eliminando) return
-
-    setEliminando(true)
-    try {
-      await eliminarTrabajador(borrando.idUsuario)
-      setBorrando(null)
-      setAviso('Trabajador dado de baja correctamente.')
-      setRecarga((actual) => actual + 1)
-    } catch (err) {
-      setError(err.message)
-      setBorrando(null)
-    } finally {
-      setEliminando(false)
-    }
-  }
-
   return (
     <Stack spacing={3}>
       <EncabezadoPagina
@@ -172,7 +97,7 @@ function Trabajadores() {
           variant="contained"
           size="small"
           startIcon={<IconoMas sx={{ fontSize: 16 }} />}
-          onClick={() => setAltaAbierta(true)}
+          onClick={() => setEditor({ trabajador: null })}
           sx={{ fontSize: '0.875rem', textTransform: 'none' }}
         >
           Nuevo trabajador
@@ -233,7 +158,11 @@ function Trabajadores() {
                       {trabajador.correo}
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: 'center', flexShrink: 0 }}
+                  >
                     <Chip
                       label={
                         ESTADOS_TRABAJADOR[trabajador.estatus] ??
@@ -246,16 +175,21 @@ function Trabajadores() {
                         fontWeight: 700,
                       }}
                     />
-                    <Button size="small" onClick={() => abrirEdicion(trabajador)}>
+                    <Button
+                      size="small"
+                      onClick={() => setEditor({ trabajador })}
+                      sx={{ textTransform: 'none' }}
+                    >
                       Editar
                     </Button>
                     <Button
                       size="small"
                       color="error"
-                      onClick={() => setBorrando(trabajador)}
                       disabled={trabajador.estatus === 'INACTIVO'}
+                      onClick={() => setPorEliminar(trabajador)}
+                      sx={{ textTransform: 'none' }}
                     >
-                      Eliminar
+                      Dar de baja
                     </Button>
                   </Stack>
                 </Stack>
@@ -323,107 +257,27 @@ function Trabajadores() {
         />
       )}
 
-      <Dialog
-        open={Boolean(editando)}
-        onClose={() => (guardando ? null : setEditando(null))}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogoTitulo alCerrar={() => !guardando && setEditando(null)}>
-          Editar trabajador
-        </DialogoTitulo>
-        <DialogContent dividers>
-          {formulario && (
-            <Stack spacing={2}>
-              <TextField
-                label="Nombre"
-                size="small"
-                value={formulario.nombreUsuario}
-                onChange={cambiarCampo('nombreUsuario')}
-                slotProps={{ htmlInput: { maxLength: 80 } }}
-              />
-              <TextField
-                label="Apellido paterno"
-                size="small"
-                value={formulario.apaterno}
-                onChange={cambiarCampo('apaterno')}
-                slotProps={{ htmlInput: { maxLength: 80 } }}
-              />
-              <TextField
-                label="Apellido materno"
-                size="small"
-                value={formulario.amaterno}
-                onChange={cambiarCampo('amaterno')}
-                slotProps={{ htmlInput: { maxLength: 80 } }}
-              />
-              <TextField
-                label="Correo electrónico"
-                type="email"
-                size="small"
-                value={formulario.correo}
-                onChange={cambiarCampo('correo')}
-                slotProps={{ htmlInput: { maxLength: 254 } }}
-              />
-              {errorFormulario && <Alert severity="error">{errorFormulario}</Alert>}
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditando(null)} disabled={guardando}>
-            Cancelar
-          </Button>
-          <Button variant="contained" onClick={guardarEdicion} disabled={guardando}>
-            {guardando ? 'Guardando…' : 'Guardar cambios'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {editor && (
+        <DialogoTrabajador
+          trabajador={editor.trabajador}
+          onCerrar={() => setEditor(null)}
+          onGuardado={() => {
+            setRecarga((actual) => actual + 1)
+            if (editor.trabajador) setEditor(null)
+          }}
+        />
+      )}
 
-      <Dialog
-        open={Boolean(borrando)}
-        onClose={() => (eliminando ? null : setBorrando(null))}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogoTitulo alCerrar={() => !eliminando && setBorrando(null)}>
-          Dar de baja trabajador
-        </DialogoTitulo>
-        <DialogContent>
-          <DialogContentText>
-            ¿Dar de baja a {borrando?.nombre}? Su cuenta quedará inactiva y no
-            podrá iniciar sesión.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBorrando(null)} disabled={eliminando}>
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={confirmarBaja}
-            disabled={eliminando}
-          >
-            {eliminando ? 'Dando de baja…' : 'Dar de baja'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={Boolean(aviso)}
-        autoHideDuration={4000}
-        onClose={() => setAviso('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="success" variant="filled" onClose={() => setAviso('')}>
-          {aviso}
-        </Alert>
-      </Snackbar>
-
-      <DialogoNuevoTrabajador
-        abierto={altaAbierta}
-        onCerrar={() => setAltaAbierta(false)}
-        onCreado={() => setRecarga((actual) => actual + 1)}
-      />
+      {porEliminar && (
+        <DialogoEliminarTrabajador
+          trabajador={porEliminar}
+          onCerrar={() => setPorEliminar(null)}
+          onEliminado={() => {
+            setPorEliminar(null)
+            setRecarga((actual) => actual + 1)
+          }}
+        />
+      )}
     </Stack>
   )
 }

@@ -1,45 +1,35 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
+const BACKEND = 'http://127.0.0.1:5000'
+
+// Las rutas del panel (/admin, /carteras, /soporte…) se llaman igual que los
+// prefijos de la API. Al recargar el navegador pide HTML y se sirve el SPA;
+// las llamadas fetch piden JSON y siguen al backend.
+function alNavegar(req) {
+  if (req.headers.accept?.includes('text/html')) return '/index.html'
+}
+
+const api = () => ({
+  target: BACKEND,
+  changeOrigin: true,
+  bypass: alNavegar,
+})
+
+// En desarrollo el front llama a rutas relativas y Vite las reenvía al backend,
+// así el navegador no bloquea la petición por CORS.
 export default defineConfig({
   plugins: [react()],
-  // En desarrollo el front llama a rutas relativas y Vite las reenvía al backend,
-  // así el navegador no bloquea la petición por CORS.
   server: {
     proxy: {
-      '/auth': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/carteras': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/reportes': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/comentarios': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/transacciones': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/pagos-recurrentes': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/soporte': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/admin': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
+      '/auth': api(),
+      '/carteras': api(),
+      '/reportes': api(),
+      '/comentarios': api(),
+      '/transacciones': api(),
+      '/pagos-recurrentes': api(),
+      '/soporte': api(),
+      '/admin': api(),
     },
   },
 })

@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.security import generate_password_hash
 
 from app.extensions import db
-from app.models import AsignacionTicket, Ticket, Usuario
+from app.models import AsignacionTicket, SesionUsuario, Ticket, Usuario
 from app.utils import seguridad, validacion
 from app.utils.serializers import serializar_usuario
 
@@ -89,7 +89,9 @@ def listar_trabajadores(pagina="1", por_pagina="20"):
             .scalars()
             .all()
         )
-        tickets = _tickets_actuales([trabajador.idUsuario for trabajador in trabajadores])
+        tickets = _tickets_actuales(
+            [trabajador.idUsuario for trabajador in trabajadores]
+        )
     except SQLAlchemyError:
         db.session.rollback()
         return {
@@ -220,9 +222,27 @@ def eliminar_trabajador(id_trabajador):
     if error:
         return error
 
+    ahora = seguridad.ahora_utc()
     trabajador.estado = "INACTIVO"
-    trabajador.fechaActualizacion = seguridad.ahora_utc()
+    trabajador.fechaActualizacion = ahora
 
+    # Los tickets que atendía quedan libres y sus sesiones se revocan.
+    db.session.execute(
+        db.update(AsignacionTicket)
+        .where(
+            AsignacionTicket.trabajadorId == trabajador.idUsuario,
+            AsignacionTicket.esActual == db.true(),
+        )
+        .values(esActual=False, fechaFin=ahora)
+    )
+    db.session.execute(
+        db.update(SesionUsuario)
+        .where(
+            SesionUsuario.usuarioId == trabajador.idUsuario,
+            SesionUsuario.fechaRevocacion.is_(None),
+        )
+        .values(fechaRevocacion=ahora)
+    )
     try:
         db.session.commit()
     except SQLAlchemyError:
@@ -238,7 +258,7 @@ def eliminar_trabajador(id_trabajador):
             "idUsuario": trabajador.idUsuario,
             "estatus": trabajador.estado,
         },
-        "mensaje": "Trabajador dado de baja correctamente.",
+        "mensaje": "Trabajador dado de baja. Sus tickets quedaron sin asignar.",
     }, 200
 
 
@@ -309,7 +329,9 @@ def _entero(nombre, valor, minimo, maximo=None):
     except (TypeError, ValueError):
         return None, f"El parámetro {nombre} debe ser un número entero."
     if numero < minimo or (maximo is not None and numero > maximo):
-        rango = f"entre {minimo} y {maximo}" if maximo is not None else f"mínimo {minimo}"
+        rango = (
+            f"entre {minimo} y {maximo}" if maximo is not None else f"mínimo {minimo}"
+        )
         return None, f"El parámetro {nombre} debe estar {rango}."
     return numero, None
 

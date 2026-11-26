@@ -10,15 +10,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { crearTrabajador } from '../api.js'
+import { editarTrabajador, crearTrabajador } from '../api.js'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
-
-const FORMULARIO_VACIO = {
-  nombreUsuario: '',
-  apaterno: '',
-  amaterno: '',
-  correo: '',
-}
 
 const CORREO_VALIDO = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
@@ -28,8 +21,7 @@ const sxBoton = {
   textTransform: 'none',
 }
 
-// CA1 y CA2 de HU-11.1: nombre y correo obligatorios; el correo repetido lo
-// rechaza el backend.
+// CA1 de HU-11.1 y HU-11.3: mismas validaciones al crear y al editar.
 function validar({ nombreUsuario, apaterno, correo }) {
   const errores = {}
 
@@ -45,20 +37,28 @@ function validar({ nombreUsuario, apaterno, correo }) {
   return errores
 }
 
-function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
-  const [formulario, setFormulario] = useState(FORMULARIO_VACIO)
+function valoresIniciales(trabajador) {
+  if (!trabajador) {
+    return { nombreUsuario: '', apaterno: '', amaterno: '', correo: '' }
+  }
+
+  return {
+    nombreUsuario: trabajador.nombreUsuario ?? '',
+    apaterno: trabajador.apaterno ?? '',
+    amaterno: trabajador.amaterno ?? '',
+    correo: trabajador.correo ?? '',
+  }
+}
+
+function DialogoTrabajador({ trabajador, onCerrar, onGuardado }) {
+  const esEdicion = Boolean(trabajador)
+  const [formulario, setFormulario] = useState(() =>
+    valoresIniciales(trabajador),
+  )
   const [errores, setErrores] = useState({})
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [temporal, setTemporal] = useState('')
-
-  const cerrar = () => {
-    setFormulario(FORMULARIO_VACIO)
-    setErrores({})
-    setErrorEnvio('')
-    setTemporal('')
-    onCerrar()
-  }
 
   const actualizar = (campo) => (evento) =>
     setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
@@ -73,9 +73,15 @@ function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
 
     setEnviando(true)
     try {
+      if (esEdicion) {
+        await editarTrabajador(trabajador.idUsuario, formulario)
+        onGuardado()
+        return
+      }
+
       const { contraseniaTemporal } = await crearTrabajador(formulario)
       setTemporal(contraseniaTemporal)
-      onCreado()
+      onGuardado()
     } catch (err) {
       setErrorEnvio(err.message)
     } finally {
@@ -84,9 +90,11 @@ function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
   }
 
   return (
-    <Dialog open={abierto} onClose={cerrar} fullWidth maxWidth="xs">
+    <Dialog open onClose={onCerrar} fullWidth maxWidth="xs">
       <Box component="form" onSubmit={guardar} noValidate>
-        <DialogoTitulo alCerrar={cerrar}>Nuevo trabajador</DialogoTitulo>
+        <DialogoTitulo alCerrar={onCerrar}>
+          {esEdicion ? 'Editar trabajador' : 'Nuevo trabajador'}
+        </DialogoTitulo>
 
         <DialogContent>
           {temporal ? (
@@ -149,7 +157,7 @@ function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={cerrar} disabled={enviando} sx={sxBoton}>
+          <Button onClick={onCerrar} disabled={enviando} sx={sxBoton}>
             {temporal ? 'Listo' : 'Cancelar'}
           </Button>
           {!temporal && (
@@ -159,7 +167,11 @@ function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
               disabled={enviando}
               sx={sxBoton}
             >
-              {enviando ? 'Creando…' : 'Crear trabajador'}
+              {enviando
+                ? 'Guardando…'
+                : esEdicion
+                  ? 'Guardar cambios'
+                  : 'Crear trabajador'}
             </Button>
           )}
         </DialogActions>
@@ -168,4 +180,4 @@ function DialogoNuevoTrabajador({ abierto, onCerrar, onCreado }) {
   )
 }
 
-export default DialogoNuevoTrabajador
+export default DialogoTrabajador

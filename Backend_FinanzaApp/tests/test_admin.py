@@ -37,10 +37,16 @@ class SesionFalsa:
     def __init__(self, resultados):
         self.resultados = list(resultados)
 
+    def get(self, _modelo, _id):
+        return self.resultados.pop(0).valor
+
     def execute(self, _consulta):
         return self.resultados.pop(0)
 
     def rollback(self):
+        pass
+
+    def commit(self):
         pass
 
 
@@ -124,6 +130,9 @@ def test_serializar_trabajador_expone_datos_minimos():
         "apaterno": "Borja",
         "amaterno": None,
         "nombre": "Diego Borja",
+        "nombreUsuario": "Diego",
+        "apaterno": "Borja",
+        "amaterno": None,
         "correo": "diego@finanzapp.com",
         "rolGlobal": "TRABAJADOR",
         "estatus": "ACTIVO",
@@ -185,9 +194,7 @@ def test_listar_trabajadores_incluye_tickets_y_paginacion(monkeypatch):
         ),
     )
 
-    payload, status = admin_service.listar_trabajadores(
-        pagina="1", por_pagina="2"
-    )
+    payload, status = admin_service.listar_trabajadores(pagina="1", por_pagina="2")
 
     assert status == 200
     assert payload["ok"] is True
@@ -250,9 +257,7 @@ def test_tickets_actuales_agrupa_por_trabajador(monkeypatch):
     datos = admin_service._tickets_actuales([7, 8])
 
     assert len(datos[7]) == 2
-    assert datos[8] == [
-        {"idTicket": 103, "asunto": "Ticket C", "estado": "ESPERA"}
-    ]
+    assert datos[8] == [{"idTicket": 103, "asunto": "Ticket C", "estado": "ESPERA"}]
 
 
 def test_solo_admin_crea_trabajadores(monkeypatch):
@@ -278,6 +283,120 @@ def test_trabajador_no_crea_trabajadores(monkeypatch):
     )
     assert status == 403
     assert payload["ok"] is False
+
+
+def test_solo_admin_edita_trabajadores(monkeypatch):
+    _como(monkeypatch, "TRABAJADOR")
+    payload, status = admin_service.editar_trabajador(7, {})
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_solo_admin_elimina_trabajadores(monkeypatch):
+    _como(monkeypatch, "CLIENTE")
+    payload, status = admin_service.eliminar_trabajador(7)
+    assert status == 403
+    assert payload["ok"] is False
+
+
+def test_editar_trabajador_inexistente_devuelve_404(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    monkeypatch.setattr(
+        admin_service.db, "session", SesionFalsa([ResultadoFalso(valor=None)])
+    )
+
+    payload, status = admin_service.editar_trabajador(99, {})
+
+    assert status == 404
+    assert payload["ok"] is False
+
+
+def test_editar_trabajador_rechaza_datos_invalidos(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Diego", "Borja", "diego@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa([ResultadoFalso(valor=trabajador)]),
+    )
+
+    payload, status = admin_service.editar_trabajador(
+        7, {"nombreUsuario": "Diego", "apaterno": "", "correo": "diego@"}
+    )
+
+    assert status == 400
+    assert payload["ok"] is False
+
+
+def test_editar_trabajador_rechaza_correo_repetido(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Diego", "Borja", "diego@finanzapp.com")
+    otro = _trabajador(8, "Ana", "Ruiz", "ana@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa([ResultadoFalso(valor=trabajador), ResultadoFalso(valor=otro)]),
+    )
+
+    payload, status = admin_service.editar_trabajador(
+        7,
+        {
+            "nombreUsuario": "Diego",
+            "apaterno": "Borja",
+            "correo": "ana@finanzapp.com",
+        },
+    )
+
+    assert status == 409
+    assert payload["ok"] is False
+
+
+def test_editar_trabajador_actualiza_campos(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Diego", "Borja", "diego@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa([ResultadoFalso(valor=trabajador), ResultadoFalso(valor=None)]),
+    )
+
+    payload, status = admin_service.editar_trabajador(
+        7,
+        {
+            "nombreUsuario": "Diego",
+            "apaterno": "Borja",
+            "amaterno": "Romero",
+            "correo": "nuevo@finanzapp.com",
+        },
+    )
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert trabajador.correo == "nuevo@finanzapp.com"
+    assert trabajador.amaterno == "Romero"
+    assert trabajador.fechaActualizacion is not None
+
+
+def test_eliminar_trabajador_lo_inactiva_y_libera_tickets(monkeypatch):
+    _como(monkeypatch, "ADMIN")
+    trabajador = _trabajador(7, "Diego", "Borja", "diego@finanzapp.com")
+    monkeypatch.setattr(
+        admin_service.db,
+        "session",
+        SesionFalsa(
+            [
+                ResultadoFalso(valor=trabajador),
+                ResultadoFalso(valor=None),
+                ResultadoFalso(valor=None),
+            ]
+        ),
+    )
+
+    payload, status = admin_service.eliminar_trabajador(7)
+
+    assert status == 200
+    assert payload["ok"] is True
+    assert trabajador.estado == "INACTIVO"
 
 
 def test_resumen_tickets_mapea_estados():

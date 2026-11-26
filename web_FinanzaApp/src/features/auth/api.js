@@ -12,7 +12,10 @@ export async function iniciarSesion({ correo, contrasenia }) {
   return {
     token: data.access_token,
     refreshToken: data.refresh_token,
-    usuario: normalizarUsuario(data.usuario),
+    usuario: {
+      ...normalizarUsuario(data.usuario),
+      debeCambiarContrasenia: data.debeCambiarContrasenia,
+    },
   }
 }
 
