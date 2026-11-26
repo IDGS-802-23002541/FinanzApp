@@ -36,6 +36,8 @@ function aVistaCartera(cartera) {
   return {
     id: cartera.id,
     nombre: cartera.nombre,
+    // Enum crudo: la lista y los reportes filtran por tipo sin volver a pedirlo.
+    tipo: cartera.tipo,
     categoria: CATEGORIA_POR_TIPO[cartera.tipo],
     estatus: ESTATUS_POR_ESTADO[cartera.estado],
     rol: ROL_EN_PANTALLA[cartera.rol],
