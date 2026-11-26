@@ -31,11 +31,65 @@ ENCABEZADOS_CSV = [
     "Cartera",
     "Tipo",
     "Categoría",
-    "Monto",
+    "Monto (MXN)",
     "Descripción",
     "Autor",
     "Método de pago",
 ]
+
+# --- Maquetación del PDF --------------------------------------------------
+# Medidas de una hoja carta en puntos (1 pt = 1/72 pulgada).
+MARGEN = 40
+ANCHO_PAGINA = 612
+ALTO_PAGINA = 792
+ANCHO_CONTENIDO = ANCHO_PAGINA - 2 * MARGEN
+LIMITE_INFERIOR = 740
+FILA_DETALLE = 15
+
+# Colores de marca (los mismos del logo en web_FinanzaApp/public/marca).
+PETROLEO = (0.090, 0.231, 0.271)  # #173B45
+TERRACOTA = (0.776, 0.365, 0.271)  # #C65D45
+CREMA = (0.973, 0.953, 0.937)  # #F8F3EF
+GRIS_TEXTO = (0.365, 0.443, 0.463)  # #5D7176
+GRIS_BORDE = (0.890, 0.847, 0.820)  # #E3D8D1
+BARRA_FONDO = (0.941, 0.918, 0.898)  # #F0EAE5
+BLANCO = (1.0, 1.0, 1.0)
+
+# Columnas de la tabla de detalle: (título, x, ancho, alineación).
+COLUMNAS_DETALLE = [
+    ("Fecha", 0, 52, "izq"),
+    ("Tipo", 56, 46, "izq"),
+    ("Categoría", 106, 80, "izq"),
+    ("Descripción", 190, 132, "izq"),
+    ("Autor", 326, 68, "izq"),
+    ("Método", 398, 80, "izq"),
+    ("Monto", 478, 54, "der"),
+]
+
+# Anchos estándar de Helvetica en milésimas para estimar el ancho del texto.
+_ANCHOS_TEXTO = {
+    " ": 278, "!": 278, '"': 355, "#": 556, "$": 556, "%": 889,
+    "&": 667, "'": 191, "(": 333, ")": 333, "*": 389, "+": 584,
+    ",": 278, "-": 333, ".": 278, "/": 278, "0": 556, "1": 556,
+    "2": 556, "3": 556, "4": 556, "5": 556, "6": 556, "7": 556,
+    "8": 556, "9": 556, ":": 278, ";": 278, "<": 584, "=": 584,
+    ">": 584, "?": 556, "@": 1015, "[": 278, "\\": 278, "]": 278,
+    "^": 469, "_": 556, "`": 333, "{": 334, "|": 260, "}": 334,
+    "~": 584, "·": 278, "¿": 611, "¡": 333, "°": 400, "º": 365,
+    "A": 667, "B": 667, "C": 722, "D": 722, "E": 667, "F": 611,
+    "G": 778, "H": 722, "I": 278, "J": 500, "K": 667, "L": 556,
+    "M": 833, "N": 722, "O": 778, "P": 667, "Q": 778, "R": 722,
+    "S": 667, "T": 611, "U": 722, "V": 667, "W": 944, "X": 667,
+    "Y": 667, "Z": 611,
+    "a": 556, "b": 556, "c": 500, "d": 556, "e": 556, "f": 278,
+    "g": 556, "h": 556, "i": 222, "j": 222, "k": 500, "l": 222,
+    "m": 833, "n": 556, "o": 556, "p": 556, "q": 556, "r": 333,
+    "s": 500, "t": 278, "u": 556, "v": 500, "w": 722, "x": 500,
+    "y": 500, "z": 500,
+    "á": 556, "é": 556, "í": 278, "ó": 556, "ú": 556, "ñ": 556,
+    "ü": 556, "Á": 667, "É": 667, "Í": 278, "Ó": 778, "Ú": 722,
+    "Ñ": 722, "Ü": 722,
+}
 
 
 def vista_previa(
@@ -392,19 +446,41 @@ def _contenido_csv(contexto, indicadores, filas):
     salida = io.StringIO()
     escritor = csv.writer(salida, lineterminator="\r\n")
 
-    escritor.writerow(["Reporte de FinanzApp"])
+    escritor.writerow(["Reporte financiero · FinanzApp"])
     escritor.writerow(["Cartera(s)", _nombres_carteras(contexto["carteras"])])
-    escritor.writerow(["Periodo", _texto_periodo(contexto["inicio"], contexto["fin"])])
-    escritor.writerow(["Generado el", datetime.now().strftime("%d/%m/%Y %H:%M")])
+    escritor.writerow(["Tipo", _etiqueta_tipo(contexto)])
     escritor.writerow(
-        [
-            "Totales",
-            f"Ingresos {indicadores['totalIngresos']:.2f}",
-            f"Gastos {indicadores['totalGastos']:.2f}",
-            f"Ahorro {indicadores['ahorro']:.2f}",
-        ]
+        ["Periodo", _texto_periodo(contexto["inicio"], contexto["fin"])]
     )
+    escritor.writerow(["Generado el", datetime.now().strftime("%d/%m/%Y %H:%M")])
+    escritor.writerow(["Moneda", "MXN"])
     escritor.writerow([])
+
+    escritor.writerow(["Resumen"])
+    escritor.writerow(["Ingresos", _monto_csv(indicadores["totalIngresos"])])
+    escritor.writerow(["Gastos", _monto_csv(indicadores["totalGastos"])])
+    escritor.writerow(["Ahorro", _monto_csv(indicadores["ahorro"])])
+    escritor.writerow(["Movimientos", indicadores["movimientos"]])
+    escritor.writerow([])
+
+    gastos = _gastos_de_filas(filas)
+    if gastos:
+        total_gastos = sum(gastos.values(), Decimal("0"))
+        escritor.writerow(["Gastos por categoría"])
+        escritor.writerow(["Categoría", "Monto (MXN)", "Porcentaje"])
+        for nombre, monto in sorted(
+            gastos.items(), key=lambda item: item[1], reverse=True
+        ):
+            porcentaje = (
+                float(monto / total_gastos * 100) if total_gastos else 0.0
+            )
+            escritor.writerow(
+                [nombre, _monto_csv(monto), f"{porcentaje:.1f}%"]
+            )
+        escritor.writerow(["Total de gastos", _monto_csv(total_gastos), "100.0%"])
+        escritor.writerow([])
+
+    escritor.writerow(["Detalle de movimientos"])
     escritor.writerow(ENCABEZADOS_CSV)
 
     for transaccion, cartera, categoria, autor in filas:
@@ -414,7 +490,7 @@ def _contenido_csv(contexto, indicadores, filas):
                 cartera.nombre,
                 "Ingreso" if transaccion.tipo == "INGRESO" else "Gasto",
                 categoria.nombre if categoria else "Sin categoría",
-                f"{Decimal(transaccion.monto):.2f}",
+                _monto_csv(transaccion.monto),
                 transaccion.descripcion or "",
                 f"{autor.nombreUsuario} {autor.apaterno or ''}".strip(),
                 transaccion.metodoPago or "",
@@ -425,111 +501,595 @@ def _contenido_csv(contexto, indicadores, filas):
 
 
 def _contenido_pdf(contexto, indicadores, filas):
-    lineas = [
-        "Reporte de FinanzApp",
-        f"Cartera(s): {_nombres_carteras(contexto['carteras'])}",
-        f"Periodo: {_texto_periodo(contexto['inicio'], contexto['fin'])}",
-        f"Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-        "",
-        (
-            "Totales: "
-            f"Ingresos {indicadores['totalIngresos']:.2f} | "
-            f"Gastos {indicadores['totalGastos']:.2f} | "
-            f"Ahorro {indicadores['ahorro']:.2f}"
-        ),
-        "",
-    ]
+    lienzo = _LienzoPdf()
+    alto = _cabecera_reporte(lienzo)
+    alto = _bloque_info(lienzo, contexto, indicadores, alto)
+    alto = _bloque_resumen(lienzo, indicadores, alto)
+    alto = _bloque_gastos(lienzo, filas, alto)
+    _bloque_detalle(lienzo, filas, alto)
+    lienzo.sello_pies("Reporte generado automáticamente por FinanzApp")
+    return lienzo.a_bytes()
 
-    gastos_por_categoria = {}
+
+def _gastos_de_filas(filas):
+    gastos = {}
     for transaccion, _cartera, categoria, _autor in filas:
         if transaccion.tipo != "GASTO":
             continue
-        nombre = categoria.nombre if categoria else "Sin categoria"
-        gastos_por_categoria[nombre] = (
-            gastos_por_categoria.get(nombre, Decimal("0"))
-            + Decimal(transaccion.monto)
+        nombre = categoria.nombre if categoria else "Sin categoría"
+        gastos[nombre] = gastos.get(nombre, Decimal("0")) + Decimal(
+            transaccion.monto
         )
+    return gastos
 
-    if gastos_por_categoria:
-        lineas.append("Gastos por categoria:")
-        for nombre, monto in sorted(
-            gastos_por_categoria.items(), key=lambda item: item[1], reverse=True
-        ):
-            lineas.append(f"  {nombre}: {monto:.2f}")
-        lineas.append("")
 
-    lineas.append(
-        f"{'Fecha':<10} {'Cartera':<18} {'Tipo':<7} {'Categoria':<16} "
-        f"{'Monto':>10} {'Autor':<16} {'Metodo':<12}"
+def _etiqueta_tipo(contexto):
+    tipo = contexto["tipo"]
+    if not tipo and contexto["carteras"]:
+        tipo = contexto["carteras"][0].tipo
+    etiquetas = {
+        "HOGAR": "Hogar",
+        "VIAJE": "Viaje",
+        "EVENTO": "Evento",
+        "OTRO": "Otro",
+        "OTRA": "Otra",
+    }
+    return etiquetas.get(tipo, "-")
+
+
+def _monto_pdf(valor):
+    return f"{Decimal(str(valor)):,.2f}"
+
+
+def _monto_csv(valor):
+    return f"{Decimal(str(valor)):.2f}"
+
+
+def _cabecera_reporte(lienzo, continuacion=False):
+    if continuacion:
+        lienzo.texto(
+            MARGEN,
+            40,
+            "FinanzApp · Reporte financiero (continuación)",
+            tam=9,
+            negrita=True,
+            color=GRIS_TEXTO,
+        )
+        lienzo.linea(MARGEN, 48, ANCHO_PAGINA - MARGEN, 48, GRIS_BORDE, 0.8)
+        return 62
+
+    _dibujar_logo(lienzo, MARGEN, 24, 46)
+    lienzo.texto(
+        MARGEN + 58, 45, "FinanzApp", tam=19, negrita=True, color=PETROLEO
+    )
+    lienzo.texto(
+        MARGEN + 58, 63, "Reporte financiero", tam=10, color=GRIS_TEXTO
+    )
+    lienzo.texto_derecha(
+        ANCHO_PAGINA - MARGEN, 44, "Generado el", tam=8, color=GRIS_TEXTO
+    )
+    lienzo.texto_derecha(
+        ANCHO_PAGINA - MARGEN,
+        59,
+        datetime.now().strftime("%d/%m/%Y %H:%M"),
+        tam=9,
+        negrita=True,
+        color=PETROLEO,
+    )
+    lienzo.linea(MARGEN, 82, ANCHO_PAGINA - MARGEN, 82, PETROLEO, 1.5)
+    return 100
+
+
+def _bloque_info(lienzo, contexto, indicadores, alto):
+    altura = 52
+    lienzo.rect_redondeado(
+        MARGEN, alto, ANCHO_CONTENIDO, altura, 8, relleno=CREMA
+    )
+    izquierda = MARGEN + 14
+    derecha = MARGEN + 272
+    fila_uno = alto + 20
+    fila_dos = alto + 38
+
+    _campo(
+        lienzo, izquierda, fila_uno, "Cartera",
+        _nombres_carteras(contexto["carteras"]), 226,
+    )
+    _campo(
+        lienzo, derecha, fila_uno, "Periodo",
+        _texto_periodo(contexto["inicio"], contexto["fin"]), 226,
+    )
+    _campo(lienzo, izquierda, fila_dos, "Tipo", _etiqueta_tipo(contexto), 226)
+    _campo(
+        lienzo, derecha, fila_dos, "Movimientos",
+        str(indicadores["movimientos"]), 226,
+    )
+    return alto + altura + 18
+
+
+def _campo(lienzo, x, y, etiqueta, valor, ancho):
+    lienzo.texto(x, y, f"{etiqueta}:", tam=8, color=GRIS_TEXTO)
+    desplazamiento = lienzo.ancho_texto(f"{etiqueta}:", 8) + 5
+    lienzo.texto(
+        x + desplazamiento,
+        y,
+        lienzo.recortar(valor, ancho - desplazamiento, 9, True),
+        tam=9,
+        negrita=True,
+        color=PETROLEO,
     )
 
-    for transaccion, cartera, categoria, autor in filas:
-        lineas.append(
-            f"{transaccion.fechaTransaccion.strftime('%d/%m/%Y'):<10} "
-            f"{cartera.nombre[:18]:<18} "
-            f"{('Ingreso' if transaccion.tipo == 'INGRESO' else 'Gasto'):<7} "
-            f"{(categoria.nombre if categoria else 'Sin categoria')[:16]:<16} "
-            f"{Decimal(transaccion.monto):>10.2f} "
-            f"{f'{autor.nombreUsuario} {autor.apaterno or ''}'.strip()[:16]:<16} "
-            f"{(transaccion.metodoPago or '')[:12]:<12}"
-        )
 
-    return _pdf_bytes(lineas)
+def _bloque_resumen(lienzo, indicadores, alto):
+    tarjetas = [
+        ("Ingresos", _monto_pdf(indicadores["totalIngresos"]), PETROLEO),
+        ("Gastos", _monto_pdf(indicadores["totalGastos"]), TERRACOTA),
+        ("Ahorro", _monto_pdf(indicadores["ahorro"]), PETROLEO),
+        ("Movimientos", str(indicadores["movimientos"]), GRIS_TEXTO),
+    ]
+    separacion = 10
+    ancho = (ANCHO_CONTENIDO - separacion * 3) / 4
+    altura = 54
+    for indice, (etiqueta, valor, color) in enumerate(tarjetas):
+        x = MARGEN + indice * (ancho + separacion)
+        lienzo.rect_redondeado(x, alto, ancho, altura, 8, relleno=CREMA)
+        lienzo.texto(x + 14, alto + 21, etiqueta, tam=8, color=GRIS_TEXTO)
+        lienzo.texto(
+            x + 14, alto + 42, valor, tam=14, negrita=True, color=color
+        )
+    lienzo.texto(
+        MARGEN, alto + altura + 14, "Montos en MXN.", tam=8, color=GRIS_TEXTO
+    )
+    return alto + altura + 28
+
+
+def _bloque_gastos(lienzo, filas, alto):
+    gastos = _gastos_de_filas(filas)
+    if not gastos:
+        return alto
+
+    total = sum(gastos.values(), Decimal("0"))
+    ordenados = sorted(gastos.items(), key=lambda item: item[1], reverse=True)
+
+    if alto + 90 > LIMITE_INFERIOR:
+        lienzo.nueva_pagina()
+        alto = _cabecera_reporte(lienzo, continuacion=True)
+
+    lienzo.texto(
+        MARGEN, alto, "Gastos por categoría",
+        tam=11, negrita=True, color=PETROLEO,
+    )
+    alto += 20
+    alto = _encabezado_gastos(lienzo, alto)
+
+    for nombre, monto in ordenados:
+        if alto + 16 > LIMITE_INFERIOR:
+            lienzo.nueva_pagina()
+            alto = _cabecera_reporte(lienzo, continuacion=True)
+            lienzo.texto(
+                MARGEN, alto, "Gastos por categoría (continuación)",
+                tam=11, negrita=True, color=PETROLEO,
+            )
+            alto += 18
+            alto = _encabezado_gastos(lienzo, alto)
+        porcentaje = float(monto / total * 100) if total else 0.0
+        _fila_gasto(lienzo, alto, nombre, monto, porcentaje)
+        alto += 16
+
+    lienzo.linea(
+        MARGEN, alto, MARGEN + ANCHO_CONTENIDO, alto, GRIS_BORDE, 0.6
+    )
+    alto += 13
+    lienzo.texto(
+        MARGEN, alto, "Total de gastos", tam=9, negrita=True, color=PETROLEO
+    )
+    lienzo.texto_derecha(
+        MARGEN + 420, alto, _monto_pdf(total),
+        tam=9, negrita=True, color=TERRACOTA,
+    )
+    lienzo.texto_derecha(
+        MARGEN + ANCHO_CONTENIDO, alto, "100%",
+        tam=9, negrita=True, color=GRIS_TEXTO,
+    )
+    return alto + 32
+
+
+def _encabezado_gastos(lienzo, alto):
+    lienzo.texto(MARGEN, alto, "Categoría", tam=7.5, negrita=True, color=GRIS_TEXTO)
+    lienzo.texto(
+        MARGEN + 200, alto, "Distribución",
+        tam=7.5, negrita=True, color=GRIS_TEXTO,
+    )
+    lienzo.texto_derecha(
+        MARGEN + 420, alto, "Monto", tam=7.5, negrita=True, color=GRIS_TEXTO
+    )
+    lienzo.texto_derecha(
+        MARGEN + ANCHO_CONTENIDO, alto, "%",
+        tam=7.5, negrita=True, color=GRIS_TEXTO,
+    )
+    lienzo.linea(
+        MARGEN, alto + 5, MARGEN + ANCHO_CONTENIDO, alto + 5, GRIS_BORDE, 0.6
+    )
+    return alto + 16
+
+
+def _fila_gasto(lienzo, alto, nombre, monto, porcentaje):
+    lienzo.texto(
+        MARGEN, alto + 11,
+        lienzo.recortar(nombre, 190, 8.5),
+        tam=8.5, color=PETROLEO,
+    )
+    barra_x = MARGEN + 200
+    ancho_barra = 150
+    lienzo.rect(barra_x, alto + 4, ancho_barra, 8, relleno=BARRA_FONDO)
+    relleno = max(0.0, min(1.0, porcentaje / 100))
+    if relleno > 0:
+        lienzo.rect(
+            barra_x, alto + 4, ancho_barra * relleno, 8, relleno=TERRACOTA
+        )
+    lienzo.texto_derecha(
+        MARGEN + 420, alto + 11, _monto_pdf(monto), tam=8.5, color=TERRACOTA
+    )
+    lienzo.texto_derecha(
+        MARGEN + ANCHO_CONTENIDO, alto + 11,
+        f"{porcentaje:.1f}%", tam=8.5, color=GRIS_TEXTO,
+    )
+
+
+def _bloque_detalle(lienzo, filas, alto):
+    if alto + 60 > LIMITE_INFERIOR:
+        lienzo.nueva_pagina()
+        alto = _cabecera_reporte(lienzo, continuacion=True)
+
+    lienzo.texto(
+        MARGEN, alto, "Detalle de movimientos",
+        tam=11, negrita=True, color=PETROLEO,
+    )
+    alto += 20
+    alto = _encabezado_detalle(lienzo, alto)
+
+    for indice, (transaccion, cartera, categoria, autor) in enumerate(filas):
+        if alto + FILA_DETALLE > LIMITE_INFERIOR:
+            lienzo.nueva_pagina()
+            alto = _cabecera_reporte(lienzo, continuacion=True)
+            lienzo.texto(
+                MARGEN, alto, "Detalle de movimientos (continuación)",
+                tam=10, negrita=True, color=PETROLEO,
+            )
+            alto += 18
+            alto = _encabezado_detalle(lienzo, alto)
+        _fila_detalle(
+            lienzo, alto, indice, transaccion, cartera, categoria, autor
+        )
+        alto += FILA_DETALLE
+
+
+def _encabezado_detalle(lienzo, alto):
+    lienzo.rect(MARGEN, alto, ANCHO_CONTENIDO, 16, relleno=PETROLEO)
+    for titulo, desplazamiento, ancho, alineacion in COLUMNAS_DETALLE:
+        x = MARGEN + desplazamiento
+        if alineacion == "der":
+            lienzo.texto_derecha(
+                x + ancho - 4, alto + 11, titulo,
+                tam=7.5, negrita=True, color=BLANCO,
+            )
+        else:
+            lienzo.texto(
+                x + 4, alto + 11, titulo,
+                tam=7.5, negrita=True, color=BLANCO,
+            )
+    return alto + 16
+
+
+def _fila_detalle(lienzo, alto, indice, transaccion, cartera, categoria, autor):
+    if indice % 2 == 0:
+        lienzo.rect(
+            MARGEN, alto, ANCHO_CONTENIDO, FILA_DETALLE, relleno=CREMA
+        )
+    valores = [
+        transaccion.fechaTransaccion.strftime("%d/%m/%Y"),
+        "Ingreso" if transaccion.tipo == "INGRESO" else "Gasto",
+        categoria.nombre if categoria else "Sin categoría",
+        transaccion.descripcion or "-",
+        f"{autor.nombreUsuario} {autor.apaterno or ''}".strip(),
+        transaccion.metodoPago or "-",
+        _monto_pdf(transaccion.monto),
+    ]
+    color_monto = PETROLEO if transaccion.tipo == "INGRESO" else TERRACOTA
+    for (_, desplazamiento, ancho, alineacion), valor in zip(
+        COLUMNAS_DETALLE, valores
+    ):
+        x = MARGEN + desplazamiento
+        if alineacion == "der":
+            lienzo.texto_derecha(
+                x + ancho - 4,
+                alto + 11,
+                lienzo.recortar(valor, ancho - 6, 7.5),
+                tam=7.5,
+                negrita=True,
+                color=color_monto,
+            )
+        else:
+            lienzo.texto(
+                x + 4,
+                alto + 11,
+                lienzo.recortar(valor, ancho - 8, 7.5),
+                tam=7.5,
+                color=PETROLEO,
+            )
+
+
+def _dibujar_logo(lienzo, x, y, tam):
+    escala = tam / 180.0
+
+    def px(valor):
+        return x + valor * escala
+
+    def py(valor):
+        return y + valor * escala
+
+    oscuro = (0.090, 0.231, 0.271)  # #173B45
+    amarillo_claro = (0.976, 0.847, 0.341)  # #F9D857
+    amarillo = (0.957, 0.769, 0.188)  # #F4C430
+    amarillo_borde = (0.878, 0.678, 0.106)  # #E0AD1B
+    crema = (0.973, 0.953, 0.937)  # #F8F3EF
+
+    lienzo.circulo(
+        px(104), py(54), 25 * escala,
+        relleno=amarillo_claro, borde=amarillo,
+        grosor=max(1.0, 4 * escala),
+    )
+    lienzo.circulo(
+        px(78), py(65), 25 * escala,
+        relleno=amarillo, borde=amarillo_borde,
+        grosor=max(1.0, 4 * escala),
+    )
+    lienzo.rect_redondeado(
+        px(28), py(58), 118 * escala, 98 * escala, 16 * escala, relleno=oscuro
+    )
+    lienzo.linea(
+        px(38), py(66), px(136), py(66), crema, max(1.0, 5 * escala)
+    )
+    lienzo.rect_redondeado(
+        px(112), py(95), 42 * escala, 28 * escala, 14 * escala,
+        relleno=oscuro, borde=crema, grosor=max(1.0, 5 * escala),
+    )
+    lienzo.circulo(px(126), py(109), 4.5 * escala, relleno=crema)
 
 
 def _pdf_bytes(lineas, por_pagina=52):
-    paginas = [lineas[i : i + por_pagina] for i in range(0, len(lineas), por_pagina)]
-    if not paginas:
-        paginas = [[]]
+    lienzo = _LienzoPdf()
+    for indice, linea in enumerate(lineas):
+        if indice and indice % por_pagina == 0:
+            lienzo.nueva_pagina()
+        alto = 60 + (indice % por_pagina) * 13
+        lienzo.texto(MARGEN, alto, linea, tam=10, color=PETROLEO)
+    lienzo.sello_pies("FinanzApp")
+    return lienzo.a_bytes()
 
-    page_ids = []
-    content_ids = []
-    siguiente_id = 4
-    for _ in paginas:
-        page_ids.append(siguiente_id)
-        content_ids.append(siguiente_id + 1)
-        siguiente_id += 2
 
-    objetos = [
-        "<< /Type /Catalog /Pages 2 0 R >>",
-        (
-            "<< /Type /Pages /Kids ["
-            + " ".join(f"{page_id} 0 R" for page_id in page_ids)
-            + f"] /Count {len(paginas)} >>"
-        ),
-        "<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>",
-    ]
+class _LienzoPdf:
+    ALTO = ALTO_PAGINA
 
-    for page_id, content_id, pagina in zip(page_ids, content_ids, paginas):
-        objetos.append(
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-            f"/Resources << /Font << /F1 3 0 R >> >> /Contents {content_id} 0 R >>"
-        )
-        texto = "BT\n/F1 8 Tf\n36 760 Td\n10 TL\n"
-        for linea in pagina:
-            texto += f"({_pdf_escape(_pdf_texto(linea)[:108])}) Tj\nT*\n"
-        texto += "ET"
-        objetos.append(
-            f"<< /Length {len(texto.encode('latin-1'))} >>\n"
-            f"stream\n{texto}\nendstream"
+    def __init__(self):
+        self.paginas = []
+        self._ops = []
+        self.paginas.append(self._ops)
+
+    def nueva_pagina(self):
+        self._ops = []
+        self.paginas.append(self._ops)
+
+    def texto(self, x, y, texto, tam=9, negrita=False, color=PETROLEO):
+        fuente = "F2" if negrita else "F1"
+        self._ops.append(
+            f"BT /{fuente} {tam:.2f} Tf {_rgb(color)} rg "
+            f"1 0 0 1 {x:.2f} {self.ALTO - y:.2f} Tm "
+            f"({_pdf_escape(_pdf_texto(texto))}) Tj ET"
         )
 
-    salida = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
-    offsets = [0]
-    for numero, objeto in enumerate(objetos, start=1):
-        offsets.append(len(salida))
-        salida += f"{numero} 0 obj\n{objeto}\nendobj\n".encode("latin-1")
+    def texto_derecha(
+        self, x_derecha, y, texto, tam=9, negrita=False, color=PETROLEO
+    ):
+        ancho = self.ancho_texto(texto, tam, negrita)
+        self.texto(x_derecha - ancho, y, texto, tam, negrita, color)
 
-    inicio_xref = len(salida)
-    salida += f"xref\n0 {len(objetos) + 1}\n".encode("latin-1")
-    salida += b"0000000000 65535 f \n"
-    for offset in offsets[1:]:
-        salida += f"{offset:010d} 00000 n \n".encode("latin-1")
-    salida += (
-        f"trailer\n<< /Size {len(objetos) + 1} /Root 1 0 R >>\n"
-        f"startxref\n{inicio_xref}\n%%EOF\n"
-    ).encode("latin-1")
-    return salida
+    def ancho_texto(self, texto, tam=9, negrita=False):
+        limpio = _pdf_texto(texto)
+        total = sum(
+            _ANCHOS_TEXTO.get(caracter, 556) for caracter in limpio
+        )
+        ancho = total / 1000 * tam
+        return ancho * 1.04 if negrita else ancho
+
+    def recortar(self, texto, ancho, tam=9, negrita=False):
+        texto = str(texto)
+        if self.ancho_texto(texto, tam, negrita) <= ancho:
+            return texto
+        recorte = texto
+        while recorte and self.ancho_texto(
+            recorte + "...", tam, negrita
+        ) > ancho:
+            recorte = recorte[:-1]
+        return f"{recorte}..." if recorte else ""
+
+    def rect(self, x, y, ancho, alto, relleno=None, borde=None, grosor=1):
+        ruta = (
+            f"{x:.2f} {self.ALTO - y - alto:.2f} "
+            f"{ancho:.2f} {alto:.2f} re"
+        )
+        self._ops.append(_operacion_forma(ruta, relleno, borde, grosor))
+
+    def linea(self, x1, y1, x2, y2, color, grosor=1):
+        self._ops.append(
+            f"{_rgb(color)} RG {grosor:.2f} w "
+            f"{x1:.2f} {self.ALTO - y1:.2f} m "
+            f"{x2:.2f} {self.ALTO - y2:.2f} l S"
+        )
+
+    def rect_redondeado(
+        self, x, y, ancho, alto, radio, relleno=None, borde=None, grosor=1
+    ):
+        ruta = _ruta_rect_redondeado(
+            x, y, ancho, alto, radio, self.ALTO
+        )
+        self._ops.append(_operacion_forma(ruta, relleno, borde, grosor))
+
+    def circulo(self, cx, cy, radio, relleno=None, borde=None, grosor=1):
+        ruta = _ruta_circulo(cx, cy, radio, self.ALTO)
+        self._ops.append(_operacion_forma(ruta, relleno, borde, grosor))
+
+    def sello_pies(self, texto):
+        total = len(self.paginas)
+        for indice, pagina in enumerate(self.paginas):
+            anterior = self._ops
+            self._ops = pagina
+            self.linea(
+                MARGEN, 752, ANCHO_PAGINA - MARGEN, 752, GRIS_BORDE, 0.6
+            )
+            self.texto(MARGEN, 766, texto, tam=7.5, color=GRIS_TEXTO)
+            self.texto_derecha(
+                ANCHO_PAGINA - MARGEN,
+                766,
+                f"Página {indice + 1} de {total}",
+                tam=7.5,
+                color=GRIS_TEXTO,
+            )
+            self._ops = anterior
+
+    def a_bytes(self):
+        cantidad = len(self.paginas)
+        ids_pagina = []
+        ids_contenido = []
+        siguiente = 5
+        for _ in range(cantidad):
+            ids_pagina.append(siguiente)
+            ids_contenido.append(siguiente + 1)
+            siguiente += 2
+
+        objetos = [
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            (
+                "<< /Type /Pages /Kids ["
+                + " ".join(
+                    f"{identificador} 0 R" for identificador in ids_pagina
+                )
+                + f"] /Count {cantidad} >>"
+            ),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica "
+            "/Encoding /WinAnsiEncoding >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold "
+            "/Encoding /WinAnsiEncoding >>",
+        ]
+
+        for id_pagina, id_contenido, operaciones in zip(
+            ids_pagina, ids_contenido, self.paginas
+        ):
+            objetos.append(
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> "
+                f"/Contents {id_contenido} 0 R >>"
+            )
+            contenido = "\n".join(operaciones)
+            objetos.append(
+                f"<< /Length {len(contenido.encode('latin-1'))} >>\n"
+                f"stream\n{contenido}\nendstream"
+            )
+
+        salida = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
+        offsets = [0]
+        for numero, objeto in enumerate(objetos, start=1):
+            offsets.append(len(salida))
+            salida += f"{numero} 0 obj\n{objeto}\nendobj\n".encode("latin-1")
+
+        inicio_xref = len(salida)
+        salida += f"xref\n0 {len(objetos) + 1}\n".encode("latin-1")
+        salida += b"0000000000 65535 f \n"
+        for offset in offsets[1:]:
+            salida += f"{offset:010d} 00000 n \n".encode("latin-1")
+        salida += (
+            f"trailer\n<< /Size {len(objetos) + 1} /Root 1 0 R >>\n"
+            f"startxref\n{inicio_xref}\n%%EOF\n"
+        ).encode("latin-1")
+        return salida
+
+
+def _operacion_forma(ruta, relleno, borde, grosor):
+    partes = []
+    if relleno is not None:
+        partes.append(f"{_rgb(relleno)} rg")
+    if borde is not None:
+        partes.append(f"{_rgb(borde)} RG {grosor:.2f} w")
+    partes.append(ruta)
+    if relleno is not None and borde is not None:
+        partes.append("B")
+    elif relleno is not None:
+        partes.append("f")
+    elif borde is not None:
+        partes.append("S")
+    return " ".join(partes)
+
+
+def _ruta_rect_redondeado(x, y, ancho, alto, radio, alto_pagina):
+    k = 0.5522847498
+    radio = min(radio, ancho / 2, alto / 2)
+    x0, y0, x1, y1 = x, y, x + ancho, y + alto
+    control = radio * k
+
+    def convertir(valor):
+        return alto_pagina - valor
+
+    return " ".join(
+        [
+            f"{x0 + radio:.2f} {convertir(y0):.2f} m",
+            f"{x1 - radio:.2f} {convertir(y0):.2f} l",
+            f"{x1 - radio + control:.2f} {convertir(y0):.2f} "
+            f"{x1:.2f} {convertir(y0 + radio - control):.2f} "
+            f"{x1:.2f} {convertir(y0 + radio):.2f} c",
+            f"{x1:.2f} {convertir(y1 - radio):.2f} l",
+            f"{x1:.2f} {convertir(y1 - radio + control):.2f} "
+            f"{x1 - radio + control:.2f} {convertir(y1):.2f} "
+            f"{x1 - radio:.2f} {convertir(y1):.2f} c",
+            f"{x0 + radio:.2f} {convertir(y1):.2f} l",
+            f"{x0 + radio - control:.2f} {convertir(y1):.2f} "
+            f"{x0:.2f} {convertir(y1 - radio + control):.2f} "
+            f"{x0:.2f} {convertir(y1 - radio):.2f} c",
+            f"{x0:.2f} {convertir(y0 + radio):.2f} l",
+            f"{x0:.2f} {convertir(y0 + radio - control):.2f} "
+            f"{x0 + radio - control:.2f} {convertir(y0):.2f} "
+            f"{x0 + radio:.2f} {convertir(y0):.2f} c",
+            "h",
+        ]
+    )
+
+
+def _ruta_circulo(cx, cy, radio, alto_pagina):
+    k = 0.5522847498 * radio
+
+    def convertir(valor):
+        return alto_pagina - valor
+
+    return " ".join(
+        [
+            f"{cx + radio:.2f} {convertir(cy):.2f} m",
+            f"{cx + radio:.2f} {convertir(cy + k):.2f} "
+            f"{cx + k:.2f} {convertir(cy + radio):.2f} "
+            f"{cx:.2f} {convertir(cy + radio):.2f} c",
+            f"{cx - k:.2f} {convertir(cy + radio):.2f} "
+            f"{cx - radio:.2f} {convertir(cy + k):.2f} "
+            f"{cx - radio:.2f} {convertir(cy):.2f} c",
+            f"{cx - radio:.2f} {convertir(cy - k):.2f} "
+            f"{cx - k:.2f} {convertir(cy - radio):.2f} "
+            f"{cx:.2f} {convertir(cy - radio):.2f} c",
+            f"{cx + k:.2f} {convertir(cy - radio):.2f} "
+            f"{cx + radio:.2f} {convertir(cy - k):.2f} "
+            f"{cx + radio:.2f} {convertir(cy):.2f} c",
+            "h",
+        ]
+    )
+
+
+def _rgb(color):
+    return f"{color[0]:.3f} {color[1]:.3f} {color[2]:.3f}"
 
 
 def _pdf_texto(valor):
