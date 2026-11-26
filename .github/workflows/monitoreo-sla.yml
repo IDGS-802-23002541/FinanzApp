@@ -1,0 +1,41 @@
+name: monitoreo-sla
+
+# Plan barato: repo publico => minutos de Actions gratis.
+# Un job por hora que mide 60 veces (1 por minuto) y sube la evidencia.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitoreo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Medir disponibilidad por 60 minutos
+        working-directory: Backend_FinanzaApp
+        run: |
+          ARCHIVO="metricas/sla-$(date -u +%Y%m%d-%H).jsonl"
+          python scripts/monitoreo_sla.py \
+            --repeticiones 60 \
+            --intervalo 60 \
+            --salida "$ARCHIVO"
+
+      - name: Subir evidencia
+        uses: actions/upload-artifact@v4
+        with:
+          name: sla-${{ github.run_id }}
+          path: Backend_FinanzaApp/metricas/*.jsonl
+          retention-days: 30
+          if-no-files-found: error
