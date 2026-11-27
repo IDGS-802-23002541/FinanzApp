@@ -5,10 +5,11 @@ const CATEGORIAS = ['GENERAL', 'CUENTA', 'CARTERA', 'PAGOS', 'ERROR', 'OTRO']
 const ESTADOS = ['ABIERTO', 'EN_PROCESO', 'ESPERA', 'RESUELTO', 'CERRADO']
 
 // apiClient.get no acepta opciones: la query se arma aquí.
-function queryTickets({ estado, pagina, porPagina }) {
+function queryTickets({ estado, busqueda, pagina, porPagina }) {
   const params = new URLSearchParams()
 
   if (estado && ESTADOS.includes(estado)) params.append('estado', estado)
+  if (busqueda) params.append('busqueda', busqueda)
   if (pagina) params.append('pagina', String(pagina))
   if (porPagina) params.append('porPagina', String(porPagina))
 
@@ -26,9 +27,9 @@ export async function crearTicket({ asunto, descripcion, categoria }) {
   return data.ticket
 }
 
-export async function listarTickets({ estado, pagina = 1, porPagina = 10 } = {}) {
+export async function listarTickets({ estado, busqueda, pagina = 1, porPagina = 10 } = {}) {
   const { data } = await api.get(
-    `/soporte/tickets${queryTickets({ estado, pagina, porPagina })}`,
+    `/soporte/tickets${queryTickets({ estado, busqueda, pagina, porPagina })}`,
   )
 
   return data

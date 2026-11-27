@@ -10,10 +10,12 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
+  InputAdornment,
   Pagination,
   Paper,
   Snackbar,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
 import FormularioTicket from '../components/FormularioTicket.jsx'
@@ -23,6 +25,7 @@ import EstadoTicket from '../components/EstadoTicket.jsx'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
 import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 import {
+  IconoBuscar,
   IconoFlechaDerecha,
   IconoMas,
   IconoPersonas,
@@ -62,6 +65,8 @@ const estiloPapel = {
 // reportes (tickets #208, #212 y #288).
 function MisTickets() {
   const [filtro, setFiltro] = useState('')
+  const [texto, setTexto] = useState('')
+  const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(1)
   const [tickets, setTickets] = useState([])
   const [paginacion, setPaginacion] = useState({ total: 0, totalPaginas: 0 })
@@ -75,6 +80,17 @@ function MisTickets() {
   const [eliminando, setEliminando] = useState(false)
   const [aviso, setAviso] = useState(null)
 
+  // La búsqueda espera a que dejes de escribir para no pedir por cada tecla.
+  useEffect(() => {
+    const temporizador = setTimeout(() => {
+      const limpio = texto.trim()
+      setBusqueda((actual) => (actual === limpio ? actual : limpio))
+      setPagina(1)
+    }, 300)
+
+    return () => clearTimeout(temporizador)
+  }, [texto])
+
   useEffect(() => {
     let vigente = true
 
@@ -84,6 +100,7 @@ function MisTickets() {
       try {
         const datos = await listarTickets({
           estado: filtro,
+          busqueda,
           pagina,
           porPagina: POR_PAGINA,
         })
@@ -104,7 +121,7 @@ function MisTickets() {
     return () => {
       vigente = false
     }
-  }, [filtro, pagina, recarga])
+  }, [filtro, busqueda, pagina, recarga])
 
   const cambiarFiltro = (valor) => {
     setFiltro(valor)
@@ -233,13 +250,34 @@ function MisTickets() {
           </Stack>
 
           {!cargando && !error && (
-            <Typography
-              sx={{ fontSize: '0.8125rem', color: 'var(--color-texto-secundario)' }}
-            >
-              {paginacion.total === 1
-                ? '1 reporte'
-                : `${paginacion.total} reportes`}
-            </Typography>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+              <TextField
+                size="small"
+                placeholder="Buscar reporte…"
+                value={texto}
+                onChange={(evento) => setTexto(evento.target.value)}
+                sx={{
+                  width: { xs: '100%', sm: 260 },
+                  '& .MuiOutlinedInput-root': { minHeight: 40 },
+                }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconoBuscar sx={{ fontSize: 16 }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+              <Typography
+                sx={{ fontSize: '0.8125rem', color: 'var(--color-texto-secundario)' }}
+              >
+                {paginacion.total === 1
+                  ? '1 reporte'
+                  : `${paginacion.total} reportes`}
+              </Typography>
+            </Stack>
           )}
         </Stack>
       </Box>
