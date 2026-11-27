@@ -67,6 +67,11 @@ function validar({ nombre, categoria, presupuesto, fechaInicio, fechaFin }) {
   // Las carteras de Hogar no manejan presupuesto ni fechas.
   if (!admitePeriodo(categoria)) return errores
 
+  if (presupuesto !== '' && Number.isNaN(Number(presupuesto))) {
+    errores.presupuesto = 'El presupuesto debe ser un número.'
+    return errores
+  }
+
   if (presupuesto !== '' && Number(presupuesto) < 0) {
     errores.presupuesto = 'El presupuesto no puede ser negativo.'
   }
