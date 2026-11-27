@@ -73,6 +73,7 @@ function FormularioTicket({ alCrear }) {
           label="Asunto"
           size="small"
           required
+          fullWidth
           value={formulario.asunto}
           onChange={cambiar('asunto')}
           inputProps={{ maxLength: 150 }}
@@ -84,6 +85,7 @@ function FormularioTicket({ alCrear }) {
           label="Descripción"
           size="small"
           required
+          fullWidth
           multiline
           minRows={4}
           value={formulario.descripcion}
@@ -97,6 +99,7 @@ function FormularioTicket({ alCrear }) {
           select
           label="Categoría"
           size="small"
+          fullWidth
           value={formulario.categoria}
           onChange={cambiar('categoria')}
         >
