@@ -16,8 +16,20 @@ export async function listarTransacciones(
   return data // { items, paginacion, totales }
 }
 
-export async function actualizarTransaccion(idTransaccion, datos) {
-  const { data } = await api.put(`/transacciones/${idTransaccion}`, datos)
+// El backend exige monto numérico también al editar: se normaliza igual que al
+// crear, si no `validar_monto` responde "El monto debe ser un número".
+export async function actualizarTransaccion(
+  idTransaccion,
+  { tipo, monto, fecha, categoriaId, metodoPago, descripcion },
+) {
+  const { data } = await api.put(`/transacciones/${idTransaccion}`, {
+    tipo,
+    monto: Number(monto),
+    fecha,
+    ...(tipo === 'GASTO' ? { categoriaId: Number(categoriaId) } : {}),
+    metodoPago: metodoPago || undefined,
+    descripcion: descripcion?.trim() || undefined,
+  })
   return data
 }
 
