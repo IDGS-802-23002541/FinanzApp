@@ -273,9 +273,16 @@ def test_cliente_solo_ve_sus_tickets():
     assert filtros[0].right.value == 7
 
 
-def test_staff_ve_todos_los_tickets():
+def test_admin_ve_todos_los_tickets():
     assert soporte_service._filtros_visibilidad(UsuarioFalso("ADMIN", 7)) == []
-    assert soporte_service._filtros_visibilidad(UsuarioFalso("TRABAJADOR", 7)) == []
+
+
+def test_trabajador_ve_sus_asignados_y_libres():
+    filtros = soporte_service._filtros_visibilidad(UsuarioFalso("TRABAJADOR", 7))
+    assert len(filtros) == 1
+    sql = str(filtros[0])
+    assert '"idTicket" IN' in sql
+    assert '"idTicket" NOT IN' in sql
 
 
 def test_asignar_cierra_asignacion_anterior_y_deja_ticket_en_proceso():

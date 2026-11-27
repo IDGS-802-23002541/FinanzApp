@@ -592,8 +592,24 @@ def _es_staff():
 
 
 def _filtros_visibilidad(usuario):
-    if usuario.rolGlobal in ROLES_BUZON:
+    if usuario.rolGlobal == "ADMIN":
         return []
+    if usuario.rolGlobal == "TRABAJADOR":
+        # El trabajador ve los tickets asignados a él y los que aún no tienen
+        # responsable (para poder tomarlos).
+        con_responsable = db.select(AsignacionTicket.ticketId).where(
+            AsignacionTicket.esActual == db.true()
+        )
+        mios = db.select(AsignacionTicket.ticketId).where(
+            AsignacionTicket.esActual == db.true(),
+            AsignacionTicket.trabajadorId == usuario.idUsuario,
+        )
+        return [
+            db.or_(
+                Ticket.idTicket.in_(mios),
+                Ticket.idTicket.notin_(con_responsable),
+            )
+        ]
     return [Ticket.usuarioId == usuario.idUsuario]
 
 
