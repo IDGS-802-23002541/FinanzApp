@@ -9,6 +9,8 @@ import {
   MenuItem,
   Stack,
   TextField,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import SelectorCategorias from '../../carteras/components/SelectorCategorias.jsx'
 import { crearPago, editarPago } from '../api.js'
