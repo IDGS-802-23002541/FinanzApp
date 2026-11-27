@@ -18,8 +18,18 @@ export async function listarTransacciones(
   return data // { items, paginacion, totales }
 }
 
-export async function actualizarTransaccion(idTransaccion, datos) {
-  const { data } = await api.put(`/transacciones/${idTransaccion}`, datos)
+export async function actualizarTransaccion(
+  idTransaccion,
+  { tipo, monto, fecha, categoriaId, metodoPago, descripcion },
+) {
+  const { data } = await api.put(`/transacciones/${idTransaccion}`, {
+    tipo,
+    monto: Number(monto),
+    fecha,
+    ...(tipo === 'GASTO' ? { categoriaId: Number(categoriaId) } : {}),
+    metodoPago: metodoPago || undefined,
+    descripcion: descripcion?.trim() || undefined,
+  })
   return data
 }
 
