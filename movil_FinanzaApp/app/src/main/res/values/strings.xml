@@ -55,6 +55,7 @@
     <string name="mi_cuenta_descripcion">Administra tu perfil, tu seguridad y las notificaciones de FinanzApp.</string>
     <string name="mi_cuenta_cambiar_contrasena">Cambiar contraseña</string>
     <string name="mi_cuenta_seguridad">Seguridad y preferencias</string>
+    <string name="mi_cuenta_editar_detalle">Nombre, apellidos y correo</string>
     <string name="mi_cuenta_zona_riesgo">Zona de riesgo</string>
     <string name="mi_cuenta_zona_riesgo_aviso">Estas acciones afectan tu cuenta de forma permanente. Te pediremos tu contraseña antes de continuar.</string>
     <string name="mi_cuenta_notificaciones_listas">Notificaciones de la app</string>

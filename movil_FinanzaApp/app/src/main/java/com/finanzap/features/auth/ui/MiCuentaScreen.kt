@@ -137,7 +137,7 @@ fun MiCuentaContenido(
                 FilaAccion(
                     icono = Icons.Default.Edit,
                     titulo = stringResource(R.string.cuenta_editar_datos),
-                    detalle = stringResource(R.string.mi_cuenta_descripcion),
+                    detalle = stringResource(R.string.mi_cuenta_editar_detalle),
                     onClick = onEditarCuenta
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
