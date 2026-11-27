@@ -185,6 +185,7 @@ function DetalleCartera() {
       {modalAbierto && (
         <DialogoNuevaTransaccion
           idCartera={id}
+          categoriaCartera={cartera.categoria}
           onCerrar={() => setModalAbierto(false)}
           onGuardada={() => {
             setModalAbierto(false)

@@ -50,9 +50,17 @@ function validar({ tipo, monto, fecha, categoriaId }) {
 }
 
 // formulario de ingreso/gasto (HU-05.1). Se monta limpio en cada apertura.
-function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion }) {
+function DialogoNuevaTransaccion({
+  idCartera,
+  onCerrar,
+  onGuardada,
+  transaccion,
+  categoriaCartera,
+}) {
   const tema = useTheme()
   const pantallaChica = useMediaQuery(tema.breakpoints.down('sm'))
+  // En las carteras con presupuesto el dinero que entra es una aportación.
+  const textoIngreso = categoriaCartera === 'Hogar' ? 'Ingreso' : 'Aportación'
   const [formulario, setFormulario] = useState({
     tipo: transaccion?.tipo ?? 'GASTO',
     monto: transaccion?.monto != null ? String(transaccion.monto) : '',
@@ -131,7 +139,7 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
                 Gasto
               </ToggleButton>
               <ToggleButton value="INGRESO" sx={{ flex: 1 }}>
-                Ingreso
+                {textoIngreso}
               </ToggleButton>
             </ToggleButtonGroup>
 
@@ -148,7 +156,6 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
               <TextField
                 size="small"
                 label="Monto"
-                placeholder="$0.00"
                 type="number"
                 value={formulario.monto}
                 onChange={actualizar('monto')}
@@ -240,4 +247,3 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
 }
 
 export default DialogoNuevaTransaccion
-
