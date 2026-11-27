@@ -29,6 +29,8 @@
   --color-exito: var(--paleta-petroleo);
   --color-alerta: var(--paleta-terracota);
   --color-error: #a94832;
+  /* Fondo del aviso de la zona de riesgo (contenedor destructivo). */
+  --color-peligro-fondo: #f7e2dd;
   /* Signo negativo del dinero y acciones destructivas. */
   --color-negativo: #a94832;
   --color-info: #4a7c86;
@@ -94,6 +96,8 @@
   --color-exito: #8fd1b8;
   --color-alerta: var(--paleta-coral);
   --color-error: #e08a73;
+  /* Fondo del aviso de la zona de riesgo en oscuro. */
+  --color-peligro-fondo: #43231d;
   --color-negativo: #e08a73;
   --color-info: #8fc1cb;
 

@@ -95,13 +95,13 @@ function ZonaRiesgo() {
     >
       <Box
         sx={{
-          borderLeft: '3px solid var(--color-alerta)',
-          backgroundColor: 'var(--color-superficie-suave)',
+          borderLeft: '3px solid var(--color-error)',
+          backgroundColor: 'var(--color-peligro-fondo)',
           borderRadius: 'var(--radio-sm)',
           p: 1.5,
         }}
       >
-        <Typography sx={{ fontSize: '0.875rem', color: 'var(--color-alerta)' }}>
+        <Typography sx={{ fontSize: '0.875rem', color: 'var(--color-error)' }}>
           Al desactivar o eliminar tu cuenta, tus carteras dejan de estar
           disponibles para ti y para sus colaboradores.
         </Typography>
