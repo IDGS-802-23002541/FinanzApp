@@ -27,6 +27,7 @@ def listar_tickets():
         responsable=request.args.get("responsable"),
         desde=request.args.get("desde"),
         hasta=request.args.get("hasta"),
+        busqueda=request.args.get("busqueda"),
         pagina=request.args.get("pagina", "1"),
         por_pagina=request.args.get("porPagina", "20"),
     )

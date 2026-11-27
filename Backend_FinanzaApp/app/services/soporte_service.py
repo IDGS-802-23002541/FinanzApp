@@ -1,8 +1,9 @@
 import math
+import unicodedata
 from datetime import timedelta
 
 from flask_jwt_extended import current_user
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
@@ -18,10 +19,37 @@ PRIORIDADES = {"BAJA", "MEDIA", "ALTA", "URGENTE"}
 ESTADOS = {"ABIERTO", "EN_PROCESO", "ESPERA", "RESUELTO", "CERRADO"}
 
 
+def _normalizar_asunto(texto):
+    """Minúsculas, sin acentos, sin espacios dobles ni puntuación final."""
+    sin_acentos = "".join(
+        letra
+        for letra in unicodedata.normalize("NFKD", texto or "")
+        if not unicodedata.combining(letra)
+    )
+    return " ".join(sin_acentos.lower().split()).strip(" .,;:!¡¿?-")
+
+
 def crear_ticket(datos):
     campos, error = _validar_ticket(datos)
     if error:
         return {"ok": False, "mensaje": error}, 400
+
+    # Un usuario no puede repetir el mismo asunto mientras el anterior siga
+    # abierto o en proceso (issue #365). Se normaliza el texto para que las
+    # tildes, la puntuación y los espacios no dejen pasar duplicados.
+    abiertos = db.session.execute(
+        db.select(Ticket.asunto).where(
+            Ticket.usuarioId == current_user.idUsuario,
+            Ticket.estado.in_(("ABIERTO", "EN_PROCESO")),
+        )
+    ).scalars().all()
+    objetivo = _normalizar_asunto(campos["asunto"])
+    if any(_normalizar_asunto(asunto) == objetivo for asunto in abiertos):
+        return {
+            "ok": False,
+            "mensaje": "Ya tienes un reporte abierto con ese asunto. "
+            "Espera la respuesta antes de crear otro.",
+        }, 409
 
     ticket = Ticket(
         usuarioId=current_user.idUsuario,
@@ -57,6 +85,7 @@ def listar_tickets(
     responsable=None,
     desde=None,
     hasta=None,
+    busqueda=None,
     pagina="1",
     por_pagina="20",
 ):
@@ -93,6 +122,13 @@ def listar_tickets(
             "mensaje": "El filtro desde no puede ser posterior a hasta.",
         }, 400
 
+    busqueda = (busqueda or "").strip()
+    if len(busqueda) > 100:
+        return {
+            "ok": False,
+            "mensaje": "La búsqueda admite hasta 100 caracteres.",
+        }, 400
+
     pagina, error = _entero("pagina", pagina, 1)
     if error:
         return {"ok": False, "mensaje": error}, 400
@@ -106,6 +142,13 @@ def listar_tickets(
     if estado:
         filtros.append(Ticket.estado == estado)
     filtros.extend(_filtros_tickets(categoria, prioridad, responsable, desde, hasta))
+    if busqueda:
+        # Busca por asunto (sin distinguir mayúsculas) o por folio exacto.
+        patron = f"%{busqueda.lower()}%"
+        condiciones = [func.lower(Ticket.asunto).like(patron)]
+        if busqueda.isdigit():
+            condiciones.append(Ticket.idTicket == int(busqueda))
+        filtros.append(or_(*condiciones))
 
     try:
         total = db.session.execute(
