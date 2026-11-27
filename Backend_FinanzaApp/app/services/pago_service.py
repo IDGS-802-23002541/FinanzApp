@@ -21,8 +21,15 @@ from app.services.transaccion_service import (
 )
 from app.utils import validacion
 
-FRECUENCIAS = {"DIARIO", "SEMANAL", "MENSUAL", "ANUAL"}
+FRECUENCIAS = {"DIARIO", "SEMANAL", "QUINCENAL", "MENSUAL", "ANUAL"}
 ESTADOS_PAGO = {"ACTIVO", "PAUSADO", "CANCELADO"}
+# México centro usa UTC-6 todo el año desde 2022; evita depender de tzdata.
+DESFASE_MEXICO = timedelta(hours=6)
+
+
+def _hoy():
+    """Fecha local de México para comparar vencimientos sin desfase UTC."""
+    return (datetime.now(timezone.utc) - DESFASE_MEXICO).date()
 
 
 def calcular_proxima_ejecucion(fecha_inicio, frecuencia):
@@ -35,6 +42,8 @@ def _sumar_periodos(fecha, frecuencia, periodos):
         return fecha + timedelta(days=periodos)
     if frecuencia == "SEMANAL":
         return fecha + timedelta(days=7 * periodos)
+    if frecuencia == "QUINCENAL":
+        return fecha + timedelta(days=15 * periodos)
     if frecuencia == "MENSUAL":
         return _sumar_meses(fecha, periodos)
     if frecuencia == "ANUAL":
@@ -74,13 +83,6 @@ def crear(datos):
 
     if membresia is None:
         return {"ok": False, "mensaje": "Cartera no encontrada."}, 404
-    if membresia.rol != "ADMIN":
-        return {
-            "ok": False,
-            "mensaje": (
-                "Solo el propietario de la cartera puede crear pagos recurrentes."
-            ),
-        }, 403
 
     cambios, error = _validar(datos)
     if error:
@@ -206,16 +208,9 @@ def listar(cartera_id=None, estado=None, pagina="1", por_pagina="20"):
 
 
 def editar(id_pago, datos):
-    pago, membresia, error = _pago_y_membresia(id_pago)
+    pago, _, error = _pago_y_membresia(id_pago)
     if error:
         return error
-    if membresia.rol != "ADMIN":
-        return {
-            "ok": False,
-            "mensaje": (
-                "Solo el propietario de la cartera puede editar pagos recurrentes."
-            ),
-        }, 403
 
     cambios, error = _validar(datos, pago)
     if error:
@@ -249,16 +244,9 @@ def editar(id_pago, datos):
 
 
 def eliminar(id_pago):
-    pago, membresia, error = _pago_y_membresia(id_pago)
+    pago, _, error = _pago_y_membresia(id_pago)
     if error:
         return error
-    if membresia.rol != "ADMIN":
-        return {
-            "ok": False,
-            "mensaje": (
-                "Solo el propietario de la cartera puede cancelar pagos recurrentes."
-            ),
-        }, 403
 
     pago.estado = "CANCELADO"
 
@@ -292,6 +280,29 @@ def marcar_hecho(id_pago, datos):
                 "ok": False,
                 "mensaje": "Las fechas deben tener formato YYYY-MM-DD.",
             }, 400
+
+    if pago.estado == "CANCELADO":
+        return {
+            "ok": False,
+            "mensaje": "Este pago recurrente está cancelado.",
+        }, 409
+
+    if fecha_programada is None:
+        return {
+            "ok": False,
+            "mensaje": "El pago no tiene una fecha de vencimiento.",
+        }, 409
+
+    # Solo se puede marcar cuando vence hoy o ya venció.
+    hoy = _hoy()
+    if fecha_programada > hoy:
+        return {
+            "ok": False,
+            "mensaje": (
+                "Este pago aún no vence. Podrás marcarlo como hecho "
+                f"a partir del {fecha_programada.isoformat()}."
+            ),
+        }, 409
 
     try:
         existe = db.session.execute(
@@ -395,7 +406,9 @@ def _validar(datos, pago=None):
             return None, "La frecuencia es obligatoria."
         frecuencia = frecuencia.strip().upper()
         if frecuencia not in FRECUENCIAS:
-            return None, ("La frecuencia debe ser DIARIO, SEMANAL, MENSUAL o ANUAL.")
+            return None, (
+            "La frecuencia debe ser DIARIO, SEMANAL, QUINCENAL, MENSUAL o ANUAL."
+        )
         cambios["frecuencia"] = frecuencia
 
     if "fechaInicio" in datos or pago is None:

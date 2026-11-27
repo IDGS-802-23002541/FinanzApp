@@ -70,7 +70,7 @@ class PagoRecurrente(db.Model):
         db.Index("IX_PAGOS_RECURRENTES_proxima", "estado", "proximaEjecucion"),
         db.CheckConstraint("monto > 0", name="CK_PAGOS_RECURRENTES_monto"),
         db.CheckConstraint(
-            "frecuencia IN ('DIARIO', 'SEMANAL', 'MENSUAL', 'ANUAL')",
+            "frecuencia IN ('DIARIO', 'SEMANAL', 'QUINCENAL', 'MENSUAL', 'ANUAL')",
             name="CK_PAGOS_RECURRENTES_frecuencia",
         ),
         db.CheckConstraint(

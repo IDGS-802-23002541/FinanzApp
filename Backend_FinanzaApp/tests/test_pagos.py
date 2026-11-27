@@ -28,8 +28,14 @@ class PagoFalso:
         self.frecuencia = "MENSUAL"
         self.fechaInicio = date(2026, 12, 1)
         self.fechaFin = None
-        self.proximaEjecucion = date(2027, 1, 1)
+        self.proximaEjecucion = date(2026, 11, 1)
         self.estado = "ACTIVO"
+
+
+class PagoFuturoFalso(PagoFalso):
+    def __init__(self):
+        super().__init__()
+        self.proximaEjecucion = date(2099, 1, 1)
 
 
 class FilaFalsa:
@@ -98,7 +104,7 @@ def test_validar_rechaza_monto_no_positivo():
 
 def test_validar_rechaza_frecuencia_invalida():
     datos = _pago_valido()
-    datos["frecuencia"] = "QUINCENAL"
+    datos["frecuencia"] = "BIMESTRAL"
     cambios, error = pago_service._validar(datos)
     assert cambios is None
     assert error
@@ -125,6 +131,7 @@ def test_validar_rechaza_fecha_con_formato_incorrecto():
     [
         ("DIARIO", date(2026, 12, 2)),
         ("SEMANAL", date(2026, 12, 8)),
+        ("QUINCENAL", date(2026, 12, 16)),
         ("MENSUAL", date(2027, 1, 1)),
         ("ANUAL", date(2027, 12, 1)),
     ],
@@ -144,17 +151,18 @@ def test_calcular_proxima_ejecucion_usa_ultimo_dia_del_mes():
 
 def test_calcular_proxima_ejecucion_rechaza_frecuencia_desconocida():
     with pytest.raises(ValueError):
-        pago_service.calcular_proxima_ejecucion(date(2026, 12, 1), "QUINCENAL")
+        pago_service.calcular_proxima_ejecucion(date(2026, 12, 1), "BIMESTRAL")
 
 
-def test_colaborador_no_puede_editar(monkeypatch):
+def test_colaborador_puede_editar(monkeypatch):
     monkeypatch.setattr(
         pago_service,
         "_pago_y_membresia",
         lambda id_pago: (PagoFalso(), MiembroFalso(rol="COLABORADOR"), None),
     )
-    payload, status = pago_service.editar(4, {"nombre": "Otro"})
-    assert status == 403
+    # Con un cuerpo vacío el permiso se pasa y falla la validacion, no el rol.
+    payload, status = pago_service.editar(4, {})
+    assert status == 400
     assert payload["ok"] is False
 
 
@@ -202,4 +210,15 @@ def test_colaborador_tambien_puede_marcar_hecho(monkeypatch):
     payload, status = pago_service.marcar_hecho(4, {})
     assert status == 409
     assert payload["ok"] is False
+
+
+def test_no_se_puede_marcar_un_pago_que_aun_no_vence(monkeypatch):
+    monkeypatch.setattr(
+        pago_service,
+        "_pago_y_membresia",
+        lambda id_pago: (PagoFuturoFalso(), MiembroFalso(rol="COLABORADOR"), None),
+    )
+    payload, status = pago_service.marcar_hecho(4, {})
+    assert status == 409
+    assert "no vence" in payload["mensaje"]
 
