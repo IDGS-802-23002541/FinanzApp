@@ -37,6 +37,18 @@ const COLUMNAS = [
   'Estado',
 ]
 
+// El backend devuelve el enum; la tabla y las tarjetas muestran el texto.
+const FRECUENCIAS_TEXTO = {
+  DIARIO: 'Diario',
+  SEMANAL: 'Semanal',
+  QUINCENAL: 'Quincenal',
+  MENSUAL: 'Mensual',
+  ANUAL: 'Anual',
+}
+
+const textoFrecuencia = (frecuencia) =>
+  FRECUENCIAS_TEXTO[frecuencia] ?? frecuencia
+
 const sxBoton = {
   px: 2,
   borderRadius: 'var(--radio-md)',
@@ -277,7 +289,7 @@ function PagosCartera() {
                   <Typography
                     sx={{ mt: 0.25, fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
                   >
-                    {nombreCategoria(pago.categoriaId)} · {pago.frecuencia}
+                    {nombreCategoria(pago.categoriaId)} · {textoFrecuencia(pago.frecuencia)}
                   </Typography>
                   <Typography
                     sx={{ fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
@@ -392,7 +404,7 @@ function PagosCartera() {
                   <TableCell align="right" sx={{ fontWeight: 700 }}>
                     {formatearMonto(pago.monto)}
                   </TableCell>
-                  <TableCell>{pago.frecuencia}</TableCell>
+                  <TableCell>{textoFrecuencia(pago.frecuencia)}</TableCell>
                   <TableCell>
                     <Typography sx={{ fontSize: '0.875rem' }}>
                       {pago.proximaEjecucion
@@ -593,4 +605,3 @@ function PagosCartera() {
 }
 
 export default PagosCartera
-

@@ -9,6 +9,8 @@ import {
   MenuItem,
   Stack,
   TextField,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import SelectorCategorias from '../../carteras/components/SelectorCategorias.jsx'
 import { crearPago, editarPago } from '../api.js'
@@ -17,6 +19,7 @@ import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 const FRECUENCIAS = [
   { valor: 'DIARIO', texto: 'Diario' },
   { valor: 'SEMANAL', texto: 'Semanal' },
+  { valor: 'QUINCENAL', texto: 'Quincenal' },
   { valor: 'MENSUAL', texto: 'Mensual' },
   { valor: 'ANUAL', texto: 'Anual' },
 ]
