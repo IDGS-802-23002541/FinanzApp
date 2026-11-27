@@ -96,6 +96,17 @@ function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
     setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
   }
 
+  // Presupuesto: solo dígitos y un punto decimal; descarta cualquier letra o símbolo.
+  const actualizarPresupuesto = (evento) => {
+    const limpio = evento.target.value.replace(/[^0-9.]/g, '')
+    const [entero, ...decimales] = limpio.split('.')
+    const valor = decimales.length > 0 ? `${entero}.${decimales.join('')}` : entero
+
+    setErrores((actuales) => ({ ...actuales, presupuesto: undefined }))
+    setErrorEnvio('')
+    setFormulario((actual) => ({ ...actual, presupuesto: valor }))
+  }
+
   // Al elegir Hogar se descartan presupuesto y fechas, porque no aplican.
   const cambiarCategoria = (evento) => {
     const categoria = evento.target.value
@@ -221,13 +232,13 @@ function DialogoNuevaCartera({ cartera, onCerrar, onGuardada }) {
                 <TextField
                   size="small"
                   label="Presupuesto inicial"
-                  placeholder="$0.00"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={formulario.presupuesto}
-                  onChange={actualizar('presupuesto')}
+                  onChange={actualizarPresupuesto}
                   error={Boolean(errores.presupuesto)}
                   helperText={errores.presupuesto}
-                  slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               )}
 
