@@ -66,6 +66,10 @@ fun SoporteScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.cargar()
+    }
+
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar()
     }
@@ -440,7 +444,15 @@ private fun TarjetaTicket(
                 )
             }
 
-            if (ticket.asignacionActual != null) {
+            if (ticket.asignado != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.soporte_atendido_por, ticket.asignado),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else if (ticket.asignacionActual != null) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.soporte_asignado),
@@ -450,7 +462,7 @@ private fun TarjetaTicket(
             }
 
             if (ticket.respuestas.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(R.string.soporte_respuestas),
                     style = MaterialTheme.typography.labelMedium,
@@ -458,17 +470,30 @@ private fun TarjetaTicket(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 ticket.respuestas.forEach { respuesta ->
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         shape = RoundedCornerShape(Dimensiones.RadioCampo),
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            if (respuesta.autor != null) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.soporte_respondio,
+                                        respuesta.autor
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
                             Text(
                                 text = respuesta.mensaje,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = formatearFechaHoraCorta(respuesta.fechaCreacion),
                                 style = MaterialTheme.typography.labelSmall,
@@ -506,14 +531,23 @@ private fun TarjetaTicket(
 
 @Composable
 private fun ChipEstado(estado: String) {
+    val (fondo, texto) = when (estado) {
+        "RESUELTO", "CERRADO" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) to
+            MaterialTheme.colorScheme.primary
+        "EN_PROCESO" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.28f) to
+            MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f) to
+            MaterialTheme.colorScheme.secondary
+    }
     Surface(
         shape = RoundedCornerShape(percent = 50),
-        color = MaterialTheme.colorScheme.secondaryContainer
+        color = fondo
     ) {
         Text(
             text = etiquetaEstado(estado),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = FontWeight.Bold,
+            color = texto,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }

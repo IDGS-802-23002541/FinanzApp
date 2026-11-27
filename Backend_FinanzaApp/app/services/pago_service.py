@@ -279,17 +279,9 @@ def eliminar(id_pago):
 
 
 def marcar_hecho(id_pago, datos):
-    pago, membresia, error = _pago_y_membresia(id_pago)
+    pago, _, error = _pago_y_membresia(id_pago)
     if error:
         return error
-    if membresia.rol != "ADMIN":
-        return {
-            "ok": False,
-            "mensaje": (
-                "Solo el propietario de la cartera puede registrar el pago "
-                "como realizado."
-            ),
-        }, 403
 
     fecha_programada = pago.proximaEjecucion
     if datos.get("fechaProgramada") is not None:

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Reportes exportados por la app para compartirlos o abrirlos con otra app. -->
+    <external-files-path name="reportes" path="Download/" />
+    <files-path name="reportes_internos" path="." />
+</paths>

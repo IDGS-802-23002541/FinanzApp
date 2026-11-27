@@ -101,3 +101,29 @@ Reglas:
 - Montos en MXN (`es-MX`), fechas `dd/MM/aaaa`.
 - **Eliminaciones lógicas**: nunca borrar datos; reflejar `estado`/`fechaBaja`.
 - Cachear datos para uso offline básico y sincronizar al reconectar.
+
+## Revisión de la app (noviembre 2026)
+
+Cambios aplicados a partir de la valoración de la app móvil:
+
+- **Menú lateral**: encabezado con identidad de FinanzApp, secciones agrupadas (Principal / Cuenta), ítem activo resaltado y forma redondeada.
+- **Carteras**:
+  - La tarjeta de las carteras compartidas ya no muestra «mi pagado», «mi cuota» ni «mi saldo».
+  - Nuevo filtro por estado: Activas, Inactivas, Finalizadas y Todas. Se consultan los tres estados al backend y se filtran en la app.
+  - Las carteras inactivas o finalizadas se marcan como solo lectura y ocultan «Registrar gasto».
+  - «Gastos por categoría» usa una gráfica circular (dona) reutilizable en `core/ui/GraficaDona.kt`.
+  - «Salir de la cartera» ahora advierte el riesgo de dejar de participar y perder el acceso, y se muestra en color de error.
+- **Pagos recurrentes**:
+  - La primera carga ya no depende de `ON_RESUME`; se dispara al entrar a la pantalla.
+  - Cualquier miembro activo puede marcar un pago como hecho (alineado con `docs/rbac-permisos.md`), con indicador de progreso y aviso de éxito. Crear y editar sigue siendo exclusivo del propietario.
+- **Reportes**:
+  - El tipo va primero y la cartera se elige en un desplegable, filtrado por tipo (igual que la web).
+  - Resumen, gráficas y exportación se agrupan en tarjetas; la categoría se muestra como gráfica circular.
+  - El PDF/CSV se guarda en el almacenamiento de la app y se ofrece **Abrir** o **Compartir** con otra app mediante `FileProvider`, para que sea accesible desde el teléfono.
+- **Soporte**: las respuestas muestran **quién respondió** y el ticket indica el trabajador asignado.
+- **Mi cuenta**: el perfil y las acciones se presentan como lista con iconos; desactivar/eliminar cuenta se mueven a una «Zona de riesgo» discreta, sin botones resaltados.
+- **Notificaciones**: se crea el canal al arrancar, se declara `POST_NOTIFICATIONS` y en *Notificaciones* hay un botón **Enviar notificación de prueba** que solicita el permiso y publica un aviso real del sistema. Sirve para comprobar el funcionamiento en clase.
+
+Pruebas: `:app:testDebugUnitTest`, `:app:compileDebugAndroidTestKotlin` y `:app:assembleDebug` en verde; `tests/test_pagos.py` (backend) en verde.
+
+Referencias: #TG-46, #TG-47, #TG-48, #TG-51, #TG-58, #TG-60, #TG-62, #TG-65, #TG-68.

@@ -184,3 +184,22 @@ def test_no_se_puede_marcar_dos_veces_el_mismo_periodo(monkeypatch):
     payload, status = pago_service.marcar_hecho(4, {})
     assert status == 409
     assert payload["ok"] is False
+
+
+def test_colaborador_tambien_puede_marcar_hecho(monkeypatch):
+    """El RBAC permite marcar como hecho a cualquier miembro de la cartera."""
+    monkeypatch.setattr(
+        pago_service,
+        "_pago_y_membresia",
+        lambda id_pago: (PagoFalso(), MiembroFalso(rol="COLABORADOR"), None),
+    )
+    # Llega a la validación de duplicado (409), no a un 403 por rol.
+    monkeypatch.setattr(
+        pago_service.db.session,
+        "execute",
+        lambda *args, **kwargs: FilaFalsa((1,)),
+    )
+    payload, status = pago_service.marcar_hecho(4, {})
+    assert status == 409
+    assert payload["ok"] is False
+

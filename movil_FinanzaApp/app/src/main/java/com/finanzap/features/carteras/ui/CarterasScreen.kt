@@ -63,7 +63,6 @@ import com.finanzap.core.ui.EstadoError
 import com.finanzap.core.ui.EstadoVacio
 import com.finanzap.core.ui.LocalAbrirMenu
 import com.finanzap.core.util.formatearRangoFechas
-import com.finanzap.core.util.formatearMoneda
 import com.finanzap.features.carteras.Cartera
 import com.finanzap.features.carteras.RolEnCartera
 import com.finanzap.features.carteras.TipoCartera
@@ -94,6 +93,7 @@ fun CarterasScreen(
             onUnirseCartera = onUnirseCartera,
             onSegmentoChange = viewModel::onSegmentoChange,
             onTipoChange = viewModel::onTipoChange,
+            onEstadoChange = viewModel::onEstadoChange,
             onBusquedaChange = viewModel::onBusquedaChange,
             onReintentar = viewModel::cargar
         )
@@ -108,7 +108,8 @@ data class CarterasAcciones(
     val onSegmentoChange: (Segmento) -> Unit,
     val onTipoChange: (TipoCartera?) -> Unit,
     val onBusquedaChange: (String) -> Unit,
-    val onReintentar: () -> Unit
+    val onReintentar: () -> Unit,
+    val onEstadoChange: (EstadoCartera) -> Unit = {}
 )
 
 @Composable
@@ -122,6 +123,7 @@ fun CarterasContenido(
     val onUnirseCartera = acciones.onUnirseCartera
     val onSegmentoChange = acciones.onSegmentoChange
     val onTipoChange = acciones.onTipoChange
+    val onEstadoChange = acciones.onEstadoChange
     val onBusquedaChange = acciones.onBusquedaChange
     val onReintentar = acciones.onReintentar
 
@@ -163,6 +165,13 @@ fun CarterasContenido(
                 }
 
                 item {
+                    FiltrosEstado(
+                        seleccionado = state.estado,
+                        onEstadoChange = onEstadoChange
+                    )
+                }
+
+                item {
                     Buscador(
                         busqueda = state.busqueda,
                         onBusquedaChange = onBusquedaChange
@@ -181,7 +190,9 @@ fun CarterasContenido(
                 }
 
                 state.carteras.isEmpty() -> item {
-                    if (state.busqueda.isNotBlank() || state.tipo != null) {
+                    if (state.busqueda.isNotBlank() || state.tipo != null ||
+                        state.estado != EstadoCartera.ACTIVAS
+                    ) {
                         EstadoVacio(
                             icono = Icons.Default.Search,
                             titulo = stringResource(R.string.carteras_sin_resultados_titulo),
@@ -207,15 +218,18 @@ fun CarterasContenido(
                 }
 
                 else -> items(items = state.carteras, key = { it.id }) { cartera ->
+                    val puedeRegistrar = cartera.estado == "ACTIVA"
                     if (cartera.rol == RolEnCartera.PROPIETARIO) {
                         TarjetaPropia(
                             cartera = cartera,
+                            puedeRegistrar = puedeRegistrar,
                             onAbrir = { onAbrirCartera(cartera) },
                             onRegistrarGasto = { onRegistrarGasto(cartera) }
                         )
                     } else {
                         TarjetaCompartida(
                             cartera = cartera,
+                            puedeRegistrar = puedeRegistrar,
                             onRegistrarGasto = { onRegistrarGasto(cartera) },
                             onVerCartera = { onAbrirCartera(cartera) }
                         )
@@ -410,6 +424,46 @@ private fun FiltrosTipo(
 }
 
 @Composable
+private fun FiltrosEstado(
+    seleccionado: EstadoCartera,
+    onEstadoChange: (EstadoCartera) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        EstadoCartera.entries.forEach { estado ->
+            FilterChip(
+                selected = seleccionado == estado,
+                onClick = { onEstadoChange(estado) },
+                label = { Text(estado.etiqueta()) },
+                shape = RoundedCornerShape(percent = 50),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onTertiary
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = seleccionado == estado,
+                    borderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun EstadoCartera.etiqueta(): String = when (this) {
+    EstadoCartera.ACTIVAS -> stringResource(R.string.carteras_estado_activas)
+    EstadoCartera.INACTIVAS -> stringResource(R.string.carteras_estado_inactivas)
+    EstadoCartera.FINALIZADAS -> stringResource(R.string.carteras_estado_finalizadas)
+    EstadoCartera.TODAS -> stringResource(R.string.carteras_estado_todas)
+}
+
+@Composable
 private fun Buscador(busqueda: String, onBusquedaChange: (String) -> Unit) {
     OutlinedTextField(
         value = busqueda,
@@ -439,6 +493,7 @@ private fun Buscador(busqueda: String, onBusquedaChange: (String) -> Unit) {
 @Composable
 private fun TarjetaPropia(
     cartera: Cartera,
+    puedeRegistrar: Boolean,
     onAbrir: () -> Unit,
     onRegistrarGasto: () -> Unit
 ) {
@@ -475,6 +530,10 @@ private fun TarjetaPropia(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             EtiquetaTipo(cartera.tipo)
+                            if (cartera.estado != "ACTIVA") {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                EtiquetaEstado(cartera.estado)
+                            }
 
                             if (cartera.fechaInicio != null && cartera.fechaFin != null) {
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -512,21 +571,24 @@ private fun TarjetaPropia(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = onRegistrarGasto,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(percent = 50),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.carteras_registrar_gasto),
-                            maxLines = 1
-                        )
+                    if (puedeRegistrar) {
+                        Button(
+                            onClick = onRegistrarGasto,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(percent = 50),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.carteras_registrar_gasto),
+                                maxLines = 1
+                            )
+                        }
                     }
                     OutlinedButton(
                         onClick = onAbrir,
                         shape = RoundedCornerShape(percent = 50),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                        modifier = if (puedeRegistrar) Modifier else Modifier.weight(1f)
                     ) {
                         Text(
                             text = stringResource(R.string.carteras_abrir),
@@ -542,6 +604,7 @@ private fun TarjetaPropia(
 @Composable
 private fun TarjetaCompartida(
     cartera: Cartera,
+    puedeRegistrar: Boolean,
     onRegistrarGasto: () -> Unit,
     onVerCartera: () -> Unit
 ) {
@@ -580,11 +643,7 @@ private fun TarjetaCompartida(
                 if (cartera.inicialesAdministrador != null) {
                     Surface(
                         shape = CircleShape,
-                        color = if (cartera.miSaldo < 0) {
-                            MaterialTheme.colorScheme.secondary
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
+                        color = MaterialTheme.colorScheme.primary
                     ) {
                         Text(
                             text = cartera.inicialesAdministrador,
@@ -597,36 +656,21 @@ private fun TarjetaCompartida(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            EtiquetaTipo(cartera.tipo)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                EtiquetaTipo(cartera.tipo)
+                if (cartera.estado != "ACTIVA") {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    EtiquetaEstado(cartera.estado)
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                Row(modifier = Modifier.padding(vertical = 14.dp, horizontal = 10.dp)) {
-                    Metrica(
-                        etiqueta = stringResource(R.string.carteras_mi_pagado),
-                        valor = formatearMoneda(cartera.miPagado),
-                        modifier = Modifier.weight(1f)
-                    )
-                    Metrica(
-                        etiqueta = stringResource(R.string.carteras_mi_cuota),
-                        valor = formatearMoneda(cartera.miCuota),
-                        modifier = Modifier.weight(1f)
-                    )
-                    Metrica(
-                        etiqueta = stringResource(R.string.carteras_mi_saldo),
-                        valor = formatearMoneda(cartera.miSaldo),
-                        colorValor = if (cartera.miSaldo < 0) {
-                            MaterialTheme.colorScheme.secondary
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+            if (cartera.estado != "ACTIVA") {
+                Text(
+                    text = stringResource(R.string.carteras_solo_lectura),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             // Hogar no maneja presupuesto, así que no muestra avance.
@@ -654,11 +698,7 @@ private fun TarjetaCompartida(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp),
-                    color = if (cartera.miSaldo < 0) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
+                    color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     strokeCap = StrokeCap.Round,
                     drawStopIndicator = {}
@@ -668,20 +708,23 @@ private fun TarjetaCompartida(
             Spacer(modifier = Modifier.height(14.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = onRegistrarGasto,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(percent = 50),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.carteras_registrar_gasto),
-                        maxLines = 1
-                    )
+                if (puedeRegistrar) {
+                    Button(
+                        onClick = onRegistrarGasto,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.carteras_registrar_gasto),
+                            maxLines = 1
+                        )
+                    }
                 }
                 OutlinedButton(
                     onClick = onVerCartera,
-                    shape = RoundedCornerShape(percent = 50)
+                    shape = RoundedCornerShape(percent = 50),
+                    modifier = if (puedeRegistrar) Modifier else Modifier.weight(1f)
                 ) {
                     Text(stringResource(R.string.carteras_ver))
                 }
@@ -691,28 +734,20 @@ private fun TarjetaCompartida(
 }
 
 @Composable
-private fun Metrica(
-    etiqueta: String,
-    valor: String,
-    colorValor: Color = Color.Unspecified,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+private fun EtiquetaEstado(estado: String) {
+    Surface(
+        shape = RoundedCornerShape(percent = 50),
+        color = MaterialTheme.colorScheme.errorContainer
+    ) {
         Text(
-            text = etiqueta,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = valor,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = if (colorValor == Color.Unspecified) {
-                MaterialTheme.colorScheme.onSurface
+            text = if (estado == "FINALIZADA") {
+                stringResource(R.string.carteras_estado_finalizada)
             } else {
-                colorValor
-            }
+                stringResource(R.string.carteras_estado_inactiva)
+            },
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }

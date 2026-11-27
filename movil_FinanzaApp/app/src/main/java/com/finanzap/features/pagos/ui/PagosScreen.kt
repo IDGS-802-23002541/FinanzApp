@@ -35,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,6 +85,13 @@ fun PagosScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pagoACancelar by remember { mutableStateOf<PagoRecurrente?>(null) }
+    val snackbar = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    // La primera carga no depende de ON_RESUME: al navegar, ese evento ya ocurrió.
+    LaunchedEffect(carteraId) {
+        viewModel.cargar(carteraId)
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
@@ -91,6 +101,9 @@ fun PagosScreen(
         viewModel.eventos.collect { evento ->
             when (evento) {
                 PagosEvento.Cancelado -> pagoACancelar = null
+                PagosEvento.MarcadoHecho -> snackbar.showSnackbar(
+                    context.getString(R.string.pagos_marcado_hecho)
+                )
             }
         }
     }
@@ -99,6 +112,7 @@ fun PagosScreen(
         state = state,
         carteraNombre = carteraNombre,
         puedeEditar = puedeEditar,
+        snackbar = snackbar,
         onVolver = onVolver,
         onReintentar = viewModel::reintentar,
         onAnterior = viewModel::anterior,
@@ -169,6 +183,7 @@ fun PagosContenido(
     state: PagosUiState,
     carteraNombre: String,
     puedeEditar: Boolean,
+    snackbar: SnackbarHostState,
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
     onAnterior: () -> Unit,
@@ -187,7 +202,8 @@ fun PagosContenido(
     onCerrarFormulario: () -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbar) }
     ) { margen ->
         LazyColumn(
             modifier = Modifier
@@ -234,7 +250,7 @@ fun PagosContenido(
             } else {
                 item {
                     Text(
-                        text = stringResource(R.string.pagos_solo_consulta),
+                        text = stringResource(R.string.pagos_aviso_miembro),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -281,6 +297,7 @@ fun PagosContenido(
                         TarjetaPago(
                             pago = pago,
                             puedeEditar = puedeEditar,
+                            marcandoHecho = state.marcandoHechoId == pago.id,
                             onEditar = onEditar,
                             onCancelar = onCancelar,
                             onMarcarHecho = onMarcarHecho
@@ -499,6 +516,7 @@ private fun FormularioPago(
 private fun TarjetaPago(
     pago: PagoRecurrente,
     puedeEditar: Boolean,
+    marcandoHecho: Boolean,
     onEditar: (PagoRecurrente) -> Unit,
     onCancelar: (PagoRecurrente) -> Unit,
     onMarcarHecho: (PagoRecurrente) -> Unit
@@ -563,7 +581,7 @@ private fun TarjetaPago(
                 }
             }
 
-            if (puedeEditar && pago.estado != "CANCELADO") {
+            if (pago.estado != "CANCELADO") {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -571,22 +589,34 @@ private fun TarjetaPago(
                 ) {
                     OutlinedButton(
                         onClick = { onMarcarHecho(pago) },
+                        enabled = !marcandoHecho,
                         shape = RoundedCornerShape(Dimensiones.RadioCampo),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(stringResource(R.string.pagos_marcar_hecho))
+                        if (marcandoHecho) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.pagos_marcando))
+                        } else {
+                            Text(stringResource(R.string.pagos_marcar_hecho))
+                        }
                     }
-                    IconButton(onClick = { onEditar(pago) }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.comun_editar)
-                        )
-                    }
-                    IconButton(onClick = { onCancelar(pago) }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.comun_eliminar)
-                        )
+                    if (puedeEditar) {
+                        IconButton(onClick = { onEditar(pago) }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.comun_editar)
+                            )
+                        }
+                        IconButton(onClick = { onCancelar(pago) }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.comun_eliminar)
+                            )
+                        }
                     }
                 }
             }

@@ -19,6 +19,11 @@
     <string name="comun_pendiente_titulo">Próximamente</string>
     <string name="comun_pendiente_mensaje">Este módulo estará disponible en una próxima entrega.</string>
     <string name="menu_abrir">Abrir menú</string>
+    <string name="menu_lema">Finanzas compartidas, cuentas claras</string>
+    <string name="menu_seccion_principal">Principal</string>
+    <string name="menu_seccion_cuenta">Cuenta</string>
+    <string name="menu_cerrar_sesion_aviso">Cerrar sesión</string>
+    <string name="comun_cerrar">Cerrar</string>
     <string name="reportes_titulo">Reportes</string>
     <string name="soporte_titulo">Soporte</string>
 
@@ -47,8 +52,14 @@
 
     <!-- Mi cuenta -->
     <string name="mi_cuenta_titulo">Mi cuenta</string>
-    <string name="mi_cuenta_descripcion">Administra tu contraseña y tu cuenta. Estas acciones son permanentes.</string>
+    <string name="mi_cuenta_descripcion">Administra tu perfil, tu seguridad y las notificaciones de FinanzApp.</string>
     <string name="mi_cuenta_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="mi_cuenta_seguridad">Seguridad y preferencias</string>
+    <string name="mi_cuenta_editar_detalle">Nombre, apellidos y correo</string>
+    <string name="mi_cuenta_zona_riesgo">Zona de riesgo</string>
+    <string name="mi_cuenta_zona_riesgo_aviso">Estas acciones afectan tu cuenta de forma permanente. Te pediremos tu contraseña antes de continuar.</string>
+    <string name="mi_cuenta_notificaciones_listas">Notificaciones de la app</string>
+    <string name="mi_cuenta_notificaciones_detalle">Recibe avisos de movimientos y pagos próximos.</string>
     <string name="mi_cuenta_desactivar">Desactivar cuenta</string>
     <string name="mi_cuenta_eliminar">Eliminar cuenta</string>
     <string name="mi_cuenta_desactivar_titulo">Desactivar cuenta</string>
@@ -76,6 +87,17 @@
     <string name="preferencias_pagos">Recordatorios de pagos recurrentes</string>
     <string name="preferencias_guardar">Guardar preferencias</string>
     <string name="preferencias_guardadas">Preferencias guardadas.</string>
+    <string name="preferencias_prueba_titulo">Comprobar notificaciones</string>
+    <string name="preferencias_prueba_detalle">Envía un aviso de prueba al teléfono para confirmar que todo está activo.</string>
+    <string name="preferencias_prueba_boton">Enviar notificación de prueba</string>
+    <string name="preferencias_permiso_denegado">Las notificaciones están bloqueadas. Actívalas en Ajustes del teléfono para ver los avisos.</string>
+    <string name="preferencias_permiso_concedido">Notificaciones activadas en este teléfono.</string>
+    <string name="notificaciones_canal_nombre">Recordatorios de FinanzApp</string>
+    <string name="notificaciones_canal_descripcion">Avisos de movimientos y pagos recurrentes.</string>
+    <string name="notificaciones_prueba_titulo">Prueba de notificación</string>
+    <string name="notificaciones_prueba_texto">¡Funciona! Así verás los avisos de FinanzApp en tu teléfono.</string>
+    <string name="notificaciones_pagos_titulo">Tienes pagos próximos</string>
+    <string name="notificaciones_pagos_texto">%1$d pago(s) recurrente(s) vencen en los próximos días. Revísalos en su cartera.</string>
 
     <!-- Cambiar contraseña -->
     <string name="cambiar_contrasena_titulo">Cambiar contraseña</string>
@@ -126,6 +148,14 @@
     <string name="carteras_mis">Mis carteras</string>
     <string name="carteras_compartidas">Compartidas</string>
     <string name="carteras_todas">Todas</string>
+    <string name="carteras_filtro_estado">Estado de la cartera</string>
+    <string name="carteras_estado_activas">Activas</string>
+    <string name="carteras_estado_inactivas">Inactivas</string>
+    <string name="carteras_estado_finalizadas">Finalizadas</string>
+    <string name="carteras_estado_todas">Todas</string>
+    <string name="carteras_estado_inactiva">Inactiva</string>
+    <string name="carteras_estado_finalizada">Finalizada</string>
+    <string name="carteras_solo_lectura">Solo lectura</string>
     <string name="carteras_buscar">Buscar cartera…</string>
     <string name="carteras_limpiar_busqueda">Limpiar búsqueda</string>
     <string name="carteras_nueva">Nueva cartera</string>
@@ -156,10 +186,11 @@
     <string name="transacciones_balance">Balance</string>
     <string name="transacciones_pagina">Página %1$d de %2$d</string>
     <string name="transacciones_ver">Ver transacciones</string>
-    <string name="detalle_salir">Salir de la cartera</string>
-    <string name="detalle_salir_titulo">Salir de la cartera</string>
-    <string name="detalle_salir_aviso">Dejarás de ver esta cartera y sus movimientos. ¿Deseas continuar?</string>
+    <string name="detalle_salir">Salir de la cartera (dejar de participar)</string>
+    <string name="detalle_salir_titulo">Dejar de participar</string>
+    <string name="detalle_salir_aviso">Al salir dejarás de participar en esta cartera: ya no verás sus movimientos, pagos ni reportes, y perderás el acceso a su información aunque sigas teniendo registros en ella. Esta acción no se puede deshacer por tu cuenta. ¿Deseas continuar?</string>
     <string name="detalle_salir_confirmar">Salir</string>
+    <string name="detalle_salir_riesgo">Riesgo: dejarás de participar y perderás el acceso a la cartera.</string>
     <string name="cartera_editar_titulo">Editar cartera</string>
     <string name="cartera_editar_guardar">Guardar cambios</string>
     <string name="cartera_inactivar">Inactivar cartera</string>
@@ -211,8 +242,13 @@
 
     <!-- Reportes -->
     <string name="reportes_descripcion">Filtra tus carteras, revisa la vista previa y exporta el reporte.</string>
+    <string name="reportes_filtros_titulo">Filtros del reporte</string>
+    <string name="reportes_resumen">Resumen</string>
+    <string name="reportes_graficas">Gráficas</string>
     <string name="reportes_cartera">Cartera</string>
     <string name="reportes_cartera_todas">Todas mis carteras</string>
+    <string name="reportes_cartera_seleccionar">Selecciona una cartera</string>
+    <string name="reportes_sin_carteras">Aún no tienes carteras para reportar.</string>
     <string name="reportes_tipo">Tipo</string>
     <string name="reportes_tipo_todos">Todos los tipos</string>
     <string name="reportes_periodo">Periodo</string>
@@ -235,8 +271,13 @@
     <string name="reportes_vacio_mensaje">No hay movimientos para los filtros seleccionados.</string>
     <string name="reportes_exportar_csv">Exportar CSV</string>
     <string name="reportes_exportar_pdf">Exportar PDF</string>
+    <string name="reportes_exportar_titulo">Exportar reporte</string>
     <string name="reportes_exportando">Generando…</string>
-    <string name="reportes_archivo_titulo">Archivo guardado en el dispositivo</string>
+    <string name="reportes_archivo_titulo">Tu reporte está listo</string>
+    <string name="reportes_archivo_ayuda">Ábrelo o compártelo desde tu teléfono; también puedes enviarlo a tu computadora.</string>
+    <string name="reportes_abrir_archivo">Abrir</string>
+    <string name="reportes_compartir_archivo">Compartir</string>
+    <string name="reportes_archivo_error">No se pudo abrir el archivo en este teléfono.</string>
 
     <!-- Soporte -->
     <string name="soporte_descripcion">Reporta una duda o un problema y sigue aquí el avance del equipo de soporte.</string>
@@ -258,6 +299,8 @@
     <string name="soporte_eliminar_aviso">El reporte dejará de aparecer en tu lista, pero se conserva su historial y sus respuestas.</string>
     <string name="soporte_eliminar_confirmar">Eliminar reporte</string>
     <string name="soporte_respuestas">Respuestas</string>
+    <string name="soporte_respondio">Respondió: %1$s</string>
+    <string name="soporte_atendido_por">Atendido por: %1$s</string>
     <string name="soporte_asignado">Atendido por el equipo de soporte</string>
     <string name="soporte_pagina">Página %1$d de %2$d</string>
     <string name="soporte_categoria_general">General</string>
@@ -298,6 +341,9 @@
     <string name="pagos_error_fecha_inicio">Elige la fecha de inicio.</string>
     <string name="pagos_error_fechas">La fecha fin no puede ser anterior a la fecha inicio.</string>
     <string name="pagos_marcar_hecho">Marcar como hecho</string>
+    <string name="pagos_marcando">Registrando…</string>
+    <string name="pagos_marcado_hecho">Pago registrado como realizado.</string>
+    <string name="pagos_aviso_miembro">Ya puedes marcar los pagos como hechos. Solo el propietario crea y edita pagos.</string>
     <string name="pagos_cancelar_titulo">Cancelar pago recurrente</string>
     <string name="pagos_cancelar_mensaje">El pago dejará de programarse. Los gastos ya registrados se conservan. ¿Deseas continuar?</string>
     <string name="pagos_cancelar_confirmar">Sí, cancelar</string>

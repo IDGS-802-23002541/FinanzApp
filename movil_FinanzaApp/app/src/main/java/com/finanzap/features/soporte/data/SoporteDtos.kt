@@ -73,6 +73,8 @@ data class Ticket(
     val categoria: String = "GENERAL",
     val prioridad: String = "MEDIA",
     val estado: String = "ABIERTO",
+    val cliente: String? = null,
+    val asignado: String? = null,
     val fechaCreacion: String = "",
     val fechaCierre: String? = null,
     val respuestas: List<RespuestaTicket> = emptyList(),
@@ -84,6 +86,8 @@ data class RespuestaTicket(
     val idRespuesta: Int = 0,
     val ticketId: Int = 0,
     val mensaje: String = "",
+    val autor: String? = null,
+    val iniciales: String? = null,
     val fechaCreacion: String = ""
 )
 
