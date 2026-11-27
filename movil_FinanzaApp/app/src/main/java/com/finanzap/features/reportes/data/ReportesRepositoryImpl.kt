@@ -61,6 +61,7 @@ class ReportesRepositoryImpl @Inject constructor(
     private fun guardar(nombre: String, contenido: ByteArray): File {
         val directorio = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
             ?: context.filesDir
+        directorio.mkdirs()
         return File(directorio, nombre).apply { writeBytes(contenido) }
     }
 

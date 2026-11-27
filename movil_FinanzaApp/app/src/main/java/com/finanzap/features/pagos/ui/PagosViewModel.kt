@@ -29,7 +29,6 @@ class PagosViewModel @Inject constructor(
     val eventos: Flow<PagosEvento> = _eventos.receiveAsFlow()
 
     fun cargar(carteraId: Int) {
-        if (_state.value.cargando) return
         _state.update { it.copy(idCartera = carteraId) }
         cargarPagina(1)
     }
@@ -203,18 +202,22 @@ class PagosViewModel @Inject constructor(
 
     fun marcarHecho(pago: PagoRecurrente) {
         val actual = _state.value
-        if (actual.marcandoHecho) return
+        if (actual.marcandoHechoId != null) return
 
-        _state.update { it.copy(marcandoHecho = true, errorMarcarHecho = null) }
+        _state.update { it.copy(marcandoHechoId = pago.id, errorMarcarHecho = null) }
         viewModelScope.launch {
             pagosRepository.marcarHecho(pago.id, pago.proximaEjecucion)
                 .onSuccess {
-                    _state.update { it.copy(marcandoHecho = false) }
+                    _state.update { it.copy(marcandoHechoId = null) }
+                    _eventos.trySend(PagosEvento.MarcadoHecho)
                     cargarPagina(_state.value.pagina)
                 }
                 .onFailure { error ->
                     _state.update {
-                        it.copy(marcandoHecho = false, errorMarcarHecho = error.mensaje())
+                        it.copy(
+                            marcandoHechoId = null,
+                            errorMarcarHecho = error.mensaje()
+                        )
                     }
                 }
         }
@@ -272,12 +275,13 @@ data class PagosUiState(
     val guardando: Boolean = false,
     val cancelando: Boolean = false,
     val errorCancelar: String? = null,
-    val marcandoHecho: Boolean = false,
+    val marcandoHechoId: Int? = null,
     val errorMarcarHecho: String? = null
 )
 
 sealed interface PagosEvento {
     data object Cancelado : PagosEvento
+    data object MarcadoHecho : PagosEvento
 }
 
 private fun Throwable.mensaje(): String = message ?: "No se pudo completar la operación."

@@ -1,8 +1,16 @@
 package com.finanzap.core.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
@@ -15,9 +23,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,16 +54,16 @@ fun MenuLateral(
     onAlternarTema: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
-    ModalDrawerSheet {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp)
-        )
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(8.dp))
+    ModalDrawerSheet(
+        modifier = Modifier.width(296.dp),
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+        drawerContainerColor = MaterialTheme.colorScheme.surface
+    ) {
+        EncabezadoMenu()
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        EtiquetaSeccion(stringResource(R.string.menu_seccion_principal))
 
         ItemMenu(
             texto = stringResource(R.string.carteras_titulo),
@@ -73,6 +83,10 @@ fun MenuLateral(
             onClick = { onSeccion(SeccionMenu.SOPORTE) },
             icono = { Icon(Icons.Default.Info, contentDescription = null) }
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        EtiquetaSeccion(stringResource(R.string.menu_seccion_cuenta))
+
         ItemMenu(
             texto = stringResource(R.string.carteras_mi_cuenta),
             seleccionado = seccionActual == SeccionMenu.MI_CUENTA,
@@ -93,7 +107,7 @@ fun MenuLateral(
         )
 
         Spacer(modifier = Modifier.weight(1f))
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         ItemMenu(
             texto = stringResource(R.string.carteras_cerrar_sesion),
             onClick = onCerrarSesion,
@@ -104,8 +118,59 @@ fun MenuLateral(
                 )
             }
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
+}
+
+@Composable
+private fun EncabezadoMenu() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "F",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.menu_lema),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EtiquetaSeccion(texto: String) {
+    Text(
+        text = texto.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 4.dp)
+    )
 }
 
 @Composable
@@ -116,10 +181,18 @@ private fun ItemMenu(
     seleccionado: Boolean = false
 ) {
     NavigationDrawerItem(
-        label = { Text(texto) },
+        label = { Text(texto, style = MaterialTheme.typography.bodyMedium) },
         selected = seleccionado,
         onClick = onClick,
         icon = icono,
+        shape = RoundedCornerShape(12.dp),
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.onPrimary,
+            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
     )
 }

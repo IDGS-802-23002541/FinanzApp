@@ -28,24 +28,30 @@ class CarterasViewModel @Inject constructor(
     fun cargar() {
         _state.update { it.copy(cargando = true, error = null) }
         viewModelScope.launch {
-            carterasRepository.carteras()
-                .onSuccess { todas ->
-                    misCarteras = todas.filter { it.rol == RolEnCartera.PROPIETARIO }
-                    compartidas = todas.filter { it.rol == RolEnCartera.COLABORADOR }
-                    _state.update {
-                        it.copy(
-                            cargando = false,
-                            totalMis = misCarteras.size,
-                            totalCompartidas = compartidas.size
-                        )
-                    }
-                    actualizarLista()
-                }
-                .onFailure {
-                    _state.update {
-                        it.copy(cargando = false, error = "No se pudieron cargar tus carteras.")
-                    }
-                }
+            // El backend filtra por un solo estado, así que se consultan los tres.
+            val todas = mutableListOf<Cartera>()
+            var error: String? = null
+            for (estado in listOf("ACTIVA", "ARCHIVADA", "FINALIZADA")) {
+                carterasRepository.carterasConFiltros(estado, null, null, null)
+                    .onSuccess { todas += it }
+                    .onFailure { error = "No se pudieron cargar tus carteras." }
+            }
+
+            if (error != null && todas.isEmpty()) {
+                _state.update { it.copy(cargando = false, error = error) }
+                return@launch
+            }
+
+            misCarteras = todas.distinctBy { it.id }.filter { it.rol == RolEnCartera.PROPIETARIO }
+            compartidas = todas.distinctBy { it.id }.filter { it.rol == RolEnCartera.COLABORADOR }
+            _state.update {
+                it.copy(
+                    cargando = false,
+                    totalMis = misCarteras.size,
+                    totalCompartidas = compartidas.size
+                )
+            }
+            actualizarLista()
         }
     }
 
@@ -56,6 +62,11 @@ class CarterasViewModel @Inject constructor(
 
     fun onTipoChange(tipo: TipoCartera?) {
         _state.update { it.copy(tipo = tipo) }
+        actualizarLista()
+    }
+
+    fun onEstadoChange(estado: EstadoCartera) {
+        _state.update { it.copy(estado = estado) }
         actualizarLista()
     }
 
@@ -70,6 +81,7 @@ class CarterasViewModel @Inject constructor(
 
         val filtradas = base
             .filter { actual.tipo == null || it.tipo == actual.tipo }
+            .filter { actual.estado.coincide(it.estado) }
             .filter {
                 actual.busqueda.isBlank() ||
                     it.nombre.contains(actual.busqueda.trim(), ignoreCase = true)
@@ -84,11 +96,27 @@ enum class Segmento {
     COMPARTIDAS
 }
 
+enum class EstadoCartera {
+    ACTIVAS,
+    INACTIVAS,
+    FINALIZADAS,
+    TODAS;
+
+    /** El backend llama "ARCHIVADA" a la cartera inactiva. */
+    fun coincide(estadoCartera: String): Boolean = when (this) {
+        ACTIVAS -> estadoCartera == "ACTIVA"
+        INACTIVAS -> estadoCartera == "ARCHIVADA"
+        FINALIZADAS -> estadoCartera == "FINALIZADA"
+        TODAS -> true
+    }
+}
+
 data class CarterasUiState(
     val cargando: Boolean = true,
     val error: String? = null,
     val segmento: Segmento = Segmento.MIS,
     val tipo: TipoCartera? = null,
+    val estado: EstadoCartera = EstadoCartera.ACTIVAS,
     val busqueda: String = "",
     val carteras: List<Cartera> = emptyList(),
     val totalMis: Int = 0,

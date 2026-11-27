@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,8 +49,10 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
 import com.finanzap.core.ui.BotonPrincipal
+import com.finanzap.core.ui.DatoDona
 import com.finanzap.core.ui.Dimensiones
 import com.finanzap.core.ui.EstadoError
+import com.finanzap.core.ui.GraficaDona
 import com.finanzap.core.ui.PantallaFormulario
 import com.finanzap.core.ui.generarQr
 import com.finanzap.core.util.formatearFechaCorta
@@ -583,10 +586,20 @@ private fun DetalleCartera(
         OutlinedButton(
             onClick = { mostrarConfirmacion = true },
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.detalle_salir))
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.detalle_salir_riesgo),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error
+        )
 
         if (errorSalir != null) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -908,7 +921,7 @@ private fun GraficaCategorias(categorias: List<SerieCategoria>) {
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (categorias.isEmpty()) {
                 Text(
@@ -917,47 +930,9 @@ private fun GraficaCategorias(categorias: List<SerieCategoria>) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                val maximo = maxOf(categorias.maxOf { it.total }, 1.0)
-                categorias.sortedByDescending { it.total }.forEach { categoria ->
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = categoria.nombre,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = formatearMoneda(categoria.total),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(percent = 50)
-                                )
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth((categoria.total / maximo).toFloat())
-                                    .fillMaxHeight()
-                                    .background(
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        shape = RoundedCornerShape(percent = 50)
-                                    )
-                            )
-                        }
-                    }
-                }
+                GraficaDona(
+                    datos = categorias.map { DatoDona(it.nombre, it.total) }
+                )
             }
         }
     }

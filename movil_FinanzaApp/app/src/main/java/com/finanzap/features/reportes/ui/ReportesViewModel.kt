@@ -79,7 +79,17 @@ class ReportesViewModel @Inject constructor(
     }
 
     fun seleccionarTipo(tipo: TipoCartera?) {
-        _state.update { it.copy(tipo = tipo) }
+        _state.update { actual ->
+            // Si la cartera elegida ya no corresponde al tipo, se limpia el filtro.
+            val sigueSiendoValida = tipo == null ||
+                actual.carteras.any { it.id == actual.carteraId && it.tipo == tipo }
+            actual.copy(
+                tipo = tipo,
+                carteraId = if (sigueSiendoValida) actual.carteraId else null,
+                periodoId = if (sigueSiendoValida) actual.periodoId else null,
+                periodos = if (sigueSiendoValida) actual.periodos else emptyList()
+            )
+        }
     }
 
     fun seleccionarPeriodo(periodoId: Int?) {

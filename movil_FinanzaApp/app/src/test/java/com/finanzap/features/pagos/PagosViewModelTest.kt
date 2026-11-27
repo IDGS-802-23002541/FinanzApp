@@ -148,7 +148,7 @@ class PagosViewModelTest {
         viewModel.marcarHecho(repositorio.pagos.first())
 
         val estado = viewModel.state.value
-        assertFalse(estado.marcandoHecho)
+        assertNull(estado.marcandoHechoId)
         assertNull(estado.errorMarcarHecho)
         assertEquals(listOf(3), repositorio.marcadosHecho)
     }
@@ -165,7 +165,7 @@ class PagosViewModelTest {
         viewModel.marcarHecho(repositorio.pagos.first())
 
         val estado = viewModel.state.value
-        assertFalse(estado.marcandoHecho)
+        assertNull(estado.marcandoHechoId)
         assertEquals("Ese pago ya fue marcado como realizado.", estado.errorMarcarHecho)
         assertTrue(repositorio.marcadosHecho.isEmpty())
     }
