@@ -162,11 +162,17 @@ function TarjetaCartera({
 
         {descripcion && (
           <Typography
+            title={descripcion}
             sx={{
               mt: 1.5,
               fontSize: '0.875rem',
               lineHeight: '21px',
               color: 'var(--color-texto-secundario)',
+              overflowWrap: 'anywhere',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
             }}
           >
             {descripcion}
