@@ -71,6 +71,16 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
     setErrorEnvio('')
     setFormulario((actual) => ({ ...actual, [campo]: evento.target.value }))
   }
+  // Monto: solo dígitos y un punto decimal; descarta cualquier letra o símbolo.
+  const actualizarMonto = (evento) => {
+    const limpio = evento.target.value.replace(/[^0-9.]/g, '')
+    const [entero, ...decimales] = limpio.split('.')
+    const valor = decimales.length > 0 ? `${entero}.${decimales.join('')}` : entero
+
+    setErrores((actuales) => ({ ...actuales, monto: undefined }))
+    setErrorEnvio('')
+    setFormulario((actual) => ({ ...actual, monto: valor }))
+  }
   // Al cambiar a ingreso se limpia la categoria, porque no aplica.
   const cambiarTipo = (_evento, nuevo) => {
     if (!nuevo) return
@@ -149,13 +159,14 @@ function DialogoNuevaTransaccion({ idCartera, onCerrar, onGuardada, transaccion 
                 size="small"
                 label="Monto"
                 placeholder="$0.00"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={formulario.monto}
-                onChange={actualizar('monto')}
+                onChange={actualizarMonto}
                 error={Boolean(errores.monto)}
                 helperText={errores.monto}
                 autoFocus
-                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
 
               <TextField
