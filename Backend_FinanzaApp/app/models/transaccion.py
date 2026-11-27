@@ -11,13 +11,9 @@ class Transaccion(db.Model):
             ["MIEMBROS_CARTERA.carteraId", "MIEMBROS_CARTERA.usuarioId"],
             name="FK_TRANSACCIONES_MIEMBRO",
         ),
-        db.Index(
-            "IX_TRANSACCIONES_cartera_fecha", "carteraId", "fechaTransaccion"
-        ),
+        db.Index("IX_TRANSACCIONES_cartera_fecha", "carteraId", "fechaTransaccion"),
         db.Index("IX_TRANSACCIONES_categoria", "categoriaId"),
-        db.Index(
-            "IX_TRANSACCIONES_usuario_fecha", "usuarioId", "fechaTransaccion"
-        ),
+        db.Index("IX_TRANSACCIONES_usuario_fecha", "usuarioId", "fechaTransaccion"),
         db.Index("IX_TRANSACCIONES_cartera_estado", "carteraId", "estado"),
         db.CheckConstraint(
             "tipo IN ('INGRESO', 'GASTO')",
@@ -112,9 +108,7 @@ class PagoRecEjecucion(db.Model):
             "fechaProgramada",
             name="UQ_PAGOS_REC_EJECUCIONES_fecha",
         ),
-        db.CheckConstraint(
-            "monto > 0", name="CK_PAGOS_REC_EJECUCIONES_monto"
-        ),
+        db.CheckConstraint("monto > 0", name="CK_PAGOS_REC_EJECUCIONES_monto"),
         db.CheckConstraint(
             "estado IN ('PENDIENTE', 'EJECUTADO', 'FALLIDO', 'OMITIDO')",
             name="CK_PAGOS_REC_EJECUCIONES_estado",
@@ -134,4 +128,3 @@ class PagoRecEjecucion(db.Model):
     fechaEjecucion = db.Column(DATETIME2)
     monto = db.Column(db.Numeric(12, 2), nullable=False)
     estado = db.Column(db.String(12), nullable=False, server_default="PENDIENTE")
-    mensajeError = db.Column(db.Unicode(500))

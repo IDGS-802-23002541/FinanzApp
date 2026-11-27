@@ -39,9 +39,6 @@ class PreferenciaUsuario(db.Model):
         db.Integer, db.ForeignKey("USUARIO.idUsuario"), primary_key=True
     )
     tema = db.Column(db.String(10), nullable=False, server_default="CLARO")
-    notificacionesCorreo = db.Column(
-        db.Boolean, nullable=False, server_default=db.text("1")
-    )
     notificacionesApp = db.Column(
         db.Boolean, nullable=False, server_default=db.text("1")
     )
@@ -54,7 +51,6 @@ class PreferenciaUsuario(db.Model):
     notificacionesPagos = db.Column(
         db.Boolean, nullable=False, server_default=db.text("1")
     )
-    moneda = db.Column(db.String(3), nullable=False, server_default="MXN")
     fechaActualizacion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
     )
@@ -83,9 +79,6 @@ class SesionUsuario(db.Model):
     )
     fechaExpiracion = db.Column(DATETIME2, nullable=False)
     fechaRevocacion = db.Column(DATETIME2)
-    reemplazadaPor = db.Column(
-        db.BigInteger, db.ForeignKey("SESIONES_USUARIO.idSesion")
-    )
     ip = db.Column(db.Unicode(45))
     userAgent = db.Column(db.Unicode(500))
 

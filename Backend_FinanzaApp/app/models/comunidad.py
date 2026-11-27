@@ -6,9 +6,7 @@ from app.extensions import db
 class Notificacion(db.Model):
     __tablename__ = "NOTIFICACION"
     __table_args__ = (
-        db.Index(
-            "IX_NOTIFICACION_usuario_fecha", "usuarioId", "fechaCreacion"
-        ),
+        db.Index("IX_NOTIFICACION_usuario_fecha", "usuarioId", "fechaCreacion"),
         db.CheckConstraint(
             "LEN(LTRIM(RTRIM(titulo))) > 0",
             name="CK_NOTIFICACION_titulo",
@@ -31,15 +29,12 @@ class Notificacion(db.Model):
     fechaCreacion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
     )
-    fechaLectura = db.Column(DATETIME2)
 
 
 class ComentarioLanding(db.Model):
     __tablename__ = "COMENTARIO_LANDING"
     __table_args__ = (
-        db.Index(
-            "IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"
-        ),
+        db.Index("IX_COMENTARIO_LANDING_estado_fecha", "estado", "fechaCreacion"),
         db.Index("IX_COMENTARIO_LANDING_ip_fecha", "ip", "fechaCreacion"),
         db.CheckConstraint(
             "estado IN ('PENDIENTE', 'ATENDIDO', 'ARCHIVADO')",

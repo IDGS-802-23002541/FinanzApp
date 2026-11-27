@@ -1,4 +1,4 @@
-from sqlalchemy.dialects.mssql import DATETIME2, ROWVERSION
+from sqlalchemy.dialects.mssql import DATETIME2
 
 from app.extensions import db
 
@@ -38,9 +38,6 @@ class Cartera(db.Model):
     fechaFin = db.Column(db.Date)
     fechaCierre = db.Column(DATETIME2)
     estado = db.Column(db.String(12), nullable=False, server_default="ACTIVA")
-    versionFila = db.Column(
-        ROWVERSION, nullable=False, server_default=db.FetchedValue()
-    )
 
 
 class MiembroCartera(db.Model):
@@ -117,10 +114,6 @@ class Categoria(db.Model):
     tipoCartera = db.Column(db.String(10))
     orden = db.Column(db.Integer, nullable=False, server_default="0")
     estado = db.Column(db.String(10), nullable=False, server_default="ACTIVA")
-    esPredeterminada = db.Column(
-        db.Boolean,
-        db.Computed("CASE WHEN carteraId IS NULL THEN 1 ELSE 0 END", persisted=True),
-    )
 
 
 class Periodo(db.Model):
@@ -146,33 +139,6 @@ class Periodo(db.Model):
     nombre = db.Column(db.Unicode(80), nullable=False)
     fechaInicio = db.Column(db.Date, nullable=False)
     fechaFin = db.Column(db.Date, nullable=False)
-    estado = db.Column(db.String(12), nullable=False, server_default="ACTIVO")
-    fechaCreacion = db.Column(
-        DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()
-    )
-
-
-class Ahorro(db.Model):
-    __tablename__ = "AHORRO"
-    __table_args__ = (
-        db.ForeignKeyConstraint(
-            ["carteraId", "usuarioId"],
-            ["MIEMBROS_CARTERA.carteraId", "MIEMBROS_CARTERA.usuarioId"],
-            name="FK_AHORRO_MIEMBRO",
-        ),
-        db.Index("IX_AHORRO_cartera_estado", "carteraId", "estado"),
-    )
-
-    idAhorro = db.Column(db.Integer, primary_key=True)
-    carteraId = db.Column(
-        db.Integer, db.ForeignKey("CARTERA.idCartera"), nullable=False
-    )
-    usuarioId = db.Column(db.Integer, nullable=False)
-    nombre = db.Column(db.Unicode(100), nullable=False)
-    descripcion = db.Column(db.Unicode(500))
-    meta = db.Column(db.Numeric(12, 2), nullable=False)
-    montoActual = db.Column(db.Numeric(12, 2), nullable=False, server_default="0")
-    fechaObjetivo = db.Column(db.Date)
     estado = db.Column(db.String(12), nullable=False, server_default="ACTIVO")
     fechaCreacion = db.Column(
         DATETIME2, nullable=False, server_default=db.func.sysutcdatetime()

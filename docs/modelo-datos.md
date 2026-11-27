@@ -43,7 +43,6 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | fechaInicio | date? | Vigencia (Viaje/Evento/Otro) |
 | fechaFin | date? | Vigencia (Viaje/Evento/Otro) |
 | estado | string(12) | NOT NULL, default `ACTIVA`; `ACTIVA` \| `ARCHIVADA` \| `FINALIZADA` |
-| versionFila | rowversion | NOT NULL, control de concurrencia |
 
 > `FINALIZADA` solo aplica a carteras de tipo Viaje/Evento (HU-04.6).
 
@@ -93,7 +92,6 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | **tipo** | enum | `GASTO` \| `INGRESO` \| `AMBOS` |
 | **orden** | int | Orden del selector (default 0) |
 | **estado** | enum | `ACTIVA` \| `INACTIVA` (baja lógica; equivale a habilitar/deshabilitar) |
-| esPredeterminada | bool calculado | `1` cuando `carteraId IS NULL` |
 
 > Unicidad: globales por `(nombre, tipoCartera)`; personalizadas por `(carteraId, nombre)`.
 > Sin `icono` ni `color` por ahora: la HU-05.4 solo pide crear por nombre y mostrar en el selector.
@@ -160,7 +158,6 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | fechaEjecucion | datetime? | |
 | monto | decimal | Mayor a 0 |
 | estado | enum | `PENDIENTE` \| `EJECUTADO` \| `FALLIDO` \| `OMITIDO` |
-| mensajeError | string? | |
 
 > Migración `SQL/migracion_t169_pagos.sql`; las FK no usan `CASCADE` porque las
 > bajas son lógicas.
@@ -235,7 +232,6 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | mensaje | string | No vacío |
 | tipo | enum? | `MOVIMIENTO` \| `CIERRE` \| `RECORDATORIO` \| `PAGO` |
 | fechaCreacion | datetime | Inmutable |
-| fechaLectura | datetime? | `null` = no leída |
 
 > Migración `SQL/migracion_t184_notificaciones.sql`.
 
@@ -244,12 +240,10 @@ incluidas las **entidades nuevas** de los módulos que aún no existen.
 | --- | --- | --- |
 | usuarioId | int PK/FK | |
 | tema | enum | `CLARO` \| `OSCURO` \| `SISTEMA` |
-| notificacionesCorreo | bool | |
 | notificacionesApp | bool | Interruptor general |
 | notificacionesMovimientos | bool | Avisos de movimientos en cartera |
 | notificacionesSistema | bool | Recordatorios del sistema |
 | notificacionesPagos | bool | Recordatorios de pagos recurrentes |
-| moneda | string | `MXN` por defecto |
 | fechaActualizacion | datetime | |
 
 > Los tres interruptores nuevos se agregan en `migracion_t184_notificaciones.sql`.

@@ -1,5 +1,4 @@
 from app.models.cartera import (
-    Ahorro,
     Cartera,
     Categoria,
     Invitacion,
@@ -17,7 +16,6 @@ from app.models.usuario import (
 )
 
 __all__ = [
-    "Ahorro",
     "AsignacionTicket",
     "Cartera",
     "Categoria",
