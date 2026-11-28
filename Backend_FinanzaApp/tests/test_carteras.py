@@ -15,7 +15,11 @@ class CarteraFalsa:
 
 def test_rutas_edicion_e_inactivacion_registradas():
     app = create_app()
-    rutas = {(regla.rule, metodo) for regla in app.url_map.iter_rules() for metodo in regla.methods}
+    rutas = {
+        (regla.rule, metodo)
+        for regla in app.url_map.iter_rules()
+        for metodo in regla.methods
+    }
     assert ("/carteras/<int:idCartera>", "PUT") in rutas
     assert ("/carteras/<int:idCartera>/inactivar", "POST") in rutas
     assert ("/carteras/<int:idCartera>/reactivar", "POST") in rutas
@@ -40,9 +44,7 @@ def test_validar_edicion_sin_campos_falla():
 
 
 def test_validar_edicion_nombre_vacio_falla():
-    cambios, error = cartera_service._validar_edicion(
-        {"nombre": "   "}, CarteraFalsa()
-    )
+    cambios, error = cartera_service._validar_edicion({"nombre": "   "}, CarteraFalsa())
     assert cambios is None
     assert error[1] == 400
 
@@ -80,3 +82,38 @@ def test_validar_edicion_mapea_tipo_y_conserva_fechas():
     assert cambios["nombre"] == "Casa"
     assert cambios["tipo"] == "OTRA"
     assert cambios["fechaInicio"] == date(2026, 1, 5)
+
+
+def test_validar_edicion_nombre_con_numeros_falla():
+    cambios, error = cartera_service._validar_edicion(
+        {"nombre": "Casa 2026"}, CarteraFalsa()
+    )
+    assert cambios is None
+    assert error[1] == 400
+    assert "letras" in error[0]["mensaje"]
+
+
+def test_validar_edicion_nombre_con_simbolos_falla():
+    cambios, error = cartera_service._validar_edicion(
+        {"nombre": "Casa!"}, CarteraFalsa()
+    )
+    assert cambios is None
+    assert error[1] == 400
+
+
+def test_validar_edicion_nombre_acepta_acentos_y_espacios():
+    cambios, error = cartera_service._validar_edicion(
+        {"nombre": "Viaje a León"}, CarteraFalsa()
+    )
+    assert error is None
+    assert cambios["nombre"] == "Viaje a León"
+
+
+def test_nombre_cartera_valido_rechaza_no_texto():
+    from app.utils import validacion
+
+    nombre, error = validacion.nombre_cartera_valido(123)
+    assert nombre is None
+    assert error is not None
+    nombre, error = validacion.nombre_cartera_valido("Hogar 2")
+    assert nombre is None

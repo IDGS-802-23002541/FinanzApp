@@ -1161,7 +1161,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CarteraEditarRequest'
             example:
-              nombre: Casa Borja 2026
+              nombre: Casa Borja
               descripcion: Gastos del hogar
               presupuestoInicial: 6000
               fechaFin: '2026-12-31'
@@ -3464,6 +3464,8 @@ components:
         nombre:
           type: string
           maxLength: 100
+          pattern: ^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$
+          description: Solo letras y espacios, sin números ni símbolos.
           example: Casa Borja
         tipo:
           type: string
@@ -3596,7 +3598,9 @@ components:
         nombre:
           type: string
           maxLength: 100
-          example: Casa Borja 2026
+          pattern: ^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$
+          description: Solo letras y espacios, sin números ni símbolos.
+          example: Casa Borja
         tipo:
           type: string
           enum:

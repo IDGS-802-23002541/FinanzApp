@@ -28,15 +28,9 @@ MAPA_ROL_BD = {"PROPIETARIO": "ADMIN", "COLABORADOR": "CONTRIBUYENTE"}
 
 
 def crear(datos):
-    nombre = datos.get("nombre")
-    if not isinstance(nombre, str):
-        return {"ok": False, "mensaje": "El nombre es obligatorio."}, 400
-    nombre = nombre.strip()
-    if not nombre or len(nombre) > 100:
-        return {
-            "ok": False,
-            "mensaje": "El nombre debe tener entre 1 y 100 caracteres.",
-        }, 400
+    nombre, error = validacion.nombre_cartera_valido(datos.get("nombre"))
+    if error:
+        return {"ok": False, "mensaje": error}, 400
 
     tipo = datos.get("tipo")
     if not isinstance(tipo, str):
@@ -57,11 +51,7 @@ def crear(datos):
         }, 400
 
     bruto = datos.get("presupuestoInicial", 0)
-    if (
-    isinstance(bruto, bool)
-    or not isinstance(bruto, (int, float))
-    or bruto < 0
-):
+    if isinstance(bruto, bool) or not isinstance(bruto, (int, float)) or bruto < 0:
         return {
             "ok": False,
             "mensaje": "El presupuesto debe ser un número mayor o igual a 0.",
@@ -122,10 +112,7 @@ def editar(id_cartera, datos):
     if membresia.rol != "ADMIN":
         return {
             "ok": False,
-            "mensaje": (
-                "Solo el propietario o administrador puede editar la "
-                "cartera."
-            ),
+            "mensaje": ("Solo el propietario o administrador puede editar la cartera."),
         }, 403
 
     if cartera.estado == "FINALIZADA":
@@ -167,8 +154,7 @@ def inactivar(id_cartera):
         return {
             "ok": False,
             "mensaje": (
-                "Solo el propietario o administrador puede inactivar la "
-                "cartera."
+                "Solo el propietario o administrador puede inactivar la cartera."
             ),
         }, 403
 
@@ -184,12 +170,16 @@ def inactivar(id_cartera):
     cartera.estado = "ARCHIVADA"
     ahora = _ahora()
     try:
-        activas = db.session.execute(
-            db.select(Invitacion).where(
-                Invitacion.carteraId == id_cartera,
-                Invitacion.estado == "ACTIVA",
+        activas = (
+            db.session.execute(
+                db.select(Invitacion).where(
+                    Invitacion.carteraId == id_cartera,
+                    Invitacion.estado == "ACTIVA",
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         for invitacion in activas:
             invitacion.estado = "REVOCADA"
             invitacion.fechaRevocacion = ahora
@@ -218,8 +208,7 @@ def reactivar(id_cartera):
         return {
             "ok": False,
             "mensaje": (
-                "Solo el propietario o administrador puede reactivar la "
-                "cartera."
+                "Solo el propietario o administrador puede reactivar la cartera."
             ),
         }, 403
 
@@ -258,19 +247,13 @@ def finalizar(id_cartera):
     if membresia.rol != "ADMIN":
         return {
             "ok": False,
-            "mensaje": (
-                "Solo el propietario o administrador puede cerrar la "
-                "cartera."
-            ),
+            "mensaje": ("Solo el propietario o administrador puede cerrar la cartera."),
         }, 403
 
     if cartera.tipo not in ("VIAJE", "EVENTO"):
         return {
             "ok": False,
-            "mensaje": (
-                "Solo las carteras de tipo viaje o evento pueden "
-                "finalizarse."
-            ),
+            "mensaje": ("Solo las carteras de tipo viaje o evento pueden finalizarse."),
         }, 400
 
     if cartera.estado == "FINALIZADA":
@@ -301,9 +284,7 @@ def finalizar(id_cartera):
     return {
         "ok": True,
         "data": {
-            "cartera": serializar_cartera(
-                cartera, membresia.rol, _admin(id_cartera)
-            ),
+            "cartera": serializar_cartera(cartera, membresia.rol, _admin(id_cartera)),
             "balance": balance,
         },
         "mensaje": "Cartera finalizada correctamente.",
@@ -311,13 +292,17 @@ def finalizar(id_cartera):
 
 
 def _notificar_cierre(cartera):
-    miembros = db.session.execute(
-        db.select(MiembroCartera.usuarioId).where(
-            MiembroCartera.carteraId == cartera.idCartera,
-            MiembroCartera.estado == "ACTIVO",
-            MiembroCartera.usuarioId != current_user.idUsuario,
+    miembros = (
+        db.session.execute(
+            db.select(MiembroCartera.usuarioId).where(
+                MiembroCartera.carteraId == cartera.idCartera,
+                MiembroCartera.estado == "ACTIVO",
+                MiembroCartera.usuarioId != current_user.idUsuario,
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     for usuario_id in miembros:
         preferencia = db.session.get(PreferenciaUsuario, usuario_id)
@@ -337,23 +322,9 @@ def _validar_edicion(datos, cartera):
     cambios = {}
 
     if "nombre" in datos:
-        nombre = datos.get("nombre")
-        if not isinstance(nombre, str):
-            return None, (
-                {"ok": False, "mensaje": "El nombre es obligatorio."},
-                400,
-            )
-        nombre = nombre.strip()
-        if not nombre or len(nombre) > 100:
-            return None, (
-                {
-                    "ok": False,
-                    "mensaje": (
-                        "El nombre debe tener entre 1 y 100 caracteres."
-                    ),
-                },
-                400,
-            )
+        nombre, error = validacion.nombre_cartera_valido(datos.get("nombre"))
+        if error:
+            return None, ({"ok": False, "mensaje": error}, 400)
         cambios["nombre"] = nombre
 
     if "descripcion" in datos:
@@ -392,18 +363,11 @@ def _validar_edicion(datos, cartera):
 
     if "presupuestoInicial" in datos:
         bruto = datos.get("presupuestoInicial")
-        if (
-            isinstance(bruto, bool)
-            or not isinstance(bruto, (int, float))
-            or bruto < 0
-        ):
+        if isinstance(bruto, bool) or not isinstance(bruto, (int, float)) or bruto < 0:
             return None, (
                 {
                     "ok": False,
-                    "mensaje": (
-                        "El presupuesto debe ser un número mayor o igual "
-                        "a 0."
-                    ),
+                    "mensaje": ("El presupuesto debe ser un número mayor o igual a 0."),
                 },
                 400,
             )
@@ -417,9 +381,7 @@ def _validar_edicion(datos, cartera):
                 return None, (
                     {
                         "ok": False,
-                        "mensaje": (
-                            "Las fechas deben tener formato YYYY-MM-DD."
-                        ),
+                        "mensaje": ("Las fechas deben tener formato YYYY-MM-DD."),
                     },
                     400,
                 )
@@ -436,9 +398,7 @@ def _validar_edicion(datos, cartera):
         return None, (
             {
                 "ok": False,
-                "mensaje": (
-                    "La fecha fin no puede ser anterior a la fecha inicio."
-                ),
+                "mensaje": ("La fecha fin no puede ser anterior a la fecha inicio."),
             },
             400,
         )
@@ -479,9 +439,7 @@ def listar(estado="ACTIVA", tipo="", rol="", busqueda=""):
         if busqueda:
             consulta = consulta.where(Cartera.nombre.contains(busqueda))
         filas = db.session.execute(
-            consulta.order_by(
-                Cartera.fechaCreacion.desc(), Cartera.idCartera.desc()
-            )
+            consulta.order_by(Cartera.fechaCreacion.desc(), Cartera.idCartera.desc())
         ).all()
     except SQLAlchemyError:
         return {
@@ -504,8 +462,7 @@ def listar(estado="ACTIVA", tipo="", rol="", busqueda=""):
         admins = {cartera_id: usuario for cartera_id, usuario in admin_filas}
 
     data = [
-        serializar_cartera(cartera, membresia.rol, 
-        admins.get(cartera.idCartera))
+        serializar_cartera(cartera, membresia.rol, admins.get(cartera.idCartera))
         for membresia, cartera in filas
     ]
     return {
@@ -566,9 +523,7 @@ def detalle(id_cartera, periodo_id=None, desde=None, hasta=None):
         except ValueError as exc:
             return {"ok": False, "mensaje": str(exc)}, 400
         data = serializar_cartera(cartera, membresia.rol, _admin(id_cartera))
-        data["colaboradores"] = cartera_detalle_service.colaboradores(
-            id_cartera
-        )
+        data["colaboradores"] = cartera_detalle_service.colaboradores(id_cartera)
         data.update(detalle)
         data = _con_balance(data, cartera, id_cartera)
     except SQLAlchemyError:

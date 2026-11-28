@@ -2,10 +2,22 @@ import re
 from datetime import date
 
 CORREO_RE = r"[^@\s]+@[^@\s]+\.[^@\s]+"
+NOMBRE_CARTERA_RE = r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+"
 
 
 def correo_valido(correo):
     return bool(re.fullmatch(CORREO_RE, correo or ""))
+
+
+def nombre_cartera_valido(nombre):
+    if not isinstance(nombre, str):
+        return None, "El nombre es obligatorio."
+    nombre = nombre.strip()
+    if not nombre or len(nombre) > 100:
+        return None, "El nombre debe tener entre 1 y 100 caracteres."
+    if not re.fullmatch(NOMBRE_CARTERA_RE, nombre):
+        return None, "El nombre solo admite letras y espacios."
+    return nombre, None
 
 
 def requisitos_contrasenia(contrasenia):
