@@ -25,10 +25,15 @@ IF COL_LENGTH('dbo.NOTIFICACION', 'fechaLectura') IS NOT NULL ALTER TABLE dbo.NO
 -- 5) PAGOS_REC_EJECUCIONES.mensajeError
 IF COL_LENGTH('dbo.PAGOS_REC_EJECUCIONES', 'mensajeError') IS NOT NULL ALTER TABLE dbo.PAGOS_REC_EJECUCIONES DROP COLUMN mensajeError
 
--- 6) PREFERENCIAS_USUARIO.notificacionesCorreo
+-- 6) PREFERENCIAS_USUARIO.notificacionesCorreo (con su DEFAULT)
+DECLARE @df SYSNAME
+SELECT @df = dc.name FROM sys.default_constraints dc JOIN sys.columns col ON col.object_id = dc.parent_object_id AND col.column_id = dc.parent_column_id WHERE dc.parent_object_id = OBJECT_ID('dbo.PREFERENCIAS_USUARIO') AND col.name = 'notificacionesCorreo'
+IF @df IS NOT NULL EXEC('ALTER TABLE dbo.PREFERENCIAS_USUARIO DROP CONSTRAINT [' + @df + ']')
 IF COL_LENGTH('dbo.PREFERENCIAS_USUARIO', 'notificacionesCorreo') IS NOT NULL ALTER TABLE dbo.PREFERENCIAS_USUARIO DROP COLUMN notificacionesCorreo
 
--- 7) PREFERENCIAS_USUARIO.moneda
+-- 7) PREFERENCIAS_USUARIO.moneda (con su DEFAULT)
+SELECT @df = dc.name FROM sys.default_constraints dc JOIN sys.columns col ON col.object_id = dc.parent_object_id AND col.column_id = dc.parent_column_id WHERE dc.parent_object_id = OBJECT_ID('dbo.PREFERENCIAS_USUARIO') AND col.name = 'moneda'
+IF @df IS NOT NULL EXEC('ALTER TABLE dbo.PREFERENCIAS_USUARIO DROP CONSTRAINT [' + @df + ']')
 IF COL_LENGTH('dbo.PREFERENCIAS_USUARIO', 'moneda') IS NOT NULL ALTER TABLE dbo.PREFERENCIAS_USUARIO DROP COLUMN moneda
 
 -- 8) SESIONES_USUARIO.reemplazadaPor: primero su FK autogenerada
