@@ -6,11 +6,15 @@ import {
   CircularProgress,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   Typography,
 } from '@mui/material'
 import { actualizarMonitoreo, obtenerMonitoreo } from '../api.js'
 import EncabezadoPagina from '../../../components/ui/EncabezadoPagina.jsx'
-import { formatearFecha } from '../../../utils/formato.js'
 
 const sxTarjeta = {
   p: 2.5,
@@ -39,6 +43,56 @@ function Tarjeta({ etiqueta, valor, detalle }) {
       )}
     </Paper>
   )
+}
+
+function Grafica({ muestras }) {
+  const maximo = Math.max(1, ...muestras.map((m) => m.duracion_ms))
+
+  return (
+    <Stack spacing={1}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '2px',
+          height: 120,
+          p: 1,
+          border: '1px solid var(--color-borde)',
+          borderRadius: 'var(--radio-lg)',
+        }}
+      >
+        {muestras.map((m) => (
+          <Box
+            key={m.minuto}
+            title={`${formatearHora(m.minuto)} · ${m.ok ? 'En línea' : 'Caída'} · ${m.duracion_ms} ms`}
+            sx={{
+              flex: 1,
+              minWidth: 2,
+              height: `${Math.max(6, (m.duracion_ms / maximo) * 100)}%`,
+              borderRadius: '2px',
+              backgroundColor: m.ok
+                ? 'var(--color-primario)'
+                : 'var(--color-error, #b3261e)',
+            }}
+          />
+        ))}
+      </Box>
+      <Typography variant="body2" sx={{ color: 'var(--color-texto-terciario)' }}>
+        Cada barra es un minuto del último periodo; la altura es el tiempo de
+        respuesta y el color indica si la base respondió.
+      </Typography>
+    </Stack>
+  )
+}
+
+function formatearHora(iso) {
+  return new Date(iso).toLocaleString('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function Monitoreo() {
@@ -87,12 +141,14 @@ function Monitoreo() {
   }
 
   const metricas = datos?.metricas
+  const muestras = datos?.historial ?? []
+  const ultimas = [...muestras].reverse().slice(0, 20)
 
   return (
     <Stack spacing={3}>
       <EncabezadoPagina
         titulo="Monitoreo"
-        descripcion="Estado de la base de datos y métricas de la plataforma. Los datos se guardan 60 segundos."
+        descripcion="Estado de la base de datos y métricas de la plataforma. La app guarda una muestra cada minuto."
       >
         <Button variant="outlined" onClick={actualizar} disabled={actualizando}>
           {actualizando ? 'Actualizando…' : 'Actualizar indicadores'}
@@ -101,67 +157,101 @@ function Monitoreo() {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      {!metricas && !error && (
-        <Alert severity="info">No hay indicadores disponibles.</Alert>
+      {datos?.sonda && (
+        <Box>
+          <Typography variant="h2" sx={{ mb: 1.5 }}>
+            Estado actual
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+              gap: 2,
+            }}
+          >
+            <Tarjeta
+              etiqueta="Base de datos"
+              valor={datos.sonda.ok ? 'En línea' : 'Sin respuesta'}
+              detalle={`Base ${datos.base ?? 'desconocida'}`}
+            />
+            <Tarjeta
+              etiqueta="Tiempo de respuesta"
+              valor={`${datos.sonda.duracion_ms} ms`}
+              detalle="Milisegundos que tardan las consultas de prueba a la BD"
+            />
+          </Box>
+        </Box>
       )}
 
       {metricas && (
-        <>
-          <Box>
-            <Typography variant="h2" sx={{ mb: 1.5 }}>
-              Base de datos
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                gap: 2,
-              }}
-            >
-              <Tarjeta
-                etiqueta="Estado"
-                valor={datos.sonda.ok ? 'En línea' : 'Sin respuesta'}
-                detalle={`Base ${datos.base ?? 'desconocida'}`}
-              />
-              <Tarjeta
-                etiqueta="Latencia de la sonda"
-                valor={`${datos.sonda.duracion_ms} ms`}
-                detalle={
-                  datos.cacheado
-                    ? 'Dato en caché'
-                    : `Medido ${formatearFecha(datos.actualizado_en)}`
-                }
-              />
-            </Box>
+        <Box>
+          <Typography variant="h2" sx={{ mb: 1.5 }}>
+            Plataforma
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+              gap: 2,
+            }}
+          >
+            <Tarjeta etiqueta="Clientes totales" valor={metricas.clientes.total} />
+            <Tarjeta
+              etiqueta="Trabajadores activos"
+              valor={metricas.trabajadores.activos}
+            />
+            <Tarjeta etiqueta="Tickets totales" valor={metricas.tickets.total} />
           </Box>
-
-          <Box>
-            <Typography variant="h2" sx={{ mb: 1.5 }}>
-              Plataforma
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-                gap: 2,
-              }}
-            >
-              <Tarjeta
-                etiqueta="Clientes totales"
-                valor={metricas.clientes.total}
-              />
-              <Tarjeta
-                etiqueta="Trabajadores activos"
-                valor={metricas.trabajadores.activos}
-              />
-              <Tarjeta
-                etiqueta="Tickets totales"
-                valor={metricas.tickets.total}
-              />
-            </Box>
-          </Box>
-        </>
+        </Box>
       )}
+
+      <Box>
+        <Typography variant="h2" sx={{ mb: 1.5 }}>
+          Estado a través del tiempo
+        </Typography>
+        {muestras.length === 0 ? (
+          <Alert severity="info">
+            Aún no hay muestras guardadas. Se registran cada minuto.
+          </Alert>
+        ) : (
+          <Grafica muestras={muestras} />
+        )}
+      </Box>
+
+      <Box>
+        <Typography variant="h2" sx={{ mb: 1.5 }}>
+          Últimos registros
+        </Typography>
+        {ultimas.length === 0 ? (
+          <Alert severity="info">Sin registros todavía.</Alert>
+        ) : (
+          <Paper
+            elevation={0}
+            sx={{ border: '1px solid var(--color-borde)', overflow: 'auto' }}
+          >
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Fecha y hora</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell align="right">Respuesta</TableCell>
+                  <TableCell>Base</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {ultimas.map((m) => (
+                  <TableRow key={m.minuto}>
+                    <TableCell>{formatearHora(m.minuto)}</TableCell>
+                    <TableCell>{m.ok ? 'En línea' : 'Caída'}</TableCell>
+                    <TableCell align="right">{m.duracion_ms} ms</TableCell>
+                    <TableCell>{m.base ?? '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        )}
+      </Box>
     </Stack>
   )
 }

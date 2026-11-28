@@ -6,6 +6,7 @@ from app.models.cartera import (
     Periodo,
 )
 from app.models.comunidad import ComentarioLanding, Notificacion
+from app.models.monitoreo import MonitoreoSonda
 from app.models.soporte import AsignacionTicket, RespuestaTicket, Ticket
 from app.models.transaccion import PagoRecEjecucion, PagoRecurrente, Transaccion
 from app.models.usuario import (
@@ -22,6 +23,7 @@ __all__ = [
     "ComentarioLanding",
     "Invitacion",
     "MiembroCartera",
+    "MonitoreoSonda",
     "Notificacion",
     "PagoRecEjecucion",
     "PagoRecurrente",
