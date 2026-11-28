@@ -17,7 +17,11 @@ def medir(url, timeout):
     error = None
 
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as respuesta:
+        # Cloudflare responde 403 a User-Agents de script; el monitor se identifica.
+        peticion = urllib.request.Request(
+            url, headers={"User-Agent": "FinanzApp-SLA-Monitor/1.0"}
+        )
+        with urllib.request.urlopen(peticion, timeout=timeout) as respuesta:
             estado = respuesta.status
     except urllib.error.HTTPError as exc:
         estado = exc.code
