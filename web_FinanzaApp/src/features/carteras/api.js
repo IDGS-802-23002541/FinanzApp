@@ -72,16 +72,19 @@ function aVistaDetalle(cartera) {
       presupuestoInicial: cartera.presupuestoInicial ?? 0,
       totalIngresos: 0,
       totalGastos: 0,
-      saldo: cartera.presupuestoInicial ?? 0,
+      saldo: 0,
+      disponiblePresupuesto: 0,
     },
+    resumenPeriodo: cartera.resumenPeriodo ?? null,
     series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
     balance: cartera.balance ?? null,
     fechaCierre: cartera.fechaCierre ?? null,
   }
 }
 
-export async function obtenerCartera(id) {
-  const { data } = await api.get(`/carteras/${id}`)
+export async function obtenerCartera(id, periodoId) {
+  const query = periodoId ? `?periodoId=${encodeURIComponent(periodoId)}` : ''
+  const { data } = await api.get(`/carteras/${id}${query}`)
   return aVistaDetalle(data)
 }
 

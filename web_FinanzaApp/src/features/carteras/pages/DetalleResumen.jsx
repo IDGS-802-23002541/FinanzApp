@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
-  Alert,
   Box,
   Chip,
   MenuItem,
@@ -9,12 +8,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { listarPeriodos } from '../api.js'
 import { listarTransacciones } from '../../transacciones/api.js'
 import TarjetaResumen from '../components/TarjetaResumen.jsx'
 import BarraPresupuesto from '../components/BarraPresupuesto.jsx'
 import GraficaBarras from '../components/GraficaBarras.jsx'
 import GraficaDona from '../components/GraficaDona.jsx'
 import UltimasTransacciones from '../components/UltimasTransacciones.jsx'
+import EstadoVacio from '../../../components/ui/EstadoVacio.jsx'
 import {
   AvatarUsuario,
   IconoArchivo,
@@ -23,18 +24,27 @@ import {
   IconoPersonas,
 } from '../../../components/ui/Iconos.jsx'
 
-// Opciones del filtro por periodo del resumen (vista previa, aún sin conectar).
-const RANGOS = [
-  { valor: 'mes', texto: 'Este mes' },
-  { valor: '3m', texto: 'Últimos 3 meses' },
-  { valor: '6m', texto: 'Últimos 6 meses' },
-  { valor: 'todo', texto: 'Todo el historial' },
-]
-
 function DetalleResumen() {
-  const { cartera, id, recarga } = useOutletContext()
+  const { cartera, id, recarga, periodoId, setPeriodoId } = useOutletContext()
   const [ultimas, setUltimas] = useState([])
   const [errorUltimas, setErrorUltimas] = useState('')
+  const [periodos, setPeriodos] = useState([])
+
+  useEffect(() => {
+    let vigente = true
+
+    listarPeriodos(id)
+      .then((datos) => {
+        if (vigente) setPeriodos(datos ?? [])
+      })
+      .catch(() => {
+        if (vigente) setPeriodos([])
+      })
+
+    return () => {
+      vigente = false
+    }
+  }, [id, recarga])
 
   useEffect(() => {
     let vigente = true
@@ -42,7 +52,10 @@ function DetalleResumen() {
     const cargar = async () => {
       setErrorUltimas('')
       try {
-        const datos = await listarTransacciones(id, { porPagina: 5 })
+        const datos = await listarTransacciones(id, {
+          porPagina: 5,
+          periodoId: periodoId || undefined,
+        })
         if (vigente) setUltimas(datos?.items ?? [])
       } catch (err) {
         if (vigente) setErrorUltimas(err.message)
@@ -53,30 +66,54 @@ function DetalleResumen() {
     return () => {
       vigente = false
     }
-  }, [id, recarga])
+  }, [id, recarga, periodoId])
 
   if (!cartera) return null
 
-  const { resumen, series, colaboradores } = cartera
+  const { resumen, series, colaboradores, resumenPeriodo } = cartera
   const esHogar = cartera.categoria === 'Hogar'
   const presupuestoInicial = resumen.presupuestoInicial ?? 0
-  // En Hogar el disponible es el saldo real; en el resto es lo que queda del
-  // presupuesto (guía de gasto), sin sumar las aportaciones.
+
+  // Con un periodo elegido se muestran sus totales; sin él, el histórico.
+  const ingresos = resumenPeriodo?.totalIngresos ?? resumen.totalIngresos
+  const gastos = resumenPeriodo?.totalGastos ?? resumen.totalGastos
   const disponible = esHogar
-    ? resumen.saldo
-    : presupuestoInicial - resumen.totalGastos
-  const sinMovimientos =
-    resumen.totalIngresos === 0 && resumen.totalGastos === 0
+    ? ingresos - gastos
+    : presupuestoInicial - gastos
+  const sinMovimientos = ingresos === 0 && gastos === 0
+  const periodoElegido = periodos.find(
+    (periodo) => String(periodo.idPeriodo) === String(periodoId),
+  )
 
   const gruposBarras = series.ingresosVsEgresos.slice(-6).map((fila) => ({
     etiqueta: fila.nombre,
     valores: { gastos: fila.gastos, ingresos: fila.ingresos },
   }))
 
+  const selectorPeriodo = (
+    <TextField
+      select
+      size="small"
+      label="Periodo"
+      value={periodoId}
+      onChange={(evento) => setPeriodoId(evento.target.value)}
+      slotProps={{
+        select: { displayEmpty: true },
+        inputLabel: { shrink: true },
+      }}
+      sx={{ width: { xs: '100%', sm: 250 } }}
+    >
+      <MenuItem value="">Todo el historial</MenuItem>
+      {periodos.map((periodo) => (
+        <MenuItem key={periodo.idPeriodo} value={String(periodo.idPeriodo)}>
+          {periodo.nombre}
+        </MenuItem>
+      ))}
+    </TextField>
+  )
+
   return (
     <Stack spacing={3}>
-      {/* Vista previa del filtro por periodo. El rango de fechas se conectará
-          cuando el backend lo calcule en el resumen; por eso aún va deshabilitado. */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         sx={{
@@ -89,28 +126,19 @@ function DetalleResumen() {
           <Typography
             sx={{ fontSize: '0.875rem', color: 'var(--color-texto-secundario)' }}
           >
-            Resumen de la cartera completa
+            {periodoElegido
+              ? `Periodo: ${periodoElegido.nombre}`
+              : 'Resumen de la cartera completa'}
           </Typography>
           <Typography
             sx={{ fontSize: '0.75rem', color: 'var(--color-texto-terciario)' }}
           >
-            El filtro por periodo se activa al conectar el rango de fechas.
+            {periodos.length === 0
+              ? 'Esta cartera todavía no tiene periodos.'
+              : 'Las tarjetas, gráficas y movimientos responden al periodo elegido.'}
           </Typography>
         </Box>
-        <TextField
-          select
-          size="small"
-          label="Periodo"
-          defaultValue="todo"
-          disabled
-          sx={{ width: { xs: '100%', sm: 250 } }}
-        >
-          {RANGOS.map((rango) => (
-            <MenuItem key={rango.valor} value={rango.valor}>
-              {rango.texto}
-            </MenuItem>
-          ))}
-        </TextField>
+        {selectorPeriodo}
       </Stack>
 
       {colaboradores.length > 0 && (
@@ -142,7 +170,7 @@ function DetalleResumen() {
         {esHogar ? (
           <TarjetaResumen
             etiqueta="Ingresos"
-            monto={resumen.totalIngresos}
+            monto={ingresos}
             Icono={IconoCartera}
             fondo="var(--color-superficie-suave)"
           />
@@ -156,7 +184,7 @@ function DetalleResumen() {
             />
             <TarjetaResumen
               etiqueta="Aportado"
-              monto={resumen.totalIngresos}
+              monto={ingresos}
               Icono={IconoPersonas}
               fondo="var(--color-seleccion)"
             />
@@ -164,7 +192,7 @@ function DetalleResumen() {
         )}
         <TarjetaResumen
           etiqueta="Gastado"
-          monto={resumen.totalGastos}
+          monto={gastos}
           Icono={IconoArchivo}
           fondo="var(--color-seleccion)"
         />
@@ -178,9 +206,19 @@ function DetalleResumen() {
       </Box>
 
       {sinMovimientos && (
-        <Alert severity="info">
-          Esta cartera todavía no tiene transacciones.
-        </Alert>
+        <EstadoVacio
+          Icono={IconoArchivo}
+          titulo={
+            periodoElegido
+              ? `Sin movimientos en ${periodoElegido.nombre}`
+              : 'Esta cartera todavía no tiene transacciones'
+          }
+          descripcion={
+            periodoElegido
+              ? 'Elige otro periodo o vuelve a "Todo el historial".'
+              : 'Cuando registres el primer movimiento verás aquí las gráficas.'
+          }
+        />
       )}
 
       <Box

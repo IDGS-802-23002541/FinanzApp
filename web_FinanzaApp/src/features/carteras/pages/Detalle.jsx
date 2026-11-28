@@ -34,6 +34,7 @@ function DetalleCartera() {
   const [error, setError] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
   const [recarga, setRecarga] = useState(0)
+  const [periodoId, setPeriodoId] = useState('')
   const primeraCarga = useRef(true)
 
   useEffect(() => {
@@ -44,7 +45,7 @@ function DetalleCartera() {
       setError('')
 
       try {
-        const datos = await obtenerCartera(id)
+        const datos = await obtenerCartera(id, periodoId)
         if (vigente) setCartera(datos)
       } catch (err) {
         if (vigente) setError(err.message)
@@ -60,7 +61,7 @@ function DetalleCartera() {
     return () => {
       vigente = false
     }
-  }, [id, recarga])
+  }, [id, periodoId, recarga])
 
   if (cargando) {
     return (
@@ -180,7 +181,9 @@ function DetalleCartera() {
         ))}
       </Tabs>
 
-      <Outlet context={{ cartera, id, recarga, recargar }} />
+      <Outlet
+        context={{ cartera, id, recarga, recargar, periodoId, setPeriodoId }}
+      />
 
       {modalAbierto && (
         <DialogoNuevaTransaccion
