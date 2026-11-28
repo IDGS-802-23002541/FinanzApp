@@ -1,5 +1,6 @@
 import math
 import secrets
+import time
 
 from flask_jwt_extended import current_user
 from sqlalchemy import func
@@ -11,6 +12,15 @@ from app.models import AsignacionTicket, SesionUsuario, Ticket, Usuario
 from app.utils import seguridad, validacion
 from app.utils.serializers import serializar_usuario
 
+TTL_METRICAS = 60
+_CACHE_METRICAS = {"monotonico": 0.0, "respuesta": None}
+
+
+def limpiar_cache_metricas():
+    _CACHE_METRICAS["monotonico"] = 0.0
+    _CACHE_METRICAS["respuesta"] = None
+
+
 MAPA_ESTADO_TICKETS = {
     "ABIERTO": "abiertos",
     "EN_PROCESO": "enProceso",
@@ -20,12 +30,16 @@ MAPA_ESTADO_TICKETS = {
 }
 
 
-def metricas():
+def metricas(forzar=False):
     if current_user.rolGlobal != "ADMIN":
         return {
             "ok": False,
             "mensaje": "Solo un administrador puede consultar las métricas.",
         }, 403
+
+    if not forzar and _CACHE_METRICAS["respuesta"] is not None:
+        if time.monotonic() - _CACHE_METRICAS["monotonico"] < TTL_METRICAS:
+            return _CACHE_METRICAS["respuesta"]
 
     try:
         clientes = _conteo_usuarios("CLIENTE")
@@ -40,19 +54,25 @@ def metricas():
 
     activos = clientes.get("ACTIVO", 0)
     inactivos = clientes.get("INACTIVO", 0)
-    return {
-        "ok": True,
-        "data": {
-            "clientes": {
-                "total": activos + inactivos,
-                "activos": activos,
-                "inactivos": inactivos,
+    respuesta = (
+        {
+            "ok": True,
+            "data": {
+                "clientes": {
+                    "total": activos + inactivos,
+                    "activos": activos,
+                    "inactivos": inactivos,
+                },
+                "trabajadores": {"activos": trabajadores.get("ACTIVO", 0)},
+                "tickets": _resumen_tickets(tickets),
             },
-            "trabajadores": {"activos": trabajadores.get("ACTIVO", 0)},
-            "tickets": _resumen_tickets(tickets),
+            "mensaje": "Métricas obtenidas correctamente.",
         },
-        "mensaje": "Métricas obtenidas correctamente.",
-    }, 200
+        200,
+    )
+    _CACHE_METRICAS["monotonico"] = time.monotonic()
+    _CACHE_METRICAS["respuesta"] = respuesta
+    return respuesta
 
 
 def listar_trabajadores(pagina="1", por_pagina="20"):
@@ -264,10 +284,7 @@ def eliminar_trabajador(id_trabajador):
 
 def _buscar_trabajador(id_trabajador):
     trabajador = db.session.get(Usuario, id_trabajador)
-    if (
-        trabajador is None
-        or trabajador.rolGlobal not in {"ADMIN", "TRABAJADOR"}
-    ):
+    if trabajador is None or trabajador.rolGlobal not in {"ADMIN", "TRABAJADOR"}:
         return None, (
             {"ok": False, "mensaje": "El trabajador no existe."},
             404,

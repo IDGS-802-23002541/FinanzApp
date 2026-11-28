@@ -10,7 +10,7 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 @admin_bp.get("/metricas")
 @jwt_required()
 def metricas():
-    payload, status = admin_service.metricas()
+    payload, status = admin_service.metricas(forzar=request.args.get("forzar") == "1")
     return jsonify(payload), status
 
 

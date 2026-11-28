@@ -1027,6 +1027,38 @@
       "event": []
     },
     {
+      "name": "43b - Monitoreo: consultar SLI (caché)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/monitoreo/sli",
+        "description": "Esperado: 200 solo con token ADMIN. Devuelve sonda de BD + métricas con caché de 60s (cacheado true/false). 403 con cliente o trabajador. Usa ?forzar=1 para refrescar."
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "name": "43c - Monitoreo: actualizar SLI (forzar)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/monitoreo/sli/actualizar",
+        "description": "Esperado: 200 solo con token ADMIN. Botón actualizar indicadores: fuerza medición nueva y refresca caché. 403 con cliente o trabajador."
+      },
+      "response": [],
+      "event": []
+    },
+    {
       "name": "Carteras",
       "item": [
         {
