@@ -138,7 +138,8 @@ fun ReportesContenido(
                 EncabezadoVolver(
                     titulo = stringResource(R.string.reportes_titulo),
                     onVolver = onVolver,
-                    descripcionVolver = stringResource(R.string.comun_volver)
+                    descripcionVolver = stringResource(R.string.comun_volver),
+                    mostrarVolver = false
                 )
             }
 
@@ -166,13 +167,28 @@ fun ReportesContenido(
                 item { BannerError(mensaje = mensaje) }
             }
 
+            if (state.rangoInvalido) {
+                item { BannerError(mensaje = stringResource(R.string.reportes_error_rango)) }
+            }
+
             item {
                 BotonPrincipal(
                     texto = stringResource(R.string.reportes_actualizar),
                     textoCargando = stringResource(R.string.reportes_actualizando),
                     cargando = state.cargando,
+                    habilitado = state.carteraId != null && !state.rangoInvalido,
                     onClick = onActualizar
                 )
+            }
+
+            if (state.carteraId == null) {
+                item {
+                    Text(
+                        text = stringResource(R.string.reportes_elige_cartera),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             if (state.cargando) {
@@ -253,11 +269,11 @@ private fun FiltrosReporte(
         state.tipo == null || it.tipo == state.tipo
     }
     val nombreCartera = state.carteras.firstOrNull { it.id == state.carteraId }?.nombre
-        ?: stringResource(R.string.reportes_cartera_todas)
+        ?: stringResource(R.string.reportes_cartera_seleccionar)
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -316,13 +332,6 @@ private fun FiltrosReporte(
                     expanded = carteraExpandida,
                     onDismissRequest = { carteraExpandida = false }
                 ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.reportes_cartera_todas)) },
-                        onClick = {
-                            onSeleccionarCartera(null)
-                            carteraExpandida = false
-                        }
-                    )
                     if (carterasVisibles.isEmpty()) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.reportes_sin_carteras)) },
@@ -415,7 +424,7 @@ private fun FilaFecha(
 private fun IndicadoresReporte(indicadores: IndicadoresReporte) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(vertical = 18.dp, horizontal = 12.dp)) {
@@ -476,7 +485,7 @@ private fun RangoFechasReporte(filtros: FiltrosReporte) {
 private fun GraficaMensual(serie: List<SerieMensual>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -569,7 +578,7 @@ private fun GraficaMensual(serie: List<SerieMensual>) {
 private fun GraficaCategorias(categorias: List<GastoPorCategoria>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -603,7 +612,7 @@ private fun BotonesExportar(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -657,7 +666,7 @@ private fun TarjetaArchivo(ruta: String) {
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

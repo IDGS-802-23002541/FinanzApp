@@ -17,6 +17,18 @@ val Borde = Color(0xFFE3D8D1)
 val Error = Color(0xFFA94832)
 val ErrorSuave = Color(0xFFF6E1DB)
 
+// Estado activo del menú lateral (mismos tonos que la web).
+val SeleccionCoral = Color(0xFFF7E0D8)
+val SeleccionCoralTexto = Color(0xFFA94832)
+val SeleccionOscura = Color(0xFF1F4A55)
+
+// Colores de apoyo para gráficas (se mantienen estables en claro y oscuro).
+val Grafica1 = Color(0xFF2E7D7A)
+val Grafica2 = Color(0xFFB7793E)
+val Grafica3 = Color(0xFF7A9E7E)
+val Grafica4 = Color(0xFFB08A5A)
+val Grafica5 = Color(0xFF5B7FA6)
+
 // Adaptación a modo oscuro.
 val FondoOscuro = Color(0xFF0F2A32)
 val SuperficieOscura = Color(0xFF173B45)

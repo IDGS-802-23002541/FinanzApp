@@ -63,7 +63,8 @@ class TransaccionesRepositoryImplTest {
             idCartera: Int,
             pagina: Int,
             porPagina: Int,
-            periodoId: Int?
+            periodoId: Int?,
+            sinPeriodo: Boolean?
         ): RespuestaTransacciones {
             falla?.let { throw it }
             return RespuestaTransacciones(

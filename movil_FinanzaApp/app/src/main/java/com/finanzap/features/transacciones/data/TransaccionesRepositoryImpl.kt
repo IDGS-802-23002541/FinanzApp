@@ -14,10 +14,17 @@ class TransaccionesRepositoryImpl @Inject constructor(
         idCartera: Int,
         pagina: Int,
         porPagina: Int,
-        periodoId: Int?
+        periodoId: Int?,
+        sinPeriodo: Boolean
     ): Result<PaginaTransacciones> =
         try {
-            val respuesta = transaccionesApi.listar(idCartera, pagina, porPagina, periodoId)
+            val respuesta = transaccionesApi.listar(
+                idCartera,
+                pagina,
+                porPagina,
+                periodoId,
+                sinPeriodo
+            )
             Result.success(respuesta.data.aPagina())
         } catch (e: CancellationException) {
             throw e

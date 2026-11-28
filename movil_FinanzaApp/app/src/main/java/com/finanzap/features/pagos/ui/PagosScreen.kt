@@ -70,8 +70,11 @@ import com.finanzap.core.ui.EstadoVacio
 import com.finanzap.core.util.fechaIsoDesdeMillis
 import com.finanzap.core.util.formatearFechaCorta
 import com.finanzap.core.util.formatearMoneda
+import com.finanzap.core.util.hoyIsoLocal
 import com.finanzap.features.pagos.data.FRECUENCIAS_PAGO
 import com.finanzap.features.pagos.data.PagoRecurrente
+import com.finanzap.features.transacciones.Categoria
+import com.finanzap.features.transacciones.ui.SelectorCategoria
 
 private enum class CampoFecha { INICIO, FIN }
 
@@ -80,6 +83,7 @@ fun PagosScreen(
     carteraId: Int,
     carteraNombre: String,
     puedeEditar: Boolean,
+    puedeMarcar: Boolean,
     onVolver: () -> Unit,
     viewModel: PagosViewModel = hiltViewModel()
 ) {
@@ -112,6 +116,7 @@ fun PagosScreen(
         state = state,
         carteraNombre = carteraNombre,
         puedeEditar = puedeEditar,
+        puedeMarcar = puedeMarcar,
         snackbar = snackbar,
         onVolver = onVolver,
         onReintentar = viewModel::reintentar,
@@ -127,6 +132,8 @@ fun PagosScreen(
         onFechaInicioChange = viewModel::onFechaInicioChange,
         onFechaFinChange = viewModel::onFechaFinChange,
         onDescripcionChange = viewModel::onDescripcionChange,
+        onCategoriaChange = viewModel::onCategoriaChange,
+        onCrearCategoria = viewModel::crearCategoria,
         onGuardar = viewModel::guardar,
         onCerrarFormulario = viewModel::cerrarFormulario
     )
@@ -183,6 +190,7 @@ fun PagosContenido(
     state: PagosUiState,
     carteraNombre: String,
     puedeEditar: Boolean,
+    puedeMarcar: Boolean,
     snackbar: SnackbarHostState,
     onVolver: () -> Unit,
     onReintentar: () -> Unit,
@@ -198,6 +206,8 @@ fun PagosContenido(
     onFechaInicioChange: (String) -> Unit,
     onFechaFinChange: (String) -> Unit,
     onDescripcionChange: (String) -> Unit,
+    onCategoriaChange: (Categoria) -> Unit,
+    onCrearCategoria: (String) -> Unit,
     onGuardar: () -> Unit,
     onCerrarFormulario: () -> Unit
 ) {
@@ -250,7 +260,13 @@ fun PagosContenido(
             } else {
                 item {
                     Text(
-                        text = stringResource(R.string.pagos_aviso_miembro),
+                        text = stringResource(
+                            if (puedeMarcar) {
+                                R.string.pagos_aviso_miembro
+                            } else {
+                                R.string.pagos_aviso_solo_lectura
+                            }
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -267,6 +283,8 @@ fun PagosContenido(
                         onFechaInicioChange = onFechaInicioChange,
                         onFechaFinChange = onFechaFinChange,
                         onDescripcionChange = onDescripcionChange,
+                        onCategoriaChange = onCategoriaChange,
+                        onCrearCategoria = onCrearCategoria,
                         onGuardar = onGuardar,
                         onCancelar = onCerrarFormulario
                     )
@@ -288,7 +306,13 @@ fun PagosContenido(
                     EstadoVacio(
                         icono = Icons.AutoMirrored.Filled.List,
                         titulo = stringResource(R.string.pagos_vacio_titulo),
-                        mensaje = stringResource(R.string.pagos_vacio_mensaje)
+                        mensaje = stringResource(R.string.pagos_vacio_mensaje),
+                        textoBoton = if (puedeEditar) {
+                            stringResource(R.string.pagos_nuevo)
+                        } else {
+                            null
+                        },
+                        onBoton = if (puedeEditar) onAbrirFormulario else null
                     )
                 }
 
@@ -297,6 +321,7 @@ fun PagosContenido(
                         TarjetaPago(
                             pago = pago,
                             puedeEditar = puedeEditar,
+                            puedeMarcar = puedeMarcar,
                             marcandoHecho = state.marcandoHechoId == pago.id,
                             onEditar = onEditar,
                             onCancelar = onCancelar,
@@ -326,6 +351,8 @@ private fun FormularioPago(
     onFechaInicioChange: (String) -> Unit,
     onFechaFinChange: (String) -> Unit,
     onDescripcionChange: (String) -> Unit,
+    onCategoriaChange: (Categoria) -> Unit,
+    onCrearCategoria: (String) -> Unit,
     onGuardar: () -> Unit,
     onCancelar: () -> Unit
 ) {
@@ -378,6 +405,17 @@ private fun FormularioPago(
                 shape = RoundedCornerShape(Dimensiones.RadioCampo),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            SelectorCategoria(
+                categorias = state.categorias.filter { it.tipo == "AMBOS" || it.tipo == "GASTO" },
+                seleccionada = state.categoria,
+                onSeleccionar = onCategoriaChange,
+                onCrear = onCrearCategoria,
+                creando = state.creandoCategoria || state.cargandoCategorias,
+                error = state.errorCategorias
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -516,6 +554,7 @@ private fun FormularioPago(
 private fun TarjetaPago(
     pago: PagoRecurrente,
     puedeEditar: Boolean,
+    puedeMarcar: Boolean,
     marcandoHecho: Boolean,
     onEditar: (PagoRecurrente) -> Unit,
     onCancelar: (PagoRecurrente) -> Unit,
@@ -581,27 +620,55 @@ private fun TarjetaPago(
                 }
             }
 
-            if (pago.estado != "CANCELADO") {
+            pago.ultimaEjecucion?.let { ultima ->
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(
+                        R.string.pagos_ultima_ejecucion,
+                        formatearFechaCorta(ultima)
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            val vence = pago.proximaEjecucion?.let { it <= hoyIsoLocal() } ?: true
+
+            if (pago.estado != "CANCELADO" && (puedeMarcar || puedeEditar)) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = { onMarcarHecho(pago) },
-                        enabled = !marcandoHecho,
-                        shape = RoundedCornerShape(Dimensiones.RadioCampo),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        if (marcandoHecho) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.height(18.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.pagos_marcando))
+                    if (puedeMarcar) {
+                        if (vence) {
+                            OutlinedButton(
+                                onClick = { onMarcarHecho(pago) },
+                                enabled = !marcandoHecho,
+                                shape = RoundedCornerShape(Dimensiones.RadioCampo),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (marcandoHecho) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.height(18.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.pagos_marcando))
+                                } else {
+                                    Text(stringResource(R.string.pagos_marcar_hecho))
+                                }
+                            }
                         } else {
-                            Text(stringResource(R.string.pagos_marcar_hecho))
+                            Text(
+                                text = stringResource(
+                                    R.string.pagos_disponible,
+                                    formatearFechaCorta(pago.proximaEjecucion.orEmpty())
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                     if (puedeEditar) {
@@ -614,7 +681,8 @@ private fun TarjetaPago(
                         IconButton(onClick = { onCancelar(pago) }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.comun_eliminar)
+                                contentDescription = stringResource(R.string.comun_eliminar),
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -626,14 +694,23 @@ private fun TarjetaPago(
 
 @Composable
 private fun ChipEstado(estado: String) {
+    val (fondo, texto) = when (estado) {
+        "CANCELADO" -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f) to
+            MaterialTheme.colorScheme.error
+        "PAUSADO" -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f) to
+            MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) to
+            MaterialTheme.colorScheme.primary
+    }
     Surface(
         shape = RoundedCornerShape(percent = 50),
-        color = MaterialTheme.colorScheme.secondaryContainer
+        color = fondo
     ) {
         Text(
             text = etiquetaEstado(estado),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = FontWeight.Bold,
+            color = texto,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }

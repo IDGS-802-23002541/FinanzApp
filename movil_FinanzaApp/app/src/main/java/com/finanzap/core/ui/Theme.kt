@@ -1,10 +1,13 @@
 package com.finanzap.core.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 
 private val PrimarioOscuro = Coral
 private val SobrePrimarioOscuro = Petroleo
@@ -49,6 +52,14 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = ErrorOscuro
 )
 
+private val Formas = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(Dimensiones.RadioTarjeta),
+    extraLarge = RoundedCornerShape(28.dp)
+)
+
 @Composable
 fun FinanzAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -57,6 +68,7 @@ fun FinanzAppTheme(
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = Typography,
+        shapes = Formas,
         content = content
     )
 }

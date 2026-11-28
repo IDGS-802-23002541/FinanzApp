@@ -45,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.finanzap.R
 import com.finanzap.core.ui.EstadoError
 import com.finanzap.core.ui.EstadoVacio
+import com.finanzap.core.ui.Dimensiones
 import com.finanzap.core.ui.LocalAbrirMenu
 import com.finanzap.core.util.formatearRangoFechas
 import com.finanzap.features.carteras.Cartera
@@ -78,6 +80,11 @@ fun CarterasScreen(
     viewModel: CarterasViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // La primera carga no depende de ON_RESUME: al navegar, ese evento ya ocurrió.
+    LaunchedEffect(Unit) {
+        viewModel.cargar()
+    }
 
     // Al volver de crear una cartera la pantalla se recompone: se recarga el listado.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -260,7 +267,7 @@ private fun Encabezado(
             }
             Text(
                 text = stringResource(R.string.carteras_titulo),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
@@ -442,8 +449,8 @@ private fun FiltrosEstado(
                 label = { Text(estado.etiqueta()) },
                 shape = RoundedCornerShape(percent = 50),
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.tertiary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onTertiary
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
@@ -566,6 +573,12 @@ private fun TarjetaPropia(
                     )
                 }
 
+                // Hogar no maneja presupuesto, así que no muestra avance.
+                if (cartera.tipo != TipoCartera.HOGAR) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    AvancePresupuesto(cartera.avancePresupuesto)
+                }
+
                 Spacer(modifier = Modifier.height(14.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Spacer(modifier = Modifier.height(12.dp))
@@ -575,7 +588,7 @@ private fun TarjetaPropia(
                         Button(
                             onClick = onRegistrarGasto,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(percent = 50),
+                            shape = RoundedCornerShape(Dimensiones.RadioBoton),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {
                             Text(
@@ -586,7 +599,7 @@ private fun TarjetaPropia(
                     }
                     OutlinedButton(
                         onClick = onAbrir,
-                        shape = RoundedCornerShape(percent = 50),
+                        shape = RoundedCornerShape(Dimensiones.RadioBoton),
                         contentPadding = PaddingValues(horizontal = 8.dp),
                         modifier = if (puedeRegistrar) Modifier else Modifier.weight(1f)
                     ) {
@@ -614,7 +627,16 @@ private fun TarjetaCompartida(
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 1.dp
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column {
+            // Franja superior de la tarjeta, como en el diseño.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(MaterialTheme.colorScheme.secondary)
+            )
+
+            Column(modifier = Modifier.padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CirculoTipo(cartera.tipo, grande = true)
 
@@ -676,33 +698,7 @@ private fun TarjetaCompartida(
             // Hogar no maneja presupuesto, así que no muestra avance.
             if (cartera.tipo != TipoCartera.HOGAR) {
                 Spacer(modifier = Modifier.height(14.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.carteras_avance),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "${cartera.avancePresupuesto}%",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                LinearProgressIndicator(
-                    progress = { cartera.avancePresupuesto / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    strokeCap = StrokeCap.Round,
-                    drawStopIndicator = {}
-                )
+                AvancePresupuesto(cartera.avancePresupuesto)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -712,7 +708,7 @@ private fun TarjetaCompartida(
                     Button(
                         onClick = onRegistrarGasto,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(percent = 50),
+                        shape = RoundedCornerShape(Dimensiones.RadioBoton),
                         contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
                         Text(
@@ -723,7 +719,7 @@ private fun TarjetaCompartida(
                 }
                 OutlinedButton(
                     onClick = onVerCartera,
-                    shape = RoundedCornerShape(percent = 50),
+                    shape = RoundedCornerShape(Dimensiones.RadioBoton),
                     modifier = if (puedeRegistrar) Modifier else Modifier.weight(1f)
                 ) {
                     Text(stringResource(R.string.carteras_ver))
@@ -732,21 +728,61 @@ private fun TarjetaCompartida(
         }
     }
 }
+}
+
+@Composable
+private fun AvancePresupuesto(avance: Int) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.carteras_avance),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "$avance%",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
+    Spacer(modifier = Modifier.height(6.dp))
+
+    LinearProgressIndicator(
+        progress = { avance / 100f },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(8.dp),
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        strokeCap = StrokeCap.Round,
+        drawStopIndicator = {}
+    )
+}
 
 @Composable
 private fun EtiquetaEstado(estado: String) {
+    val esFinalizada = estado == "FINALIZADA"
     Surface(
         shape = RoundedCornerShape(percent = 50),
-        color = MaterialTheme.colorScheme.errorContainer
+        color = if (esFinalizada) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        }
     ) {
         Text(
-            text = if (estado == "FINALIZADA") {
+            text = if (esFinalizada) {
                 stringResource(R.string.carteras_estado_finalizada)
             } else {
                 stringResource(R.string.carteras_estado_inactiva)
             },
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onErrorContainer,
+            color = if (esFinalizada) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }

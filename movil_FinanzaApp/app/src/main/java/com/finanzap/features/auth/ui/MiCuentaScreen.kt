@@ -1,5 +1,6 @@
 package com.finanzap.features.auth.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,7 +111,8 @@ fun MiCuentaContenido(
     PantallaFormulario(
         titulo = stringResource(R.string.mi_cuenta_titulo),
         onVolver = onVolver,
-        descripcionVolver = stringResource(R.string.comun_volver)
+        descripcionVolver = stringResource(R.string.comun_volver),
+        mostrarVolver = false
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -129,7 +131,7 @@ fun MiCuentaContenido(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
+            shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 1.dp
         ) {
@@ -169,28 +171,40 @@ fun MiCuentaContenido(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Text(
-            text = stringResource(R.string.mi_cuenta_zona_riesgo),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.mi_cuenta_zona_riesgo_aviso),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.22f),
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.error.copy(alpha = 0.45f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = stringResource(R.string.mi_cuenta_zona_riesgo),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.mi_cuenta_zona_riesgo_aviso),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
 
-        AccionRiesgo(
-            texto = stringResource(R.string.mi_cuenta_desactivar),
-            onClick = { onPedirAccion(AccionCuenta.DESACTIVAR) }
-        )
-        AccionRiesgo(
-            texto = stringResource(R.string.mi_cuenta_eliminar),
-            onClick = { onPedirAccion(AccionCuenta.ELIMINAR) }
-        )
+                AccionRiesgo(
+                    texto = stringResource(R.string.mi_cuenta_desactivar),
+                    onClick = { onPedirAccion(AccionCuenta.DESACTIVAR) }
+                )
+                AccionRiesgo(
+                    texto = stringResource(R.string.mi_cuenta_eliminar),
+                    onClick = { onPedirAccion(AccionCuenta.ELIMINAR) }
+                )
+            }
+        }
     }
 
     if (state.accion != AccionCuenta.NINGUNA) {

@@ -78,13 +78,17 @@ fun CarteraDetalleScreen(
     onVolver: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
-    onVerPagos: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean, Boolean) -> Unit,
     onSalirDeCartera: () -> Unit,
     onEditarCartera: (Int) -> Unit,
     onCarteraInactivada: () -> Unit,
     viewModel: CarteraDetalleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(carteraId) {
+        viewModel.cargar(carteraId)
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.cargar(carteraId)
@@ -117,6 +121,7 @@ fun CarteraDetalleScreen(
         onSalir = { viewModel.salir(carteraId) },
         onEditar = { onEditarCartera(carteraId) },
         onInactivar = { viewModel.inactivar(carteraId) },
+        onReactivar = { viewModel.reactivar(carteraId) },
         onFinalizar = { viewModel.finalizar(carteraId) }
     )
 }
@@ -128,12 +133,13 @@ fun CarteraDetalleContenido(
     onReintentar: () -> Unit,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
-    onVerPagos: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean, Boolean) -> Unit,
     onGenerarInvitacion: () -> Unit,
     onSeleccionarPeriodo: (Int?) -> Unit,
     onSalir: () -> Unit,
     onEditar: () -> Unit,
     onInactivar: () -> Unit,
+    onReactivar: () -> Unit,
     onFinalizar: () -> Unit
 ) {
     PantallaFormulario(
@@ -185,8 +191,11 @@ fun CarteraDetalleContenido(
                 onFinalizar = onFinalizar,
                 inactivando = state.inactivando,
                 errorInactivar = state.errorInactivar,
+                reactivando = state.reactivando,
+                errorReactivar = state.errorReactivar,
                 onEditar = onEditar,
-                onInactivar = onInactivar
+                onInactivar = onInactivar,
+                onReactivar = onReactivar
             )
         }
     }
@@ -197,7 +206,7 @@ private fun DetalleCartera(
     cartera: Cartera,
     onRegistrarGasto: (Int, String) -> Unit,
     onVerTransacciones: (Int, String, Boolean) -> Unit,
-    onVerPagos: (Int, String, Boolean) -> Unit,
+    onVerPagos: (Int, String, Boolean, Boolean) -> Unit,
     resumen: ResumenCartera?,
     series: SeriesCartera?,
     colaboradores: List<ColaboradorCartera>,
@@ -219,8 +228,11 @@ private fun DetalleCartera(
     onFinalizar: () -> Unit,
     inactivando: Boolean,
     errorInactivar: String?,
+    reactivando: Boolean,
+    errorReactivar: String?,
     onEditar: () -> Unit,
-    onInactivar: () -> Unit
+    onInactivar: () -> Unit,
+    onReactivar: () -> Unit
 ) {
     val presupuesto = resumen?.presupuestoInicial ?: cartera.presupuestoInicial
     val totalIngresos = resumen?.totalIngresos ?: 0.0
@@ -248,7 +260,10 @@ private fun DetalleCartera(
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Etiqueta(texto = cartera.tipo.etiqueta)
-        Etiqueta(texto = "${stringResource(R.string.detalle_estado)}: ${cartera.estado}")
+        Etiqueta(
+            texto = "${stringResource(R.string.detalle_estado)}: " +
+                etiquetaEstadoCartera(cartera.estado)
+        )
     }
 
     if (cartera.descripcion != null) {
@@ -410,7 +425,10 @@ private fun DetalleCartera(
                 onVerPagos(
                     cartera.id,
                     cartera.nombre,
-                    cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA"
+                    // Crear, editar y cancelar: solo el propietario.
+                    cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ACTIVA",
+                    // Consultar y marcar como hecho: cualquier miembro activo.
+                    cartera.estado == "ACTIVA"
                 )
             },
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
@@ -472,6 +490,9 @@ private fun DetalleCartera(
         OutlinedButton(
             onClick = { mostrarConfirmacionCierre = true },
             shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.cartera_cerrar))
@@ -534,6 +555,9 @@ private fun DetalleCartera(
             OutlinedButton(
                 onClick = { mostrarConfirmacionInactivar = true },
                 shape = RoundedCornerShape(Dimensiones.RadioCampo),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.cartera_inactivar))
@@ -575,6 +599,57 @@ private fun DetalleCartera(
                     }
                 )
             }
+        }
+    }
+
+    if (cartera.rol == RolEnCartera.PROPIETARIO && cartera.estado == "ARCHIVADA") {
+        var mostrarConfirmacionReactivar by remember { mutableStateOf(false) }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = { mostrarConfirmacionReactivar = true },
+            shape = RoundedCornerShape(Dimensiones.RadioCampo),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.cartera_reactivar))
+        }
+
+        if (errorReactivar != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorReactivar,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        if (mostrarConfirmacionReactivar) {
+            AlertDialog(
+                onDismissRequest = { if (!reactivando) mostrarConfirmacionReactivar = false },
+                title = { Text(stringResource(R.string.cartera_reactivar_titulo)) },
+                text = { Text(stringResource(R.string.cartera_reactivar_aviso)) },
+                confirmButton = {
+                    TextButton(onClick = onReactivar, enabled = !reactivando) {
+                        if (reactivando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(stringResource(R.string.cartera_reactivar_confirmar))
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { mostrarConfirmacionReactivar = false },
+                        enabled = !reactivando
+                    ) {
+                        Text(stringResource(R.string.comun_cancelar))
+                    }
+                }
+            )
         }
     }
 
@@ -1105,6 +1180,13 @@ private fun Etiqueta(texto: String) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
         )
     }
+}
+
+@Composable
+private fun etiquetaEstadoCartera(estado: String): String = when (estado) {
+    "ARCHIVADA" -> stringResource(R.string.carteras_estado_inactiva)
+    "FINALIZADA" -> stringResource(R.string.carteras_estado_finalizada)
+    else -> stringResource(R.string.carteras_estado_activa)
 }
 
 @Composable

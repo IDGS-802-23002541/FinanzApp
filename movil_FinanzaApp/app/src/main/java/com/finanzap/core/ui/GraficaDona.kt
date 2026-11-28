@@ -20,9 +20,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.finanzap.R
 import com.finanzap.core.util.formatearMoneda
 import kotlin.math.min
 
@@ -89,7 +91,7 @@ fun GraficaDona(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Total",
+                    text = stringResource(R.string.comun_total),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -139,9 +141,9 @@ private fun coloresDona(): List<Color> = listOf(
     MaterialTheme.colorScheme.primary,
     MaterialTheme.colorScheme.secondary,
     MaterialTheme.colorScheme.tertiary,
-    PetroleoMedio,
-    Coral,
-    Terracota,
-    Color(0xFF7A9E7E),
-    Color(0xFFB08A5A)
+    Grafica1,
+    Grafica2,
+    Grafica3,
+    Grafica4,
+    Grafica5
 )

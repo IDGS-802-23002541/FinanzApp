@@ -167,4 +167,7 @@ private class RepositorioCarterasFalso : CarterasRepository {
 
     override suspend fun inactivar(idCartera: Int): Result<com.finanzap.features.carteras.Cartera> =
         Result.failure(UnsupportedOperationException())
+
+    override suspend fun reactivar(idCartera: Int): Result<com.finanzap.features.carteras.Cartera> =
+        Result.failure(UnsupportedOperationException())
 }

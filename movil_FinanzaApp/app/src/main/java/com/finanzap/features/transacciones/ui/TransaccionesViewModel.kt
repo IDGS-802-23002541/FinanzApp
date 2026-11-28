@@ -39,9 +39,24 @@ class TransaccionesViewModel @Inject constructor(
     }
 
     fun seleccionarPeriodo(periodoId: Int?) {
-        if (_state.value.periodoSeleccionadoId == periodoId) return
+        if (_state.value.periodoSeleccionadoId == periodoId &&
+            !_state.value.sinPeriodo
+        ) {
+            return
+        }
 
-        _state.update { it.copy(periodoSeleccionadoId = periodoId) }
+        _state.update {
+            it.copy(periodoSeleccionadoId = periodoId, sinPeriodo = false)
+        }
+        cargarPagina(1)
+    }
+
+    fun seleccionarSinPeriodo() {
+        if (_state.value.sinPeriodo) return
+
+        _state.update {
+            it.copy(periodoSeleccionadoId = null, sinPeriodo = true)
+        }
         cargarPagina(1)
     }
 
@@ -154,7 +169,8 @@ class TransaccionesViewModel @Inject constructor(
                 idCartera = actual.idCartera,
                 pagina = pagina,
                 porPagina = POR_PAGINA,
-                periodoId = actual.periodoSeleccionadoId
+                periodoId = actual.periodoSeleccionadoId,
+                sinPeriodo = actual.sinPeriodo
             )
                 .onSuccess { resultado ->
                     _state.update {
@@ -201,6 +217,7 @@ data class TransaccionesUiState(
     val transacciones: List<Transaccion> = emptyList(),
     val periodos: List<PeriodoCartera> = emptyList(),
     val periodoSeleccionadoId: Int? = null,
+    val sinPeriodo: Boolean = false,
     val errorPeriodos: String? = null,
     val totalIngresos: Double = 0.0,
     val totalGastos: Double = 0.0,

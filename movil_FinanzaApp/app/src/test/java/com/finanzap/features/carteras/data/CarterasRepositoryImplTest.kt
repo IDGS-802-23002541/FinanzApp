@@ -144,6 +144,18 @@ class CarterasRepositoryImplTest {
             )
         }
 
+        override suspend fun reactivar(idCartera: Int): RespuestaCartera {
+            falla?.let { throw it }
+            return RespuestaCartera(
+                data = CarteraDto(
+                    id = idCartera,
+                    nombre = "Casa",
+                    tipo = "HOGAR",
+                    estado = "ACTIVA"
+                )
+            )
+        }
+
         override suspend fun finalizar(idCartera: Int): RespuestaCierre {
             falla?.let { throw it }
             return RespuestaCierre(

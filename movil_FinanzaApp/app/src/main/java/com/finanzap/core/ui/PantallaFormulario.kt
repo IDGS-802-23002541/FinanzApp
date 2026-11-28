@@ -20,6 +20,7 @@ fun PantallaFormulario(
     onVolver: () -> Unit,
     descripcionVolver: String,
     modifier: Modifier = Modifier,
+    mostrarVolver: Boolean = true,
     contenido: @Composable ColumnScope.() -> Unit
 ) {
     Scaffold(
@@ -39,7 +40,8 @@ fun PantallaFormulario(
             EncabezadoVolver(
                 titulo = titulo,
                 onVolver = onVolver,
-                descripcionVolver = descripcionVolver
+                descripcionVolver = descripcionVolver,
+                mostrarVolver = mostrarVolver
             )
             contenido()
         }

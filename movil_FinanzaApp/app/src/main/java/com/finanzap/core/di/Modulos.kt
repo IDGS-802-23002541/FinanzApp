@@ -15,6 +15,9 @@ import com.finanzap.features.carteras.data.CarterasRepositoryImpl
 import com.finanzap.features.carteras.data.InvitacionesApi
 import com.finanzap.features.carteras.data.InvitacionesRepository
 import com.finanzap.features.carteras.data.InvitacionesRepositoryImpl
+import com.finanzap.features.notificaciones.data.NotificacionesApi
+import com.finanzap.features.notificaciones.data.NotificacionesRepository
+import com.finanzap.features.notificaciones.data.NotificacionesRepositoryImpl
 import com.finanzap.features.pagos.data.PagosApi
 import com.finanzap.features.pagos.data.PagosRepository
 import com.finanzap.features.pagos.data.PagosRepositoryImpl
@@ -90,6 +93,12 @@ abstract class Modulos {
     @Singleton
     abstract fun bindPagosRepository(impl: PagosRepositoryImpl): PagosRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindNotificacionesRepository(
+        impl: NotificacionesRepositoryImpl
+    ): NotificacionesRepository
+
     companion object {
 
         @Provides
@@ -164,5 +173,10 @@ abstract class Modulos {
         @Singleton
         fun providePagosApi(retrofit: Retrofit): PagosApi =
             retrofit.create(PagosApi::class.java)
+
+        @Provides
+        @Singleton
+        fun provideNotificacionesApi(retrofit: Retrofit): NotificacionesApi =
+            retrofit.create(NotificacionesApi::class.java)
     }
 }

@@ -15,7 +15,8 @@ interface TransaccionesApi {
         @Path("idCartera") idCartera: Int,
         @Query("pagina") pagina: Int = 1,
         @Query("porPagina") porPagina: Int = 20,
-        @Query("periodoId") periodoId: Int? = null
+        @Query("periodoId") periodoId: Int? = null,
+        @Query("sinPeriodo") sinPeriodo: Boolean? = null
     ): RespuestaTransacciones
 
     @POST("carteras/{idCartera}/transacciones")

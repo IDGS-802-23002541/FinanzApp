@@ -255,4 +255,7 @@ private class RepositorioFormularioFalso : CarterasRepository {
 
     override suspend fun inactivar(idCartera: Int): Result<Cartera> =
         Result.failure(UnsupportedOperationException())
+
+    override suspend fun reactivar(idCartera: Int): Result<Cartera> =
+        Result.failure(UnsupportedOperationException())
 }

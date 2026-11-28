@@ -25,11 +25,12 @@ fun BotonPrincipal(
     modifier: Modifier = Modifier,
     cargando: Boolean = false,
     textoCargando: String = texto,
-    iconoFinal: ImageVector? = null
+    iconoFinal: ImageVector? = null,
+    habilitado: Boolean = true
 ) {
     Button(
         onClick = onClick,
-        enabled = !cargando,
+        enabled = !cargando && habilitado,
         shape = RoundedCornerShape(Dimensiones.RadioCampo),
         modifier = modifier
             .fillMaxWidth()

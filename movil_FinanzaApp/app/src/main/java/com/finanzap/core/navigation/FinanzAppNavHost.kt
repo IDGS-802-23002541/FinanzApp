@@ -30,6 +30,7 @@ import com.finanzap.features.carteras.ui.CarteraDetalleScreen
 import com.finanzap.features.carteras.ui.CarterasScreen
 import com.finanzap.features.carteras.ui.FormularioCarteraScreen
 import com.finanzap.features.carteras.ui.UnirseCarteraScreen
+import com.finanzap.features.notificaciones.ui.NotificacionesScreen
 import com.finanzap.features.pagos.ui.PagosScreen
 import com.finanzap.features.reportes.ui.ReportesScreen
 import com.finanzap.features.soporte.ui.SoporteScreen
@@ -44,7 +45,10 @@ fun FinanzAppNavHost(
     eventos: Flow<MainEvento>,
     onCerrarSesion: () -> Unit,
     temaOscuro: Boolean,
-    onAlternarTema: () -> Unit
+    onAlternarTema: () -> Unit,
+    abrirNotificaciones: Boolean = false,
+    onNotificacionesAbiertas: () -> Unit = {},
+    onSincronizarNotificaciones: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val entrada by navController.currentBackStackEntryAsState()
@@ -75,6 +79,20 @@ fun FinanzAppNavHost(
                     launchSingleTop = true
                 }
             }
+        }
+    }
+
+    LaunchedEffect(autenticada) {
+        if (autenticada) onSincronizarNotificaciones()
+    }
+
+    // Un toque en un aviso del sistema abre el centro de notificaciones.
+    LaunchedEffect(abrirNotificaciones, autenticada) {
+        if (abrirNotificaciones && autenticada) {
+            navController.navigate(Rutas.Notificaciones) {
+                launchSingleTop = true
+            }
+            onNotificacionesAbiertas()
         }
     }
 
@@ -167,9 +185,9 @@ fun FinanzAppNavHost(
                                 Rutas.transacciones(id, nombre, puedeEditar)
                             )
                         },
-                        onVerPagos = { id, nombre, puedeEditar ->
+                        onVerPagos = { id, nombre, puedeEditar, puedeMarcar ->
                             navController.navigate(
-                                Rutas.pagos(id, nombre, puedeEditar)
+                                Rutas.pagos(id, nombre, puedeEditar, puedeMarcar)
                             )
                         },
                         onSalirDeCartera = { navController.popBackStack() },
@@ -211,7 +229,15 @@ fun FinanzAppNavHost(
                         carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
                         carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
                         puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
-                        onVolver = { navController.popBackStack() }
+                        onVolver = { navController.popBackStack() },
+                        onRegistrarGasto = {
+                            navController.navigate(
+                                Rutas.nuevaTransaccion(
+                                    entrada.arguments?.getInt("carteraId") ?: 0,
+                                    entrada.arguments?.getString("nombre").orEmpty()
+                                )
+                            )
+                        }
                     )
                 }
 
@@ -226,6 +252,10 @@ fun FinanzAppNavHost(
                         navArgument("puedeEditar") {
                             type = NavType.BoolType
                             defaultValue = false
+                        },
+                        navArgument("puedeMarcar") {
+                            type = NavType.BoolType
+                            defaultValue = false
                         }
                     )
                 ) { entrada ->
@@ -233,6 +263,7 @@ fun FinanzAppNavHost(
                         carteraId = entrada.arguments?.getInt("carteraId") ?: 0,
                         carteraNombre = entrada.arguments?.getString("nombre").orEmpty(),
                         puedeEditar = entrada.arguments?.getBoolean("puedeEditar") ?: false,
+                        puedeMarcar = entrada.arguments?.getBoolean("puedeMarcar") ?: false,
                         onVolver = { navController.popBackStack() }
                     )
                 }
@@ -269,7 +300,12 @@ fun FinanzAppNavHost(
 
                 composable(Rutas.PreferenciasNotificacion) {
                     PreferenciasNotificacionScreen(
-                        onVolver = { navController.popBackStack() }
+                        onVolver = { navController.popBackStack() },
+                        onVerNotificaciones = {
+                            navController.navigate(Rutas.Notificaciones) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
 
@@ -315,6 +351,12 @@ fun FinanzAppNavHost(
                         onVolver = { navController.popBackStack() }
                     )
                 }
+
+                composable(Rutas.Notificaciones) {
+                    NotificacionesScreen(
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
@@ -332,9 +374,10 @@ private fun seccionDeRuta(ruta: String?): SeccionMenu? = when (ruta) {
 
     Rutas.Reportes -> SeccionMenu.REPORTES
     Rutas.Soporte -> SeccionMenu.SOPORTE
+    Rutas.Notificaciones,
+    Rutas.PreferenciasNotificacion -> SeccionMenu.NOTIFICACIONES
     Rutas.MiCuenta,
     Rutas.EditarCuenta,
-    Rutas.PreferenciasNotificacion,
     Rutas.CambiarContrasena -> SeccionMenu.MI_CUENTA
 
     else -> null
@@ -344,5 +387,6 @@ private fun rutaDeSeccion(seccion: SeccionMenu): String = when (seccion) {
     SeccionMenu.CARTERAS -> Rutas.Carteras
     SeccionMenu.REPORTES -> Rutas.Reportes
     SeccionMenu.SOPORTE -> Rutas.Soporte
+    SeccionMenu.NOTIFICACIONES -> Rutas.PreferenciasNotificacion
     SeccionMenu.MI_CUENTA -> Rutas.MiCuenta
 }

@@ -49,4 +49,6 @@ interface CarterasRepository {
     ): Result<Cartera>
 
     suspend fun inactivar(idCartera: Int): Result<Cartera>
+
+    suspend fun reactivar(idCartera: Int): Result<Cartera>
 }

@@ -167,6 +167,9 @@ private class RepositorioCarterasFalso : CarterasRepository {
 
     override suspend fun inactivar(idCartera: Int): Result<com.finanzap.features.carteras.Cartera> =
         Result.failure(UnsupportedOperationException())
+
+    override suspend fun reactivar(idCartera: Int): Result<com.finanzap.features.carteras.Cartera> =
+        Result.failure(UnsupportedOperationException())
 }
 
 private class RepositorioFalso : TransaccionesRepository {
@@ -177,7 +180,8 @@ private class RepositorioFalso : TransaccionesRepository {
         idCartera: Int,
         pagina: Int,
         porPagina: Int,
-        periodoId: Int?
+        periodoId: Int?,
+        sinPeriodo: Boolean
     ): Result<PaginaTransacciones> {
         val error = falla
         if (error != null) return Result.failure(error)

@@ -1,11 +1,27 @@
 package com.finanzap.core.util
 
 import java.time.Instant
+import java.util.TimeZone
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class FechasTest {
+
+    private lateinit var zonaOriginal: TimeZone
+
+    @Before
+    fun prepararZona() {
+        zonaOriginal = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"))
+    }
+
+    @After
+    fun restaurarZona() {
+        TimeZone.setDefault(zonaOriginal)
+    }
 
     @Test
     fun `millis utc se convierten a iso`() {
@@ -20,9 +36,9 @@ class FechasTest {
     }
 
     @Test
-    fun `fecha con hora se muestra en dd MM aaaa HH mm`() {
+    fun `fecha con hora se muestra en la zona local`() {
         assertEquals(
-            "01/11/2026 14:30",
+            "01/11/2026 08:30",
             formatearFechaHoraCorta("2026-11-01T14:30:00.123456")
         )
     }

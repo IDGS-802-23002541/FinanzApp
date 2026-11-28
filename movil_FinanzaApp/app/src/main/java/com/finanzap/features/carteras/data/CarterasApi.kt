@@ -43,4 +43,7 @@ interface CarterasApi {
 
     @POST("carteras/{idCartera}/inactivar")
     suspend fun inactivar(@Path("idCartera") idCartera: Int): RespuestaCartera
+
+    @POST("carteras/{idCartera}/reactivar")
+    suspend fun reactivar(@Path("idCartera") idCartera: Int): RespuestaCartera
 }

@@ -10,7 +10,8 @@ interface TransaccionesRepository {
         idCartera: Int,
         pagina: Int = 1,
         porPagina: Int = 20,
-        periodoId: Int? = null
+        periodoId: Int? = null,
+        sinPeriodo: Boolean = false
     ): Result<PaginaTransacciones>
 
     suspend fun crear(
