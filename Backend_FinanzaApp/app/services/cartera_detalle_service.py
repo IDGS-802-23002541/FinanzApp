@@ -119,17 +119,20 @@ def resumen_y_series(cartera, periodo_id=None):
     ]
 
     ingresos, gastos = _sumas(filtros)
+    presupuesto = Decimal(cartera.presupuestoInicial or 0)
+    # `saldo` es la caja real (aportaciones − gastos); el presupuesto es un
+    # techo de gasto y se expone aparte como `disponiblePresupuesto`.
     resumen = {
-        "presupuestoInicial": float(cartera.presupuestoInicial or 0),
+        "presupuestoInicial": float(presupuesto),
         "totalIngresos": float(ingresos),
         "totalGastos": float(gastos),
-        "saldo": float(
-            Decimal(cartera.presupuestoInicial or 0) + ingresos - gastos
-        ),
+        "saldo": float(ingresos - gastos),
+        "disponiblePresupuesto": float(presupuesto - gastos),
     }
 
     resumen_periodo = None
     filtros_categoria = filtros
+    serie_ingresos = _serie_ingresos_egresos(cartera)
     if periodo:
         filtros_periodo = filtros + _filtros_fechas(periodo)
         ingresos_periodo, gastos_periodo = _sumas(filtros_periodo)
@@ -143,12 +146,18 @@ def resumen_y_series(cartera, periodo_id=None):
             "balance": float(ingresos_periodo - gastos_periodo),
         }
         filtros_categoria = filtros_periodo
+        # Con un periodo elegido, la serie de barras muestra solo ese periodo.
+        serie_ingresos = [
+            fila
+            for fila in serie_ingresos
+            if fila["periodoId"] == periodo.idPeriodo
+        ]
 
     return {
         "resumen": resumen,
         "resumenPeriodo": resumen_periodo,
         "series": {
-            "ingresosVsEgresos": _serie_ingresos_egresos(cartera),
+            "ingresosVsEgresos": serie_ingresos,
             "gastosPorCategoria": _gastos_por_categoria(filtros_categoria),
         },
     }
