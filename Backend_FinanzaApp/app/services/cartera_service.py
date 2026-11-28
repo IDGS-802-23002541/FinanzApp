@@ -1,7 +1,9 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
+from calendar import monthrange
 
 from flask_jwt_extended import current_user
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
@@ -10,7 +12,9 @@ from app.models import (
     Invitacion,
     MiembroCartera,
     Notificacion,
+    Periodo,
     PreferenciaUsuario,
+    Transaccion,
     Usuario,
 )
 from app.utils import validacion
@@ -25,6 +29,82 @@ from app.utils.serializers import (
 TIPOS_ENTRADA = {"HOGAR", "VIAJE", "EVENTO", "OTRO", "OTRA"}
 ESTADOS_CARTERA = {"ACTIVA", "ARCHIVADA", "FINALIZADA"}
 MAPA_ROL_BD = {"PROPIETARIO": "ADMIN", "COLABORADOR": "CONTRIBUYENTE"}
+
+MESES = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+]
+
+
+def _rango_de_periodos(cartera):
+    """Rango con el que se generan los meses de la cartera."""
+    if cartera.fechaInicio and cartera.fechaFin:
+        return cartera.fechaInicio, cartera.fechaFin
+
+    # Sin fechas (Hogar): desde el primer movimiento hasta hoy.
+    primera = db.session.execute(
+        db.select(func.min(Transaccion.fechaTransaccion)).where(
+            Transaccion.carteraId == cartera.idCartera,
+            Transaccion.estado == "ACTIVO",
+        )
+    ).scalar()
+    inicio = primera.date() if primera else date.today()
+    return inicio, date.today()
+
+
+def generar_periodos(cartera):
+    """Crea un periodo por mes calendario dentro del rango de la cartera.
+
+    Es aditivo: nunca borra periodos existentes (pueden tener movimientos).
+    Devuelve cuántos periodos nuevos se agregaron.
+    """
+    inicio, fin = _rango_de_periodos(cartera)
+    if not inicio or not fin or fin < inicio:
+        return 0
+
+    existentes = set(
+        db.session.execute(
+            db.select(Periodo.nombre).where(
+                Periodo.carteraId == cartera.idCartera
+            )
+        ).scalars().all()
+    )
+
+    creados = 0
+    actual = date(inicio.year, inicio.month, 1)
+    while actual <= fin:
+        ultimo_dia = monthrange(actual.year, actual.month)[1]
+        desde = max(actual, inicio)
+        hasta = min(date(actual.year, actual.month, ultimo_dia), fin)
+        nombre = f"{MESES[actual.month - 1]} {actual.year}"
+
+        if nombre not in existentes:
+            db.session.add(
+                Periodo(
+                    carteraId=cartera.idCartera,
+                    nombre=nombre,
+                    fechaInicio=desde,
+                    fechaFin=hasta,
+                    estado="ACTIVO",
+                )
+            )
+            creados += 1
+
+        siguiente = actual.month % 12 + 1
+        anio = actual.year + (1 if actual.month == 12 else 0)
+        actual = date(anio, siguiente, 1)
+
+    return creados
 
 
 def crear(datos):
@@ -102,6 +182,7 @@ def crear(datos):
                 estado="ACTIVO",
             )
         )
+        generar_periodos(cartera)
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
@@ -140,6 +221,10 @@ def editar(id_cartera, datos):
 
     for campo, valor in cambios.items():
         setattr(cartera, campo, valor)
+
+    # Al mover las fechas se agregan los meses que falten, sin borrar los que ya
+    # tienen movimientos.
+    generar_periodos(cartera)
 
     try:
         db.session.commit()
