@@ -74,16 +74,28 @@ function aVistaDetalle(cartera) {
       presupuestoInicial: cartera.presupuestoInicial ?? 0,
       totalIngresos: 0,
       totalGastos: 0,
-      saldo: cartera.presupuestoInicial ?? 0,
+      saldo: 0,
+      disponiblePresupuesto: 0,
     },
+    resumenPeriodo: cartera.resumenPeriodo ?? null,
     series: cartera.series ?? {ingresosVsEgresos: [], gastosPorCategoria:[]},
     balance: cartera.balance ?? null,
     fechaCierre: cartera.fechaCierre ?? null,
   }
 }
 
-export async function obtenerCartera(id, { desde, hasta } = {}) {
+export async function obtenerCartera(id, opciones = {}) {
+  // Acepta periodoId suelto (uso antiguo) u objeto con periodoId/desde/hasta.
+  let periodoId
+  let desde
+  let hasta
+  if (typeof opciones === 'string' || typeof opciones === 'number') {
+    periodoId = opciones
+  } else {
+    ;({ periodoId, desde, hasta } = opciones)
+  }
   const params = new URLSearchParams()
+  if (periodoId) params.append('periodoId', String(periodoId))
   if (desde) params.append('desde', desde)
   if (hasta) params.append('hasta', hasta)
   const query = params.toString()

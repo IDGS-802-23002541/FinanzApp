@@ -74,6 +74,7 @@ fun TransaccionesScreen(
     carteraNombre: String,
     puedeEditar: Boolean,
     onVolver: () -> Unit,
+    onRegistrarGasto: () -> Unit,
     viewModel: TransaccionesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -81,6 +82,10 @@ fun TransaccionesScreen(
     var transaccionEliminar by remember { mutableStateOf<Transaccion?>(null) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.cargar(carteraId)
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.cargar(carteraId)
     }
 
@@ -98,10 +103,12 @@ fun TransaccionesScreen(
         carteraNombre = carteraNombre,
         puedeEditar = puedeEditar,
         onVolver = onVolver,
+        onRegistrarGasto = onRegistrarGasto,
         onReintentar = viewModel::reintentar,
         onAnterior = viewModel::anterior,
         onSiguiente = viewModel::siguiente,
         onSeleccionarPeriodo = viewModel::seleccionarPeriodo,
+        onSeleccionarSinPeriodo = viewModel::seleccionarSinPeriodo,
         onEditar = { transaccionEditar = it },
         onEliminar = { transaccionEliminar = it }
     )
@@ -178,10 +185,12 @@ fun TransaccionesContenido(
     carteraNombre: String,
     puedeEditar: Boolean,
     onVolver: () -> Unit,
+    onRegistrarGasto: () -> Unit,
     onReintentar: () -> Unit,
     onAnterior: () -> Unit,
     onSiguiente: () -> Unit,
     onSeleccionarPeriodo: (Int?) -> Unit,
+    onSeleccionarSinPeriodo: () -> Unit,
     onEditar: (Transaccion) -> Unit,
     onEliminar: (Transaccion) -> Unit
 ) {
@@ -219,7 +228,9 @@ fun TransaccionesContenido(
                     SelectorPeriodoTransacciones(
                         periodos = state.periodos,
                         seleccionadoId = state.periodoSeleccionadoId,
-                        onSeleccionar = onSeleccionarPeriodo
+                        sinPeriodo = state.sinPeriodo,
+                        onSeleccionar = onSeleccionarPeriodo,
+                        onSeleccionarSinPeriodo = onSeleccionarSinPeriodo
                     )
                 }
             }
@@ -247,7 +258,13 @@ fun TransaccionesContenido(
                     EstadoVacio(
                         icono = Icons.AutoMirrored.Filled.List,
                         titulo = stringResource(R.string.transacciones_vacio_titulo),
-                        mensaje = stringResource(R.string.transacciones_vacio_mensaje)
+                        mensaje = stringResource(R.string.transacciones_vacio_mensaje),
+                        textoBoton = if (puedeEditar) {
+                            stringResource(R.string.carteras_registrar_gasto)
+                        } else {
+                            null
+                        },
+                        onBoton = if (puedeEditar) onRegistrarGasto else null
                     )
                 }
 
@@ -281,7 +298,9 @@ fun TransaccionesContenido(
 private fun SelectorPeriodoTransacciones(
     periodos: List<PeriodoCartera>,
     seleccionadoId: Int?,
-    onSeleccionar: (Int?) -> Unit
+    sinPeriodo: Boolean,
+    onSeleccionar: (Int?) -> Unit,
+    onSeleccionarSinPeriodo: () -> Unit
 ) {
     Column {
         Text(
@@ -295,9 +314,14 @@ private fun SelectorPeriodoTransacciones(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilterChip(
-                selected = seleccionadoId == null,
+                selected = seleccionadoId == null && !sinPeriodo,
                 onClick = { onSeleccionar(null) },
                 label = { Text(stringResource(R.string.detalle_periodo_todos)) }
+            )
+            FilterChip(
+                selected = sinPeriodo,
+                onClick = onSeleccionarSinPeriodo,
+                label = { Text(stringResource(R.string.transacciones_sin_periodo)) }
             )
             periodos.forEach { periodo ->
                 FilterChip(

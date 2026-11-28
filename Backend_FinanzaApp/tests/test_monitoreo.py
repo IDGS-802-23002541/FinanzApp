@@ -88,6 +88,13 @@ def test_sli_usa_cache_y_forzar_refresca(monkeypatch):
     _como(monkeypatch, "ADMIN")
     sesion = SesionSondaFalsa()
     monkeypatch.setattr(monitoreo_service.db, "session", sesion)
+    monkeypatch.setattr(monitoreo_service, "historial", lambda: [])
+    guardadas = {"n": 0}
+    monkeypatch.setattr(
+        monitoreo_service,
+        "registrar_sonda",
+        lambda sonda, base: guardadas.__setitem__("n", guardadas["n"] + 1),
+    )
     llamadas = {"n": 0}
 
     def metricas_falsa():
@@ -120,10 +127,36 @@ def test_sli_sonda_caida_devuelve_503(monkeypatch):
     _limpiar()
     _como(monkeypatch, "ADMIN")
     monkeypatch.setattr(monitoreo_service.db, "session", SesionCaida())
+    monkeypatch.setattr(monitoreo_service, "historial", lambda: [])
     payload, status = monitoreo_service.obtener_sli(forzar=True)
     assert status == 503
     assert payload["ok"] is False
     _limpiar()
+
+
+def test_historial_serializa_muestras(monkeypatch):
+    class MuestraFalsa:
+        minuto = __import__("datetime").datetime(2026, 11, 28, 10, 5)
+        ok = True
+        duracionMs = 12.5
+        base = "db71911"
+
+    class ResultadoHistorial:
+        def scalars(self):
+            return self
+
+        def all(self):
+            return [MuestraFalsa()]
+
+    class SesionHistorial:
+        def execute(self, _consulta):
+            return ResultadoHistorial()
+
+    monkeypatch.setattr(monitoreo_service.db, "session", SesionHistorial())
+    datos = monitoreo_service.historial()
+    assert datos[0]["ok"] is True
+    assert datos[0]["duracion_ms"] == 12.5
+    assert datos[0]["base"] == "db71911"
 
 
 def test_metricas_cache_evita_segundo_golpe(monkeypatch):

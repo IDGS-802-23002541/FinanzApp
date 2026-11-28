@@ -51,6 +51,7 @@ class ReportesViewModelTest {
     fun `cargar deja el reporte en el estado`() = runTest {
         val viewModel = ReportesViewModel(repositorio, carteras)
 
+        viewModel.seleccionarCartera(7)
         viewModel.cargar()
 
         val estado = viewModel.state.value
@@ -67,6 +68,7 @@ class ReportesViewModelTest {
         repositorio.hayDatos = false
         val viewModel = ReportesViewModel(repositorio, carteras)
 
+        viewModel.seleccionarCartera(7)
         viewModel.cargar()
 
         val estado = viewModel.state.value
@@ -81,6 +83,7 @@ class ReportesViewModelTest {
         repositorio.falla = IOException("sin red")
         val viewModel = ReportesViewModel(repositorio, carteras)
 
+        viewModel.seleccionarCartera(7)
         viewModel.cargar()
 
         val estado = viewModel.state.value
@@ -93,8 +96,8 @@ class ReportesViewModelTest {
     fun `la vista previa se pide con los filtros elegidos`() = runTest {
         val viewModel = ReportesViewModel(repositorio, carteras)
 
-        viewModel.seleccionarCartera(7)
         viewModel.seleccionarTipo(TipoCartera.HOGAR)
+        viewModel.seleccionarCartera(7)
         viewModel.elegirFechas("2026-11-01", "2026-11-30")
         viewModel.cargar()
 
@@ -106,9 +109,32 @@ class ReportesViewModelTest {
     }
 
     @Test
+    fun `sin cartera no pide vista previa`() = runTest {
+        val viewModel = ReportesViewModel(repositorio, carteras)
+
+        viewModel.cargar()
+
+        assertNull(repositorio.ultimosFiltros)
+        assertNull(viewModel.state.value.reporte)
+    }
+
+    @Test
+    fun `rango invertido no pide vista previa`() = runTest {
+        val viewModel = ReportesViewModel(repositorio, carteras)
+
+        viewModel.seleccionarCartera(7)
+        viewModel.elegirFechas("2026-11-30", "2026-11-01")
+        viewModel.cargar()
+
+        assertNull(repositorio.ultimosFiltros)
+        assertTrue(viewModel.state.value.rangoInvalido)
+    }
+
+    @Test
     fun `exportar guarda la ruta del archivo`() = runTest {
         val viewModel = ReportesViewModel(repositorio, carteras)
 
+        viewModel.seleccionarCartera(7)
         viewModel.exportar(FormatoReporte.CSV)
 
         val estado = viewModel.state.value
@@ -226,5 +252,8 @@ private class RepositorioCarterasFalso : CarterasRepository {
         Result.failure(UnsupportedOperationException())
 
     override suspend fun inactivar(idCartera: Int): Result<Cartera> =
+        Result.failure(UnsupportedOperationException())
+
+    override suspend fun reactivar(idCartera: Int): Result<Cartera> =
         Result.failure(UnsupportedOperationException())
 }

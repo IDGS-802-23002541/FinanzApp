@@ -52,6 +52,16 @@ def create_app():
     app.register_blueprint(comentarios_bp)
     app.register_blueprint(monitoreo_bp)
 
+    @app.before_request
+    def _arrancar_muestreo():
+        # El thread se crea aquí y no en run.py: gunicorn hace fork
+        # y los threads no sobreviven al fork, cada worker inicia el suyo.
+        if not getattr(app, "_muestreo_iniciado", False):
+            app._muestreo_iniciado = True
+            from app.services.monitoreo_service import iniciar_muestreo
+
+            iniciar_muestreo(app)
+
     @jwt.user_lookup_loader
     def cargar_usuario(_jwt_header, jwt_data):
         return db.session.get(models.Usuario, int(jwt_data["sub"]))

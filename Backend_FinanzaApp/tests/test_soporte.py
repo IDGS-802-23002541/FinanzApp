@@ -592,3 +592,24 @@ def test_staff_cataloga_categoria_y_prioridad(monkeypatch):
     assert payload["ok"] is True
     assert payload["data"]["ticket"]["categoria"] == "PAGOS"
     assert payload["data"]["ticket"]["prioridad"] == "ALTA"
+
+
+def test_normalizar_asunto_ignora_tildes_y_puntuacion():
+    assert soporte_service._normalizar_asunto("No funciona la App.") == (
+        soporte_service._normalizar_asunto("  no funciona   la app  ")
+    )
+    assert soporte_service._normalizar_asunto("Sesión cerrada") == (
+        soporte_service._normalizar_asunto("sesion cerrada")
+    )
+
+
+def test_normalizar_asunto_distingue_textos_distintos():
+    assert soporte_service._normalizar_asunto("Error de pago") != (
+        soporte_service._normalizar_asunto("Error de acceso")
+    )
+
+
+def test_listar_rechaza_busqueda_larga():
+    payload, status = soporte_service.listar_tickets(busqueda="x" * 101)
+    assert status == 400
+    assert payload["ok"] is False

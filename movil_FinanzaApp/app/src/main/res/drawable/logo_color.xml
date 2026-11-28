@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="180dp"
+    android:viewportWidth="180"
+    android:viewportHeight="180">
+
+    <!-- Monedas -->
+    <path
+        android:fillColor="#F9D857"
+        android:strokeColor="#F4C430"
+        android:strokeWidth="4"
+        android:pathData="M79,54 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0 Z" />
+    <path
+        android:fillColor="#F4C430"
+        android:strokeColor="#E0AD1B"
+        android:strokeWidth="4"
+        android:pathData="M53,65 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0 Z" />
+
+    <!-- Cartera -->
+    <path
+        android:fillColor="#173B45"
+        android:pathData="M28,74 C28,65.16 35.16,58 44,58 H130 C138.84,58 146,65.16 146,74 V136 C146,147.05 137.05,156 126,156 H48 C36.95,156 28,147.05 28,136 V74 Z" />
+
+    <!-- Ranura -->
+    <path
+        android:pathData="M38,66 H136"
+        android:strokeColor="#F8F3EF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- Botón de la cartera -->
+    <path
+        android:fillColor="#173B45"
+        android:strokeColor="#F8F3EF"
+        android:strokeWidth="5"
+        android:pathData="M126,95 H140 A14,14 0 0 1 154,109 A14,14 0 0 1 140,123 H126 A14,14 0 0 1 112,109 A14,14 0 0 1 126,95 Z" />
+    <path
+        android:fillColor="#F8F3EF"
+        android:pathData="M121.5,109 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0 Z" />
+</vector>

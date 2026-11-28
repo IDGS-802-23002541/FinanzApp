@@ -123,6 +123,18 @@ class CarteraDetalleAccionesTest {
             viewModel.state.value.errorFinalizar
         )
     }
+
+    @Test
+    fun `reactivar deja la cartera activa`() = runTest {
+        val viewModel = CarteraDetalleViewModel(carteras, invitaciones)
+
+        viewModel.reactivar(7)
+
+        assertEquals(7, carteras.ultimaReactivacion)
+        assertEquals("ACTIVA", viewModel.state.value.cartera?.estado)
+        assertFalse(viewModel.state.value.reactivando)
+        assertNull(viewModel.state.value.errorReactivar)
+    }
 }
 
 private class RepositorioSalirFalso : CarterasRepository {
@@ -133,6 +145,8 @@ private class RepositorioSalirFalso : CarterasRepository {
     var ultimaInactivacion: Int? = null
     var fallaFinalizar: Exception? = null
     var ultimaFinalizacion: Int? = null
+    var fallaReactivar: Exception? = null
+    var ultimaReactivacion: Int? = null
 
     override suspend fun carteras(): Result<List<Cartera>> = Result.success(emptyList())
 
@@ -183,6 +197,15 @@ private class RepositorioSalirFalso : CarterasRepository {
         if (error != null) return Result.failure(error)
         return Result.success(
             Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO, estado = "ARCHIVADA")
+        )
+    }
+
+    override suspend fun reactivar(idCartera: Int): Result<Cartera> {
+        ultimaReactivacion = idCartera
+        val error = fallaReactivar
+        if (error != null) return Result.failure(error)
+        return Result.success(
+            Cartera(id = idCartera, nombre = "Casa", tipo = TipoCartera.HOGAR, rol = RolEnCartera.PROPIETARIO, estado = "ACTIVA")
         )
     }
 

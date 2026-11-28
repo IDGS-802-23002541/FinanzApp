@@ -18,20 +18,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.finanzap.R
 
-/** Cabecera de pantallas secundarias: regresar y título. */
+/** Cabecera de pantallas: regresar o abrir el menú, y título. */
 @Composable
 fun EncabezadoVolver(
     titulo: String,
     onVolver: () -> Unit,
     descripcionVolver: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    mostrarVolver: Boolean = true
 ) {
+    val abrirMenu = LocalAbrirMenu.current
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onVolver) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = descripcionVolver
-            )
+        if (mostrarVolver) {
+            IconButton(onClick = onVolver) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = descripcionVolver
+                )
+            }
+        } else if (abrirMenu != null) {
+            IconButton(onClick = abrirMenu) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = stringResource(R.string.menu_abrir)
+                )
+            }
         }
         Spacer(modifier = Modifier.width(4.dp))
         Text(
@@ -41,14 +52,5 @@ fun EncabezadoVolver(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f)
         )
-        val abrirMenu = LocalAbrirMenu.current
-        if (abrirMenu != null) {
-            IconButton(onClick = abrirMenu) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = stringResource(R.string.menu_abrir)
-                )
-            }
-        }
     }
 }

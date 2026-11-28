@@ -16,7 +16,8 @@ private val ISO_HORA = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).appl
     timeZone = TimeZone.getTimeZone("UTC")
 }
 private val CORTA_HORA = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("es", "MX")).apply {
-    timeZone = TimeZone.getTimeZone("UTC")
+    // La API entrega las horas en UTC; se muestran en la zona del teléfono.
+    timeZone = TimeZone.getDefault()
 }
 
 /** Devuelve null si el texto no es una fecha ISO completa, en vez de lanzar. */
@@ -38,8 +39,16 @@ fun formatearFechaHoraCorta(iso: String): String {
     val posicion = ParsePosition(0)
     val fecha = ISO_HORA.parse(sinFraccion, posicion)
     return if (fecha != null && posicion.index == sinFraccion.length) {
+        CORTA_HORA.timeZone = TimeZone.getDefault()
         CORTA_HORA.format(fecha)
     } else {
         iso
     }
+}
+
+/** Fecha de hoy en la zona del teléfono, en formato yyyy-MM-dd. */
+fun hoyIsoLocal(): String {
+    val formato = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    formato.timeZone = TimeZone.getDefault()
+    return formato.format(Date())
 }

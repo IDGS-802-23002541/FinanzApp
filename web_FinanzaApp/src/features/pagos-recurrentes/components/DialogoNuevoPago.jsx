@@ -19,6 +19,7 @@ import DialogoTitulo from '../../../components/ui/DialogoTitulo.jsx'
 const FRECUENCIAS = [
   { valor: 'DIARIO', texto: 'Diario' },
   { valor: 'SEMANAL', texto: 'Semanal' },
+  { valor: 'QUINCENAL', texto: 'Quincenal' },
   { valor: 'MENSUAL', texto: 'Mensual' },
   { valor: 'ANUAL', texto: 'Anual' },
 ]

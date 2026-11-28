@@ -1,5 +1,6 @@
 package com.finanzap.core.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
@@ -40,6 +42,7 @@ enum class SeccionMenu {
     CARTERAS,
     REPORTES,
     SOPORTE,
+    NOTIFICACIONES,
     MI_CUENTA
 }
 
@@ -66,34 +69,46 @@ fun MenuLateral(
         EtiquetaSeccion(stringResource(R.string.menu_seccion_principal))
 
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(R.string.carteras_titulo),
             seleccionado = seccionActual == SeccionMenu.CARTERAS,
             onClick = { onSeccion(SeccionMenu.CARTERAS) },
             icono = { Icon(Icons.Default.Home, contentDescription = null) }
         )
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(R.string.reportes_titulo),
             seleccionado = seccionActual == SeccionMenu.REPORTES,
             onClick = { onSeccion(SeccionMenu.REPORTES) },
             icono = { Icon(Icons.Default.Star, contentDescription = null) }
         )
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(R.string.soporte_titulo),
             seleccionado = seccionActual == SeccionMenu.SOPORTE,
             onClick = { onSeccion(SeccionMenu.SOPORTE) },
             icono = { Icon(Icons.Default.Info, contentDescription = null) }
+        )
+        ItemMenu(
+            temaOscuro = temaOscuro,
+            texto = stringResource(R.string.notificaciones_centro_titulo),
+            seleccionado = seccionActual == SeccionMenu.NOTIFICACIONES,
+            onClick = { onSeccion(SeccionMenu.NOTIFICACIONES) },
+            icono = { Icon(Icons.Default.Notifications, contentDescription = null) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
         EtiquetaSeccion(stringResource(R.string.menu_seccion_cuenta))
 
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(R.string.carteras_mi_cuenta),
             seleccionado = seccionActual == SeccionMenu.MI_CUENTA,
             onClick = { onSeccion(SeccionMenu.MI_CUENTA) },
             icono = { Icon(Icons.Default.Person, contentDescription = null) }
         )
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(if (temaOscuro) R.string.tema_claro else R.string.tema_oscuro),
             onClick = onAlternarTema,
             icono = {
@@ -109,6 +124,7 @@ fun MenuLateral(
         Spacer(modifier = Modifier.weight(1f))
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         ItemMenu(
+            temaOscuro = temaOscuro,
             texto = stringResource(R.string.carteras_cerrar_sesion),
             onClick = onCerrarSesion,
             icono = {
@@ -130,20 +146,11 @@ private fun EncabezadoMenu() {
     ) {
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "F",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiary
-                        )
-                    }
-                }
+                Image(
+                    painter = painterResource(R.drawable.logo_blanco),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier.size(40.dp)
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.app_name),
@@ -175,6 +182,7 @@ private fun EtiquetaSeccion(texto: String) {
 
 @Composable
 private fun ItemMenu(
+    temaOscuro: Boolean,
     texto: String,
     onClick: () -> Unit,
     icono: @Composable () -> Unit,
@@ -187,9 +195,13 @@ private fun ItemMenu(
         icon = icono,
         shape = RoundedCornerShape(12.dp),
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.onPrimary,
-            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+            selectedContainerColor = if (temaOscuro) {
+                SeleccionOscura
+            } else {
+                SeleccionCoral
+            },
+            selectedTextColor = if (temaOscuro) Coral else SeleccionCoralTexto,
+            selectedIconColor = if (temaOscuro) Coral else SeleccionCoralTexto,
             unselectedTextColor = MaterialTheme.colorScheme.onSurface,
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),

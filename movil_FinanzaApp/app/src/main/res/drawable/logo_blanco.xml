@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="42dp"
+    android:height="42dp"
+    android:viewportWidth="210"
+    android:viewportHeight="210">
+
+    <!-- Monedas -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M89,62 a29,29 0 1,0 58,0 a29,29 0 1,0 -58,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M59,73 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0 Z" />
+
+    <!-- Cartera -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M55,66 H148 A23,23 0 0 1 171,89 V159 A23,23 0 0 1 148,182 H55 A23,23 0 0 1 32,159 V89 A23,23 0 0 1 55,66 Z" />
+
+    <!-- Ranura -->
+    <path
+        android:pathData="M42,74 H160"
+        android:strokeColor="#173B45"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round" />
+
+    <!-- Botón de la cartera -->
+    <path
+        android:fillColor="#173B45"
+        android:pathData="M139.2,127 a4.8,4.8 0 1,0 9.6,0 a4.8,4.8 0 1,0 -9.6,0 Z" />
+</vector>

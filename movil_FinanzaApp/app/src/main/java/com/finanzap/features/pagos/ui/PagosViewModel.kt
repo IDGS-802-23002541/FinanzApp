@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.finanzap.R
 import com.finanzap.core.util.fechaIsoDesdeMillis
+import com.finanzap.core.util.mensajeErrorApi
 import com.finanzap.features.pagos.data.PagoRecurrente
 import com.finanzap.features.pagos.data.PagosRepository
+import com.finanzap.features.transacciones.Categoria
+import com.finanzap.features.transacciones.data.CategoriasRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +22,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PagosViewModel @Inject constructor(
-    private val pagosRepository: PagosRepository
+    private val pagosRepository: PagosRepository,
+    private val categoriasRepository: CategoriasRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PagosUiState())
@@ -30,6 +34,7 @@ class PagosViewModel @Inject constructor(
 
     fun cargar(carteraId: Int) {
         _state.update { it.copy(idCartera = carteraId) }
+        cargarCategorias()
         cargarPagina(1)
     }
 
@@ -48,6 +53,7 @@ class PagosViewModel @Inject constructor(
     }
 
     fun abrirFormulario() {
+        if (_state.value.categorias.isEmpty()) cargarCategorias()
         _state.update {
             it.copy(
                 formularioAbierto = true,
@@ -58,6 +64,7 @@ class PagosViewModel @Inject constructor(
                 fechaInicio = fechaIsoDesdeMillis(System.currentTimeMillis()),
                 fechaFin = "",
                 descripcion = "",
+                categoria = null,
                 errorNombre = null,
                 errorMonto = null,
                 errorFechas = null,
@@ -67,6 +74,7 @@ class PagosViewModel @Inject constructor(
     }
 
     fun abrirEdicion(pago: PagoRecurrente) {
+        if (_state.value.categorias.isEmpty()) cargarCategorias()
         _state.update {
             it.copy(
                 formularioAbierto = true,
@@ -77,6 +85,7 @@ class PagosViewModel @Inject constructor(
                 fechaInicio = pago.fechaInicio.orEmpty(),
                 fechaFin = pago.fechaFin.orEmpty(),
                 descripcion = pago.descripcion.orEmpty(),
+                categoria = it.categorias.firstOrNull { c -> c.id == pago.categoriaId },
                 errorNombre = null,
                 errorMonto = null,
                 errorFechas = null,
@@ -111,6 +120,66 @@ class PagosViewModel @Inject constructor(
 
     fun onDescripcionChange(descripcion: String) {
         _state.update { it.copy(descripcion = descripcion, errorFormulario = null) }
+    }
+
+    fun onCategoriaChange(categoria: Categoria) {
+        _state.update { it.copy(categoria = categoria, errorFormulario = null) }
+    }
+
+    fun crearCategoria(nombre: String) {
+        val actual = _state.value
+        if (actual.creandoCategoria || actual.idCartera == 0) return
+
+        _state.update { it.copy(creandoCategoria = true, errorCategorias = null) }
+        viewModelScope.launch {
+            categoriasRepository.crear(actual.idCartera, nombre.trim())
+                .onSuccess { categoria ->
+                    _state.update {
+                        it.copy(
+                            creandoCategoria = false,
+                            categorias = it.categorias + categoria,
+                            categoria = categoria
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            creandoCategoria = false,
+                            errorCategorias = mensajeErrorApi(
+                                error,
+                                "No se pudo crear la categoría."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun cargarCategorias() {
+        val idCartera = _state.value.idCartera
+        if (idCartera == 0 || _state.value.cargandoCategorias) return
+
+        _state.update { it.copy(cargandoCategorias = true, errorCategorias = null) }
+        viewModelScope.launch {
+            categoriasRepository.listar(idCartera, "GASTO")
+                .onSuccess { categorias ->
+                    _state.update {
+                        it.copy(cargandoCategorias = false, categorias = categorias)
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            cargandoCategorias = false,
+                            errorCategorias = mensajeErrorApi(
+                                error,
+                                "No se pudieron cargar las categorías."
+                            )
+                        )
+                    }
+                }
+        }
     }
 
     fun guardar() {
@@ -154,7 +223,8 @@ class PagosViewModel @Inject constructor(
                     frecuencia = actual.frecuencia,
                     fechaInicio = actual.fechaInicio,
                     fechaFin = fechaFin,
-                    descripcion = descripcion
+                    descripcion = descripcion,
+                    categoriaId = actual.categoria?.id
                 )
             } else {
                 pagosRepository.actualizar(
@@ -164,7 +234,8 @@ class PagosViewModel @Inject constructor(
                     frecuencia = actual.frecuencia,
                     fechaInicio = actual.fechaInicio,
                     fechaFin = fechaFin,
-                    descripcion = descripcion
+                    descripcion = descripcion,
+                    categoriaId = actual.categoria?.id
                 )
             }
             resultado
@@ -268,6 +339,11 @@ data class PagosUiState(
     val fechaInicio: String = "",
     val fechaFin: String = "",
     val descripcion: String = "",
+    val categoria: Categoria? = null,
+    val categorias: List<Categoria> = emptyList(),
+    val cargandoCategorias: Boolean = false,
+    val creandoCategoria: Boolean = false,
+    val errorCategorias: String? = null,
     val errorNombre: Int? = null,
     val errorMonto: Int? = null,
     val errorFechas: Int? = null,

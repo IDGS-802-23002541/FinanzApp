@@ -24,6 +24,7 @@
     <string name="menu_seccion_cuenta">Cuenta</string>
     <string name="menu_cerrar_sesion_aviso">Cerrar sesión</string>
     <string name="comun_cerrar">Cerrar</string>
+    <string name="comun_total">Total</string>
     <string name="reportes_titulo">Reportes</string>
     <string name="soporte_titulo">Soporte</string>
 
@@ -90,10 +91,21 @@
     <string name="preferencias_prueba_titulo">Comprobar notificaciones</string>
     <string name="preferencias_prueba_detalle">Envía un aviso de prueba al teléfono para confirmar que todo está activo.</string>
     <string name="preferencias_prueba_boton">Enviar notificación de prueba</string>
+    <string name="notificaciones_ver_historial">Ver mis notificaciones</string>
     <string name="preferencias_permiso_denegado">Las notificaciones están bloqueadas. Actívalas en Ajustes del teléfono para ver los avisos.</string>
     <string name="preferencias_permiso_concedido">Notificaciones activadas en este teléfono.</string>
+    <string name="preferencias_sin_avisos">Activa al menos un tipo de aviso para enviar la prueba.</string>
     <string name="notificaciones_canal_nombre">Recordatorios de FinanzApp</string>
     <string name="notificaciones_canal_descripcion">Avisos de movimientos y pagos recurrentes.</string>
+    <string name="notificaciones_centro_titulo">Notificaciones</string>
+    <string name="notificaciones_descripcion">Aquí llegan los avisos de movimientos, pagos próximos y recordatorios del sistema.</string>
+    <string name="notificaciones_vacio_titulo">Sin notificaciones</string>
+    <string name="notificaciones_vacio_mensaje">Cuando ocurra un movimiento o se acerque un pago aparecerá aquí.</string>
+    <string name="notificaciones_marcar_todas">Marcar todas como leídas</string>
+    <string name="notificaciones_pagina">Página %1$d de %2$d</string>
+    <string name="notificaciones_tipo_movimiento">Movimiento</string>
+    <string name="notificaciones_tipo_pagos">Pagos</string>
+    <string name="notificaciones_tipo_sistema">Sistema</string>
     <string name="notificaciones_prueba_titulo">Prueba de notificación</string>
     <string name="notificaciones_prueba_texto">¡Funciona! Así verás los avisos de FinanzApp en tu teléfono.</string>
     <string name="notificaciones_pagos_titulo">Tienes pagos próximos</string>
@@ -156,6 +168,7 @@
     <string name="carteras_estado_inactiva">Inactiva</string>
     <string name="carteras_estado_finalizada">Finalizada</string>
     <string name="carteras_solo_lectura">Solo lectura</string>
+    <string name="carteras_estado_activa">Activa</string>
     <string name="carteras_buscar">Buscar cartera…</string>
     <string name="carteras_limpiar_busqueda">Limpiar búsqueda</string>
     <string name="carteras_nueva">Nueva cartera</string>
@@ -185,6 +198,7 @@
     <string name="transacciones_gastos">Gastos</string>
     <string name="transacciones_balance">Balance</string>
     <string name="transacciones_pagina">Página %1$d de %2$d</string>
+    <string name="transacciones_sin_periodo">Sin periodo</string>
     <string name="transacciones_ver">Ver transacciones</string>
     <string name="detalle_salir">Salir de la cartera (dejar de participar)</string>
     <string name="detalle_salir_titulo">Dejar de participar</string>
@@ -197,6 +211,10 @@
     <string name="cartera_inactivar_titulo">Inactivar cartera</string>
     <string name="cartera_inactivar_aviso">La cartera dejará de estar activa y se revocarán sus invitaciones. Sus datos no se borran. ¿Deseas continuar?</string>
     <string name="cartera_inactivar_confirmar">Inactivar</string>
+    <string name="cartera_reactivar">Reactivar cartera</string>
+    <string name="cartera_reactivar_titulo">Reactivar cartera</string>
+    <string name="cartera_reactivar_aviso">La cartera volverá a estar activa, sus miembros recuperarán el acceso y podrás generar nuevas invitaciones. ¿Deseas continuar?</string>
+    <string name="cartera_reactivar_confirmar">Reactivar</string>
     <string name="cartera_cerrar">Cerrar cartera</string>
     <string name="cartera_cerrar_titulo">Cerrar cartera</string>
     <string name="cartera_cerrar_aviso">Se calculará el balance final y la cartera quedará en solo lectura. ¿Deseas continuar?</string>
@@ -249,6 +267,8 @@
     <string name="reportes_cartera_todas">Todas mis carteras</string>
     <string name="reportes_cartera_seleccionar">Selecciona una cartera</string>
     <string name="reportes_sin_carteras">Aún no tienes carteras para reportar.</string>
+    <string name="reportes_elige_cartera">Elige una cartera para ver la vista previa.</string>
+    <string name="reportes_error_rango">La fecha final no puede ser anterior a la fecha inicial.</string>
     <string name="reportes_tipo">Tipo</string>
     <string name="reportes_tipo_todos">Todos los tipos</string>
     <string name="reportes_periodo">Periodo</string>
@@ -322,7 +342,6 @@
     <!-- Pagos recurrentes -->
     <string name="pagos_titulo">Pagos recurrentes</string>
     <string name="pagos_descripcion">Programa los pagos fijos de la cartera y márcalos como realizados cuando ocurran.</string>
-    <string name="pagos_solo_consulta">Solo el propietario de la cartera puede crear y modificar pagos recurrentes.</string>
     <string name="pagos_nuevo">Nuevo pago</string>
     <string name="pagos_formulario_nuevo_titulo">Datos del pago</string>
     <string name="pagos_formulario_editar_titulo">Editar pago</string>
@@ -343,7 +362,10 @@
     <string name="pagos_marcar_hecho">Marcar como hecho</string>
     <string name="pagos_marcando">Registrando…</string>
     <string name="pagos_marcado_hecho">Pago registrado como realizado.</string>
-    <string name="pagos_aviso_miembro">Ya puedes marcar los pagos como hechos. Solo el propietario crea y edita pagos.</string>
+    <string name="pagos_aviso_solo_lectura">La cartera está inactiva o finalizada: los pagos son de solo lectura.</string>
+    <string name="pagos_aviso_miembro">Puedes consultar y marcar los pagos como hechos. Solo el propietario los crea, edita o cancela.</string>
+    <string name="pagos_disponible">Disponible el %1$s</string>
+    <string name="pagos_ultima_ejecucion">Última: %1$s</string>
     <string name="pagos_cancelar_titulo">Cancelar pago recurrente</string>
     <string name="pagos_cancelar_mensaje">El pago dejará de programarse. Los gastos ya registrados se conservan. ¿Deseas continuar?</string>
     <string name="pagos_cancelar_confirmar">Sí, cancelar</string>
@@ -356,7 +378,7 @@
     <string name="pagos_frecuencia_semanal">Semanal</string>
     <string name="pagos_frecuencia_mensual">Mensual</string>
     <string name="pagos_frecuencia_anual">Anual</string>
-    <string name="pagos_estado_activo">Activo</string>
+    <string name="pagos_estado_activo">Pendiente</string>
     <string name="pagos_estado_pausado">Pausado</string>
     <string name="pagos_estado_cancelado">Cancelado</string>
     <string name="carteras_ver_pagos">Ver pagos recurrentes</string>

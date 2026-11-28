@@ -59,9 +59,16 @@ const crearAlVuelo = async (nombre) => {
     setError('')
     try{
     const nueva = await crearCategoria(idCartera,{nombre, tipo})
+    // Se agrega a la lista antes de refrescar para que la selección no se
+    // pierda mientras vuelve la petición.
+    setOpciones((actuales) =>
+      actuales.some((opcion) => opcion.idCategoria === nueva.idCategoria)
+        ? actuales
+        : [...actuales, nueva],
+    )
+    onChange(nueva.idCategoria)
     const categorias = await listarCategorias(idCartera, tipo)
     setOpciones(categorias)
-    onChange(nueva.idCategoria)
     }catch(err){
         setError(err.message)
     }finally{

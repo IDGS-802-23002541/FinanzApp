@@ -329,7 +329,13 @@ function TransaccionesCartera() {
                       <TableCell>
                         <Chip
                           size="small"
-                          label={item.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto'}
+                          label={
+                            item.tipo === 'INGRESO'
+                              ? cartera.categoria === 'Hogar'
+                                ? 'Ingreso'
+                                : 'Aportación'
+                              : 'Gasto'
+                          }
                           sx={{
                             fontWeight: 700,
                             backgroundColor:
@@ -401,6 +407,7 @@ function TransaccionesCartera() {
       {editando && (
         <DialogoNuevaTransaccion
           idCartera={id}
+          categoriaCartera={cartera.categoria}
           transaccion={editando}
           onCerrar={() => setEditando(null)}
           onGuardada={() => {

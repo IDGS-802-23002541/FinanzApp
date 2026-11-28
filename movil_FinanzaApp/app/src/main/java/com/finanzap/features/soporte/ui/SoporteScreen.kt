@@ -133,7 +133,8 @@ fun SoporteContenido(
                 EncabezadoVolver(
                     titulo = stringResource(R.string.soporte_titulo),
                     onVolver = onVolver,
-                    descripcionVolver = stringResource(R.string.comun_volver)
+                    descripcionVolver = stringResource(R.string.comun_volver),
+                    mostrarVolver = false
                 )
             }
 
@@ -178,7 +179,9 @@ fun SoporteContenido(
                         EstadoVacio(
                             icono = Icons.AutoMirrored.Filled.List,
                             titulo = stringResource(R.string.soporte_vacio_titulo),
-                            mensaje = stringResource(R.string.soporte_vacio_mensaje)
+                            mensaje = stringResource(R.string.soporte_vacio_mensaje),
+                            textoBoton = stringResource(R.string.soporte_nuevo_reporte),
+                            onBoton = onAbrirFormulario
                         )
                     }
 

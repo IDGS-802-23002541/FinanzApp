@@ -33,7 +33,21 @@ class ReportesViewModel @Inject constructor(
     }
 
     fun cargar() {
-        if (_state.value.cargando) return
+        val actual = _state.value
+        if (actual.cargando) return
+
+        // El reporte es de una sola cartera, igual que en la web.
+        if (actual.carteraId == null) {
+            _state.update {
+                it.copy(reporte = null, error = null, errorFiltros = null)
+            }
+            return
+        }
+        if (rangoInvalido(actual)) {
+            _state.update { it.copy(reporte = null, rangoInvalido = true) }
+            return
+        }
+
         _state.update { it.copy(cargando = true, error = null) }
         viewModelScope.launch {
             reportesRepository.vistaPrevia(filtros())
@@ -55,8 +69,19 @@ class ReportesViewModel @Inject constructor(
     }
 
     fun seleccionarCartera(idCartera: Int?) {
+        val cartera = _state.value.carteras.firstOrNull { it.id == idCartera }
         _state.update {
-            it.copy(carteraId = idCartera, periodoId = null, periodos = emptyList())
+            it.copy(
+                carteraId = idCartera,
+                // Al elegir cartera, su tipo se refleja en el filtro (como la web).
+                tipo = cartera?.tipo ?: it.tipo,
+                periodoId = null,
+                periodos = emptyList(),
+                reporte = null,
+                archivoGenerado = null,
+                error = null,
+                errorExportacion = null
+            )
         }
         if (idCartera == null) return
 
@@ -79,29 +104,66 @@ class ReportesViewModel @Inject constructor(
     }
 
     fun seleccionarTipo(tipo: TipoCartera?) {
-        _state.update { actual ->
-            // Si la cartera elegida ya no corresponde al tipo, se limpia el filtro.
-            val sigueSiendoValida = tipo == null ||
-                actual.carteras.any { it.id == actual.carteraId && it.tipo == tipo }
-            actual.copy(
+        // Cambiar el tipo invalida la cartera elegida, como en la web.
+        _state.update {
+            it.copy(
                 tipo = tipo,
-                carteraId = if (sigueSiendoValida) actual.carteraId else null,
-                periodoId = if (sigueSiendoValida) actual.periodoId else null,
-                periodos = if (sigueSiendoValida) actual.periodos else emptyList()
+                carteraId = null,
+                periodoId = null,
+                periodos = emptyList(),
+                reporte = null,
+                archivoGenerado = null,
+                error = null,
+                errorExportacion = null
             )
         }
     }
 
     fun seleccionarPeriodo(periodoId: Int?) {
-        _state.update { it.copy(periodoId = periodoId) }
+        _state.update {
+            it.copy(
+                periodoId = periodoId,
+                reporte = null,
+                archivoGenerado = null,
+                error = null
+            )
+        }
     }
 
     fun elegirFechas(fechaInicio: String?, fechaFin: String?) {
-        _state.update { it.copy(fechaInicio = fechaInicio, fechaFin = fechaFin) }
+        _state.update {
+            it.copy(
+                fechaInicio = fechaInicio,
+                fechaFin = fechaFin,
+                reporte = null,
+                archivoGenerado = null,
+                error = null,
+                rangoInvalido = fechaInicio != null &&
+                    fechaFin != null &&
+                    fechaFin < fechaInicio
+            )
+        }
     }
 
     fun exportar(formato: FormatoReporte) {
-        if (_state.value.exportando) return
+        val actual = _state.value
+        if (actual.exportando) return
+        if (actual.carteraId == null) {
+            _state.update {
+                it.copy(
+                    errorExportacion = "Elige una cartera antes de exportar.",
+                    archivoGenerado = null
+                )
+            }
+            return
+        }
+        if (rangoInvalido(actual)) {
+            _state.update {
+                it.copy(rangoInvalido = true, errorExportacion = null)
+            }
+            return
+        }
+
         _state.update {
             it.copy(exportando = true, errorExportacion = null, archivoGenerado = null)
         }
@@ -122,6 +184,12 @@ class ReportesViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun rangoInvalido(actual: ReportesUiState): Boolean {
+        val inicio = actual.fechaInicio
+        val fin = actual.fechaFin
+        return inicio != null && fin != null && fin < inicio
     }
 
     // Los reportes solo incluyen las carteras propias, activas o finalizadas.
@@ -161,5 +229,6 @@ data class ReportesUiState(
     val reporte: Reporte? = null,
     val exportando: Boolean = false,
     val errorExportacion: String? = null,
-    val archivoGenerado: String? = null
+    val archivoGenerado: String? = null,
+    val rangoInvalido: Boolean = false
 )

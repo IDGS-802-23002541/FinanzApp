@@ -45,12 +45,14 @@ import com.finanzap.core.ui.PantallaFormulario
 @Composable
 fun PreferenciasNotificacionScreen(
     onVolver: () -> Unit,
+    onVerNotificaciones: () -> Unit = {},
     viewModel: PreferenciasNotificacionViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var guardado by remember { mutableStateOf(false) }
     var permisoDenegado by remember { mutableStateOf(false) }
+    var sinPreferenciasActivas by remember { mutableStateOf(false) }
 
     val launcherPermiso = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -60,6 +62,7 @@ fun PreferenciasNotificacionScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.cargar()
         crearCanalNotificaciones(context)
         viewModel.eventos.collect { evento ->
             when (evento) {
@@ -76,14 +79,20 @@ fun PreferenciasNotificacionScreen(
         state = state,
         guardado = guardado,
         permisoDenegado = permisoDenegado,
+        sinPreferenciasActivas = sinPreferenciasActivas,
         onVolver = onVolver,
         onMovimientosChange = viewModel::onMovimientosChange,
         onSistemaChange = viewModel::onSistemaChange,
         onPagosChange = viewModel::onPagosChange,
         onGuardar = viewModel::guardar,
         onReintentar = viewModel::cargar,
+        onVerNotificaciones = onVerNotificaciones,
         onProbarNotificacion = {
-            if (notificacionesPermitidas(context)) {
+            val hayAvisos = state.movimientos || state.sistema || state.pagos
+            sinPreferenciasActivas = !hayAvisos
+            if (!hayAvisos) {
+                // La prueba respeta las preferencias guardadas en el servidor.
+            } else if (notificacionesPermitidas(context)) {
                 permisoDenegado = false
                 enviarPrueba(context)
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -115,6 +124,8 @@ fun PreferenciasNotificacionContenido(
     onGuardar: () -> Unit,
     onReintentar: () -> Unit,
     permisoDenegado: Boolean = false,
+    sinPreferenciasActivas: Boolean = false,
+    onVerNotificaciones: () -> Unit = {},
     onProbarNotificacion: () -> Unit = {}
 ) {
     PantallaFormulario(
@@ -215,6 +226,14 @@ fun PreferenciasNotificacionContenido(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+                if (sinPreferenciasActivas) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.preferencias_sin_avisos),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
 
@@ -226,6 +245,16 @@ fun PreferenciasNotificacionContenido(
             cargando = state.guardando,
             onClick = onGuardar
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        OutlinedButton(
+            onClick = onVerNotificaciones,
+            modifier = Modifier.fillMaxWidth(),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
+        ) {
+            Text(stringResource(R.string.notificaciones_ver_historial))
+        }
     }
 }
 

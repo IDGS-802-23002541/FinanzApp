@@ -27,6 +27,7 @@ class PreferenciasNotificacionViewModel @Inject constructor(
     val eventos: Flow<PreferenciasNotificacionEvento> = _eventos.receiveAsFlow()
 
     fun cargar() {
+        if (_state.value.cargando) return
         _state.update { it.copy(cargando = true, errorCarga = null) }
         viewModelScope.launch {
             authRepository.obtenerPreferencias()
@@ -104,7 +105,7 @@ class PreferenciasNotificacionViewModel @Inject constructor(
 }
 
 data class PreferenciasNotificacionUiState(
-    val cargando: Boolean = true,
+    val cargando: Boolean = false,
     val movimientos: Boolean = true,
     val sistema: Boolean = true,
     val pagos: Boolean = true,

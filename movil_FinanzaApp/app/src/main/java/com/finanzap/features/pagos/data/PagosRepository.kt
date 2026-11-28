@@ -19,7 +19,8 @@ interface PagosRepository {
         frecuencia: String,
         fechaInicio: String,
         fechaFin: String?,
-        descripcion: String?
+        descripcion: String?,
+        categoriaId: Int?
     ): Result<PagoRecurrente>
 
     suspend fun actualizar(
@@ -29,7 +30,8 @@ interface PagosRepository {
         frecuencia: String,
         fechaInicio: String,
         fechaFin: String?,
-        descripcion: String?
+        descripcion: String?,
+        categoriaId: Int?
     ): Result<PagoRecurrente>
 
     suspend fun cancelar(idPago: Int): Result<PagoRecurrente>

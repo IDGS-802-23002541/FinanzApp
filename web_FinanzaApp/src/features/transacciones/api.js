@@ -3,21 +3,21 @@ import { api } from '../../services/apiClient.js'
 
 export async function listarTransacciones(
   idCartera,
-  { pagina = 1, porPagina = 20, periodoId, desde, hasta } = {},
+  { pagina = 1, porPagina = 20, periodoId } = {},
 ) {
   const query = new URLSearchParams({
     pagina: String(pagina),
     porPagina: String(porPagina),
   })
   if (periodoId) query.append('periodoId', String(periodoId))
-  if (desde) query.append('desde', desde)
-  if (hasta) query.append('hasta', hasta)
   const { data } = await api.get(
     `/carteras/${idCartera}/transacciones?${query}`,
   )
   return data // { items, paginacion, totales }
 }
 
+// El backend exige monto numérico también al editar: se normaliza igual que al
+// crear, si no `validar_monto` responde "El monto debe ser un número".
 export async function actualizarTransaccion(
   idTransaccion,
   { tipo, monto, fecha, categoriaId, metodoPago, descripcion },

@@ -26,6 +26,7 @@ class CarterasViewModel @Inject constructor(
     val state: StateFlow<CarterasUiState> = _state.asStateFlow()
 
     fun cargar() {
+        if (_state.value.cargando) return
         _state.update { it.copy(cargando = true, error = null) }
         viewModelScope.launch {
             // El backend filtra por un solo estado, así que se consultan los tres.
@@ -79,15 +80,22 @@ class CarterasViewModel @Inject constructor(
         val actual = _state.value
         val base = if (actual.segmento == Segmento.MIS) misCarteras else compartidas
 
-        val filtradas = base
+        // Los contadores reflejan el estado elegido para que coincidan con la lista.
+        val delEstado = base.filter { actual.estado.coincide(it.estado) }
+        val filtradas = delEstado
             .filter { actual.tipo == null || it.tipo == actual.tipo }
-            .filter { actual.estado.coincide(it.estado) }
             .filter {
                 actual.busqueda.isBlank() ||
                     it.nombre.contains(actual.busqueda.trim(), ignoreCase = true)
             }
 
-        _state.update { it.copy(carteras = filtradas) }
+        _state.update {
+            it.copy(
+                carteras = filtradas,
+                totalMis = misCarteras.count { c -> actual.estado.coincide(c.estado) },
+                totalCompartidas = compartidas.count { c -> actual.estado.coincide(c.estado) }
+            )
+        }
     }
 }
 
@@ -112,7 +120,7 @@ enum class EstadoCartera {
 }
 
 data class CarterasUiState(
-    val cargando: Boolean = true,
+    val cargando: Boolean = false,
     val error: String? = null,
     val segmento: Segmento = Segmento.MIS,
     val tipo: TipoCartera? = null,

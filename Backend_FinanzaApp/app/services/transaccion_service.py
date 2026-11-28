@@ -532,11 +532,14 @@ def _recalcular_saldo(cartera):
     por_tipo = {tipo: Decimal(total) for tipo, total in totales}
     ingresos = por_tipo.get("INGRESO", Decimal("0"))
     gastos = por_tipo.get("GASTO", Decimal("0"))
-    saldo = Decimal(cartera.presupuestoInicial or 0) + ingresos - gastos
+    presupuesto = Decimal(cartera.presupuestoInicial or 0)
     return {
         "totalIngresos": float(ingresos),
         "totalGastos": float(gastos),
-        "saldo": float(saldo),
+        # Caja real: lo que entró menos lo que salió.
+        "saldo": float(ingresos - gastos),
+        # Lo que queda del techo de gasto (guía), sin sumar aportaciones.
+        "disponiblePresupuesto": float(presupuesto - gastos),
     }
 
 

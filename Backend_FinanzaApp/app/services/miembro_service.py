@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
 from app.models import Cartera, MiembroCartera
+from app.services import notificacion_service
 
 
 def eliminar(id_cartera, id_usuario):
@@ -47,6 +48,14 @@ def eliminar(id_cartera, id_usuario):
         }, 409
 
     _dar_baja(objetivo)
+    # El colaborador dado de baja recibe el aviso en la misma transacción (issue #360).
+    notificacion_service.notificar(
+        objetivo.usuarioId,
+        "SISTEMA",
+        "Saliste de una cartera",
+        f'El propietario te dio de baja de "{cartera.nombre}". '
+        "Ya no tienes acceso a sus movimientos.",
+    )
     try:
         db.session.commit()
     except SQLAlchemyError:

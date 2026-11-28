@@ -40,7 +40,8 @@ class PagosRepositoryImpl @Inject constructor(
         frecuencia: String,
         fechaInicio: String,
         fechaFin: String?,
-        descripcion: String?
+        descripcion: String?,
+        categoriaId: Int?
     ): Result<PagoRecurrente> =
         try {
             val respuesta = pagosApi.crear(
@@ -51,7 +52,8 @@ class PagosRepositoryImpl @Inject constructor(
                     frecuencia = frecuencia,
                     fechaInicio = fechaInicio,
                     descripcion = descripcion?.trim()?.ifBlank { null },
-                    fechaFin = fechaFin
+                    fechaFin = fechaFin,
+                    categoriaId = categoriaId
                 )
             )
             Result.success(respuesta.data.pago.aPagoRecurrente())
@@ -70,7 +72,8 @@ class PagosRepositoryImpl @Inject constructor(
         frecuencia: String,
         fechaInicio: String,
         fechaFin: String?,
-        descripcion: String?
+        descripcion: String?,
+        categoriaId: Int?
     ): Result<PagoRecurrente> =
         try {
             val respuesta = pagosApi.actualizar(
@@ -81,7 +84,8 @@ class PagosRepositoryImpl @Inject constructor(
                     frecuencia = frecuencia,
                     fechaInicio = fechaInicio,
                     descripcion = descripcion?.trim()?.ifBlank { null },
-                    fechaFin = fechaFin
+                    fechaFin = fechaFin,
+                    categoriaId = categoriaId
                 )
             )
             Result.success(respuesta.data.pago.aPagoRecurrente())

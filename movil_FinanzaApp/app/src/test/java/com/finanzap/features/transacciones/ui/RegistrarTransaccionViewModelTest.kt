@@ -120,7 +120,8 @@ private class RepositorioTransaccionesFalso : TransaccionesRepository {
         idCartera: Int,
         pagina: Int,
         porPagina: Int,
-        periodoId: Int?
+        periodoId: Int?,
+        sinPeriodo: Boolean
     ): Result<PaginaTransacciones> = Result.success(
         PaginaTransacciones(emptyList(), 1, 1, 0, 0.0, 0.0, 0.0)
     )

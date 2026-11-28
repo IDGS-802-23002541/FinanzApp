@@ -15,7 +15,8 @@ data class CrearPagoRequest(
     val frecuencia: String,
     val fechaInicio: String,
     val descripcion: String?,
-    val fechaFin: String?
+    val fechaFin: String?,
+    val categoriaId: Int? = null
 )
 
 @Serializable
@@ -25,7 +26,8 @@ data class EditarPagoRequest(
     val frecuencia: String,
     val fechaInicio: String,
     val descripcion: String?,
-    val fechaFin: String?
+    val fechaFin: String?,
+    val categoriaId: Int? = null
 )
 
 @Serializable
@@ -74,6 +76,7 @@ data class PagoDto(
     val fechaInicio: String? = null,
     val fechaFin: String? = null,
     val proximaEjecucion: String? = null,
+    val ultimaEjecucion: EjecucionDto? = null,
     val estado: String = "ACTIVO"
 )
 
@@ -101,6 +104,7 @@ data class EjecucionDto(
 data class PagoRecurrente(
     val id: Int,
     val carteraId: Int,
+    val categoriaId: Int?,
     val nombre: String,
     val descripcion: String?,
     val monto: Double,
@@ -108,6 +112,7 @@ data class PagoRecurrente(
     val fechaInicio: String?,
     val fechaFin: String?,
     val proximaEjecucion: String?,
+    val ultimaEjecucion: String?,
     val estado: String
 )
 
@@ -120,6 +125,7 @@ data class ListadoPagos(
 fun PagoDto.aPagoRecurrente(): PagoRecurrente = PagoRecurrente(
     id = idPagoRecurrente,
     carteraId = carteraId,
+    categoriaId = categoriaId,
     nombre = nombre,
     descripcion = descripcion,
     monto = monto,
@@ -127,5 +133,6 @@ fun PagoDto.aPagoRecurrente(): PagoRecurrente = PagoRecurrente(
     fechaInicio = fechaInicio,
     fechaFin = fechaFin,
     proximaEjecucion = proximaEjecucion,
+    ultimaEjecucion = ultimaEjecucion?.fechaProgramada,
     estado = estado
 )

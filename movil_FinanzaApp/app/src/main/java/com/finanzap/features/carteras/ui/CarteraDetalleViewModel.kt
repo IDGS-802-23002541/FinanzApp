@@ -216,6 +216,30 @@ class CarteraDetalleViewModel @Inject constructor(
                 }
         }
     }
+
+    fun reactivar(idCartera: Int) {
+        if (_state.value.reactivando) return
+
+        _state.update { it.copy(reactivando = true, errorReactivar = null) }
+        viewModelScope.launch {
+            carterasRepository.reactivar(idCartera)
+                .onSuccess { cartera ->
+                    _state.update { it.copy(reactivando = false, cartera = cartera) }
+                    cargarInvitacion(idCartera)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            reactivando = false,
+                            errorReactivar = mensajeErrorApi(
+                                error,
+                                "No se pudo reactivar la cartera."
+                            )
+                        )
+                    }
+                }
+        }
+    }
 }
 
 data class CarteraDetalleUiState(
@@ -238,6 +262,8 @@ data class CarteraDetalleUiState(
     val inactivando: Boolean = false,
     val errorInactivar: String? = null,
     val inactivada: Boolean = false,
+    val reactivando: Boolean = false,
+    val errorReactivar: String? = null,
     val balance: BalanceCierre? = null,
     val finalizando: Boolean = false,
     val errorFinalizar: String? = null,

@@ -108,6 +108,15 @@ class CarterasRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
 
+    override suspend fun reactivar(idCartera: Int): Result<Cartera> =
+        try {
+            Result.success(carterasApi.reactivar(idCartera).data.aCartera())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     override suspend fun salir(idCartera: Int): Result<Unit> =
         try {
             carterasApi.salir(idCartera)
