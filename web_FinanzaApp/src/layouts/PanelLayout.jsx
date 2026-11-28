@@ -23,6 +23,7 @@ const enlacesPorRol = {
     { ruta: '/admin/trabajadores', texto: 'Trabajadores', grupo: 'Principal' },
     { ruta: '/admin/comentarios', texto: 'Buzón', grupo: 'Principal' },
     { ruta: '/admin/tickets', texto: 'Tickets', grupo: 'Principal' },
+    { ruta: '/admin/monitoreo', texto: 'Monitoreo', grupo: 'Principal' },
     { ruta: '/ajustes', texto: 'Ajustes', grupo: 'Cuenta' },
     ],
   [ROLES.TRABAJADOR]: [

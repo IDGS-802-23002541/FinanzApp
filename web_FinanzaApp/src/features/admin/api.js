@@ -7,6 +7,18 @@ export async function obtenerMetricas() {
   return data
 }
 
+// Indicadores de monitoreo (sonda de BD + métricas) con caché del backend.
+export async function obtenerMonitoreo() {
+  const { data } = await api.get('/monitoreo/sli')
+  return data
+}
+
+// Botón actualizar: fuerza una medición nueva y refresca la caché.
+export async function actualizarMonitoreo() {
+  const { data } = await api.post('/monitoreo/sli/actualizar', {})
+  return data
+}
+
 // Comentarios enviados desde la landing, del más reciente al más antiguo.
 export async function listarComentarios({ pagina = 1, porPagina = 10 } = {}) {
   const params = new URLSearchParams({

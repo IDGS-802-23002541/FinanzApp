@@ -25,6 +25,7 @@ import InicioAdmin from '../features/admin/pages/Inicio.jsx'
 import Trabajadores from '../features/admin/pages/Trabajadores.jsx'
 import TicketsAdmin from '../features/admin/pages/Tickets.jsx'
 import BuzonComentarios from '../features/admin/pages/BuzonComentarios.jsx'
+import Monitoreo from '../features/admin/pages/Monitoreo.jsx'
 import PanelLayout from '../layouts/PanelLayout.jsx'
 import PaginaNoEncontrada from '../features/PaginaNoEncontrada.jsx'
 import { ROLES } from '../utils/constantes.js'
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
           {element: <RoleRoute roles={[ROLES.ADMIN]} />, children: [
             {path: '/admin', element: <InicioAdmin />},
             {path: '/admin/trabajadores', element: <Trabajadores />},
+            {path: '/admin/monitoreo', element: <Monitoreo />},
           ]},
           {path: '/admin/tickets', element: <TicketsAdmin />},
           {path: '/admin/comentarios', element: <BuzonComentarios />},
