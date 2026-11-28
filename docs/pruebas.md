@@ -31,11 +31,37 @@ Para guardarlo también en archivo local (opcional):
 export LOG_ARCHIVO=logs/acceso.jsonl
 ```
 
-Para verlo en Azure:
+### Ver los logs en Azure
+
+El contenedor ya escribe el JSON en stdout; hay que habilitar que App Service lo guarde.
+
+1. Habilitar el registro (una sola vez):
+
+```bash
+az webapp log config -g finanzapp -n finanzapp --docker-container-logging filesystem
+```
+
+2. Ver en vivo:
 
 ```bash
 az webapp log tail -g finanzapp -n finanzapp
 ```
+
+También en el portal: Web App `finanzapp` → **Supervisión → Registro en streaming**.
+
+3. Descargar lo ya escrito (para adjuntar la evidencia del mes):
+
+```text
+https://finanzapp-efaydwe0heemd0ad.scm.mexicocentral-01.azurewebsites.net/api/logs/docker
+```
+
+Devuelve la lista de archivos; cada uno se baja desde
+`.../api/vfs/LogFiles/docker/<archivo>`. Las credenciales son las de publicación:
+Web App → **Centro de implementación → Credenciales de FTP**.
+
+4. Retención: App Service rota y borra esos archivos. Para conservar un mes completo
+se descargan al cierre del periodo, o se activa **Registro de App Service → Almacenamiento
+de blobs** con los días de retención que pida el SLA.
 
 ## 3. Monitor de disponibilidad (SLI-02)
 
