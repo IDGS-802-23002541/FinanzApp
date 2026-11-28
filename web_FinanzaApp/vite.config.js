@@ -20,6 +20,11 @@ const api = () => ({
 // así el navegador no bloquea la petición por CORS.
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/pruebas/setup.js',
+    include: ['src/**/*.test.{js,jsx}'],
+  },
   server: {
     proxy: {
       '/auth': api(),

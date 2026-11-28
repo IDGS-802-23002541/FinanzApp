@@ -64,6 +64,9 @@ yarn-error.log*
 Backend_FinanzaApp/metricas/
 Backend_FinanzaApp/reportes/
 
+# Capturas y trazas del MCP de Playwright
+.playwright-mcp/
+
 # =========================
 # Temporales
 # =========================

@@ -2,12 +2,28 @@
 
 Cómo correr lo que mide los SLI de FinanzApp. Todo es Python estándar y pytest; no requiere dependencias nuevas.
 
-## 1. Pruebas automáticas (pytest)
+## 1. Pruebas automáticas (pytest y vitest)
 
-Desde `Backend_FinanzaApp/`:
+Desde la raíz del repositorio, el script corre backend y web de una vez:
+
+```bash
+python3 ejecutar_pruebas.py            # backend + web
+python3 ejecutar_pruebas.py backend    # solo pytest
+python3 ejecutar_pruebas.py web        # solo vitest
+```
+
+Devuelve código 0 solo si todo pasa.
+
+Backend desde `Backend_FinanzaApp/`:
 
 ```bash
 python -m pytest -q
+```
+
+Web desde `web_FinanzaApp/`:
+
+```bash
+npm run test
 ```
 
 Cubre los módulos medidos:
@@ -17,7 +33,7 @@ Cubre los módulos medidos:
 - P-04 / P-05 alta de transacción (válida e inválida)
 - P-06 / P-07 soporte (crear, responder, cerrar)
 
-En CI corre solo con `ci-develop.yml` en cada push a `develop`.
+En CI corre con `ci-develop.yml` en cada push y pull request a `develop`, y antes de cada despliegue de `ci-deploy.yml`. El job de web ejecuta `lint`, `test` y `build`.
 
 ## 2. Log de accesos (JSON)
 
